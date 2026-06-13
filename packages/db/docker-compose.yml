@@ -1,0 +1,24 @@
+# Local Postgres for development. Mirrors the Neon Postgres used in production.
+#   pnpm db:up    → start
+#   pnpm db:down  → stop
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: acolhe-animal-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: acolhe
+      POSTGRES_PASSWORD: acolhe
+      POSTGRES_DB: acolhe_animal
+    ports:
+      - '5432:5432'
+    volumes:
+      - acolhe-animal-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U acolhe -d acolhe_animal']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  acolhe-animal-pgdata:

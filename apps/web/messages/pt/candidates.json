@@ -1,0 +1,134 @@
+{
+  "page": {
+    "title": "Candidaturas",
+    "description": "Cada candidatura é alguém pronto para acolher. Cuide do caminho até o sim — ou do não com carinho.",
+    "metricLabel": "Esperando"
+  },
+  "empty": {
+    "eyebrow": "Ainda quietinho",
+    "title": "Nenhuma candidatura por enquanto",
+    "description": "Quando alguém preencher o formulário de adoção de um animal, a candidatura aparece aqui para você acompanhar.",
+    "actionLabel": "Ver animais"
+  },
+  "species": {
+    "dog": "Cão",
+    "cat": "Gato"
+  },
+  "status": {
+    "draft": "Rascunho",
+    "new": "Novo",
+    "inProgress": "Em análise",
+    "approved": "Aprovado",
+    "rejected": "Recusado",
+    "withdrew": "Desistiu"
+  },
+  "columns": {
+    "new": "Novo",
+    "inProgress": "Em análise",
+    "approved": "Aprovado",
+    "closed": "Recusado / Desistiu"
+  },
+  "kanban": {
+    "empty": "Ninguém por aqui."
+  },
+  "card": {
+    "wantsToAdopt": "Quer adotar",
+    "new": "Novo",
+    "submitted": "submetida {when}",
+    "formalize": "formalizar adoção"
+  },
+  "detail": {
+    "breadcrumb": "Candidaturas",
+    "updated": "atualizado {when}",
+    "wantsToAdopt": "Quer adotar",
+    "bannerStatus": "{status} · há {when}",
+    "bannerForAnimal": "candidatura para {animalName}",
+    "answersEyebrow": "— O que ela respondeu",
+    "answersTitle": "As respostas",
+    "contactEyebrow": "— A conversa",
+    "contactTitle": "Acontece no WhatsApp",
+    "whatsappMessage": "Oi, {firstName}! Tudo bem? Falo da organização sobre a adoção do {animalName}.",
+    "whatsappCta": "Abrir WhatsApp de {firstName}",
+    "animalEyebrow": "— Animal de interesse",
+    "animalLink": "Ver ficha",
+    "nextStepEyebrow": "— Próximo passo",
+    "moveEyebrow": "— Estado",
+    "whoCaresEyebrow": "— Responsável",
+    "notesEyebrow": "— Notas internas",
+    "historyEyebrow": "— Histórico",
+    "historyTitle": "Como chegamos aqui",
+    "backToAll": "← Voltar para todas as candidaturas"
+  },
+  "facts": {
+    "empty": "Esta candidatura ainda não tem respostas registradas.",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "timeline": {
+    "empty": "Ainda sem histórico por aqui.",
+    "applicationSubmitted": "Candidatura recebida",
+    "applicationAssigned": "Responsável definido",
+    "applicationApproved": "Candidatura aprovada",
+    "applicationRejected": "Candidatura recusada",
+    "adoptionCompleted": "Adoção formalizada 🎉",
+    "adoptionCancelled": "Adoção cancelada",
+    "adoptionCancelledWithReason": "Adoção cancelada — {reason}"
+  },
+  "assign": {
+    "placeholder": "Ninguém ainda"
+  },
+  "statusControl": {
+    "startReview": "Começar análise",
+    "reject": "Recusar",
+    "approve": "Aprovar",
+    "markWithdrew": "Marcar desistência",
+    "backToReview": "Voltar para análise",
+    "reopen": "Reabrir",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "saving": "Salvando…",
+    "confirmReject": {
+      "title": "Recusar esta candidatura?",
+      "bodyFromNew": "A pessoa será avisada com cuidado pelo WhatsApp. Você pode reabrir depois, se mudar de ideia.",
+      "bodyFromInProgress": "A pessoa será avisada com cuidado pelo WhatsApp."
+    },
+    "confirmApprove": {
+      "title": "Aprovar esta candidatura?",
+      "body": "O animal fica reservado para esta pessoa e o próximo passo é formalizar a adoção."
+    },
+    "confirmBackToReview": {
+      "title": "Voltar para análise?",
+      "body": "O animal deixa de ficar reservado para esta pessoa."
+    }
+  },
+  "notes": {
+    "placeholder": "Como foi a conversa? O que te deixou tranquilo ou com um pé atrás?",
+    "save": "Salvar anotações",
+    "saving": "Salvando…"
+  },
+  "finalize": {
+    "trigger": "Formalizar adoção",
+    "title": "Formalizar a adoção de {animalName}",
+    "description": "Confirme os dados de {adopterName} para gerar o termo de adoção. O termo é assinado digitalmente e fica guardado.",
+    "cpfLabel": "CPF do adotante",
+    "cpfPlaceholder": "000.000.000-00",
+    "streetLabel": "Rua",
+    "numberLabel": "Número",
+    "complementLabel": "Complemento (opcional)",
+    "cityLabel": "Cidade",
+    "stateLabel": "UF",
+    "postalCodeLabel": "CEP",
+    "postalCodePlaceholder": "00000-000",
+    "extraClausesLabel": "Cláusulas extras (opcional)",
+    "extraClausesPlaceholder": "Combinados específicos desta adoção — visitas de acompanhamento, castração agendada…",
+    "cancel": "Cancelar",
+    "submit": "Formalizar adoção",
+    "submitting": "Formalizando…"
+  },
+  "toasts": {
+    "assigned": "Responsável definido.",
+    "notesSaved": "Anotações salvas.",
+    "statusUpdated": "Status atualizado.",
+    "adoptionFinalized": "Adoção de {animalName} formalizada. Que alegria! 🎉"
+  }
+}

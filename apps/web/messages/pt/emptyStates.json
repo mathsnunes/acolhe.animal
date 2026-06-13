@@ -1,0 +1,34 @@
+{
+  "donations": {
+    "eyebrow": "Doações",
+    "title": "Ative o recebimento de doações",
+    "description": "Quando você configurar o financeiro, cada doação aparece aqui automaticamente — sem planilha, sem conferência manual.",
+    "action": "Configurar financeiro →"
+  },
+  "cashflow": {
+    "eyebrow": "Caixa",
+    "title": "O caixa aparece quando o financeiro estiver ativo",
+    "description": "Entradas e saídas aparecem aqui assim que você ativar o recebimento de doações.",
+    "action": "Configurar financeiro →"
+  },
+  "campaigns": {
+    "eyebrow": "Campanhas",
+    "title": "Campanhas chegam com o portal de doações",
+    "description": "Crie esforços pontuais de arrecadação com meta e prazo. Esta área faz parte do Pilar de doações."
+  },
+  "stories": {
+    "eyebrow": "Histórias",
+    "title": "Em breve",
+    "description": "Conte as histórias de adoções bem-sucedidas para inspirar novos adotantes e apoiadores."
+  },
+  "neededItems": {
+    "eyebrow": "Itens em falta",
+    "title": "Em breve",
+    "description": "Liste o que falta na sede (ração, areia, cobertores) para que apoiadores possam ajudar."
+  },
+  "supporters": {
+    "eyebrow": "Apoiadores",
+    "title": "Apoio mensal chega com o portal de doações",
+    "description": "Acompanhe quem apoia sua organização todo mês. Esta área faz parte do Pilar de doações."
+  }
+}

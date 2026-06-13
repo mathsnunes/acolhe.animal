@@ -1,0 +1,24 @@
+{
+  "eyebrow": "Hoje",
+  "greeting": "Bom dia. Vamos <em>cuidar</em> de quem espera.",
+  "stats": {
+    "activeAnimals": "Animais ativos",
+    "available": "Disponíveis",
+    "waitingCandidates": "Candidatos esperando"
+  },
+  "feed": {
+    "title": "O que aconteceu",
+    "empty": "Nada por aqui ainda. Quando você cadastrar animais e receber candidaturas, a atividade aparece neste feed."
+  },
+  "events": {
+    "animalCreated": "{name} foi cadastrado",
+    "animalCreatedFallback": "Um animal foi cadastrado",
+    "animalArchived": "Um animal foi arquivado",
+    "applicationSubmitted": "Nova candidatura recebida",
+    "applicationApproved": "Uma candidatura foi aprovada",
+    "applicationRejected": "Uma candidatura foi recusada",
+    "adoptionCompleted": "{animalName} foi adotado por {adopterName} 🎉",
+    "adoptionCompletedFallback": "Um animal foi adotado 🎉",
+    "adoptionCancelled": "Uma adoção foi cancelada"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "eyebrow": "Configurações",
+  "title": "Sua organização",
+  "orgCard": {
+    "title": "Dados da organização",
+    "name": "Nome",
+    "publicAddress": "Endereço público",
+    "cnpj": "CNPJ",
+    "cpf": "CPF",
+    "city": "Cidade",
+    "phone": "Telefone"
+  },
+  "finance": {
+    "title": "Financeiro",
+    "descriptionCnpj": "Ative o recebimento de doações com reconciliação automática.",
+    "descriptionCpf": "O recebimento automático exige CNPJ (MEI). Veja como formalizar.",
+    "status": {
+      "not_started": "Não ativado",
+      "creating": "Criando conta",
+      "awaiting_revenue": "Verificando dados",
+      "documents_pending": "Documentos pendentes",
+      "under_review": "Em análise",
+      "approved": "Ativo",
+      "rejected": "Recusado"
+    }
+  }
+}

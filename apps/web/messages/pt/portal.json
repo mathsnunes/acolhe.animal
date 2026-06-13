@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "portalNotFound": "Portal não encontrado",
+    "defaultDescription": "Conheça os animais disponíveis para adoção na {orgName} e candidate-se a um novo lar.",
+    "animalNotFound": "Animal não encontrado",
+    "animalDescription": "{animalName} está disponível para adoção na {orgName}.",
+    "animalOgTitle": "{animalName} para adoção",
+    "animalDetailTitle": "{animalName} · {orgName}",
+    "applicationTitleWithAnimal": "Candidatura para {animalName} · {orgName}",
+    "applicationTitle": "Candidatura",
+    "submittedTitle": "Candidatura enviada"
+  },
+  "hero": {
+    "eyebrow": "— Portal de adoção"
+  },
+  "available": {
+    "eyebrow": "— Quem está esperando",
+    "titlePrefix": "Disponíveis para ",
+    "titleEm": "adoção",
+    "emptyTitle": "Nenhum animal por aqui no momento.",
+    "emptyDescription": "Todos os animais da {orgName} já encontraram um lar — ou ainda estão sendo preparados. Volte em breve."
+  },
+  "footer": {
+    "madeWith": "feito com"
+  },
+  "card": {
+    "cta": "Quero adotar"
+  },
+  "labels": {
+    "speciesDog": "Cão",
+    "speciesCat": "Gato",
+    "sexMale": "Macho",
+    "sexFemale": "Fêmea",
+    "sizeSmall": "Pequeno porte",
+    "sizeMedium": "Médio porte",
+    "sizeLarge": "Grande porte"
+  },
+  "detail": {
+    "available": "Disponível para adoção",
+    "adoptCta": "Quero adotar a {animalName}"
+  },
+  "adopt": {
+    "back": "Voltar",
+    "footerDoubt": "Tem dúvida sobre como funciona? Fale com a {orgName} pelo WhatsApp.",
+    "footerVia": "candidatura via"
+  },
+  "submitted": {
+    "fallbackAnimalName": "o animal",
+    "eyebrow": "Candidatura enviada",
+    "title": "Sua candidatura para a <em>{animalName}</em> foi enviada.",
+    "lede": "Chegou aqui na {orgName}, recebemos tudo direitinho. Agora é com a gente.",
+    "nextEyebrow": "— O que vem agora",
+    "nextTitlePrefix": "A gente cuida dos ",
+    "nextTitleEm": "próximos passos",
+    "nextTitleSuffix": ".",
+    "step1Title": "A gente lê com cuidado",
+    "step1Time": "até 2 dias úteis",
+    "step1Body": "A equipe da {orgName} lê cada candidatura com atenção. Pode levar um pouquinho — preferimos demorar e fazer direito.",
+    "step2Title": "A gente te chama no WhatsApp",
+    "step2Time": "conversa por mensagem",
+    "step2Body": "Quando for sua vez, mandamos mensagem no número que você cadastrou. É uma conversa para tirar dúvidas, conhecer você melhor e ver se a {animalName} combina com o seu jeito.",
+    "step3Title": "Marcamos a visita presencial",
+    "step3Time": "no momento certo",
+    "step3Body": "Se a conversa fluir bem, combinamos para você conhecer a {animalName} pessoalmente. Sem pressão — é para vocês se conhecerem antes de qualquer formalização.",
+    "tipTitle": "Fica de olho no seu WhatsApp",
+    "tipBody": "A equipe entra em contato pelo WhatsApp. Salve o número da {orgName} para a mensagem não cair como spam — e responda quando puder, sem pressa.",
+    "thanks": "Por enquanto, é isso. A {animalName} agradece a paciência.",
+    "backToOrg": "Voltar para a {orgName}",
+    "otherAnimals": "Ver outros animais",
+    "footerVia": "candidatura via"
+  }
+}

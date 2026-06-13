@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Write-Output \"node: $\\(\\(Get-Command node -ErrorAction SilentlyContinue\\).Source\\)\"; if \\(Get-Command node -ErrorAction SilentlyContinue\\) { node --version }; Write-Output \"pnpm: $\\(\\(Get-Command pnpm -ErrorAction SilentlyContinue\\).Source\\)\"; if \\(Get-Command pnpm -ErrorAction SilentlyContinue\\) { pnpm --version }; Write-Output \"npm: $\\(\\(Get-Command npm -ErrorAction SilentlyContinue\\).Source\\)\"; Write-Output \"docker: $\\(\\(Get-Command docker -ErrorAction SilentlyContinue\\).Source\\)\"; Write-Output \"corepack: $\\(\\(Get-Command corepack -ErrorAction SilentlyContinue\\).Source\\)\")",
+      "PowerShell(winget install --id OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements --silent)"
+    ]
+  }
+}

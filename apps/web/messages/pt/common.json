@@ -1,0 +1,29 @@
+{
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "edit": "Editar",
+    "create": "Criar",
+    "new": "Novo",
+    "confirm": "Confirmar",
+    "remove": "Remover",
+    "close": "Fechar",
+    "search": "Buscar",
+    "send": "Enviar"
+  },
+  "states": {
+    "loading": "Carregando…",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "submitting": "Enviando…"
+  },
+  "feedback": {
+    "genericError": "Algo deu errado. Tente novamente em instantes.",
+    "requiredFields": "Falta preencher uns campos para continuar."
+  },
+  "nav": {
+    "viewPublicPage": "Ver página pública"
+  }
+}

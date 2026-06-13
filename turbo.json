@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", ".env.local"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "INTEGRATIONS_MODE",
+    "ASAAS_API_KEY",
+    "ASAAS_KEY_ENCRYPTION_SECRET",
+    "PAYOUT_ENCRYPTION_SECRET",
+    "MASTER_WALLET_ID",
+    "R2_*",
+    "RESEND_API_KEY",
+    "EVOLUTION_API_*"
+  ],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    }
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "list": {
+    "title": "Animais",
+    "description": "Animais ativos da casa. Marque como adotado quando o termo for assinado, ou arquive quando a história já estiver contada.",
+    "metricLabel": "ATIVOS",
+    "newAnimal": "Novo animal",
+    "emptyEyebrow": "Nada por aqui",
+    "emptyFilteredTitle": "Nenhum animal com esses filtros",
+    "emptyTitle": "Ainda sem animais",
+    "emptyFilteredDescription": "Tente ajustar a busca ou os filtros acima.",
+    "emptyDescription": "Quando você cadastrar o primeiro animal, ele aparece aqui pronto pra ganhar uma família.",
+    "emptyActionLabel": "Cadastrar primeiro animal",
+    "colName": "Nome",
+    "colSpecies": "Espécie · Idade · Porte",
+    "colStatus": "Status",
+    "colCandidates": "Candidatos",
+    "colIntake": "Na casa desde",
+    "waiting": "{count, plural, one {# esperando} other {# esperando}}",
+    "noCandidates": "—",
+    "open": "Ver ficha de {name}"
+  },
+  "filters": {
+    "tabAll": "Todos",
+    "tabAvailable": "Disponíveis",
+    "tabUnderReview": "Em avaliação",
+    "tabReserved": "Reservados",
+    "tabAdopted": "Adotados (mês)",
+    "tabUnavailable": "Indisponíveis",
+    "tabsAriaLabel": "Filtrar por status",
+    "searchPlaceholder": "Buscar por nome…",
+    "searchAriaLabel": "Buscar animais por nome",
+    "speciesFilterLabel": "Filtrar por espécie",
+    "speciesPrefix": "Espécie",
+    "allSpecies": "todas",
+    "dogsPlural": "Cachorros",
+    "catsPlural": "Gatos",
+    "sizePrefix": "Tamanho",
+    "sizeFilterLabel": "Filtrar por porte",
+    "allSizes": "todos",
+    "agePrefix": "Idade",
+    "ageFilterLabel": "Filtrar por idade",
+    "allAges": "todas",
+    "ageBaby": "Filhote",
+    "ageAdult": "Adulto",
+    "ageSenior": "Idoso",
+    "sortPrefix": "Ordenar",
+    "sortFilterLabel": "Ordenar a lista",
+    "sortRecent": "mais recentes",
+    "sortName": "nome (A–Z)",
+    "viewLabel": "Visualização",
+    "viewGrid": "Grade",
+    "viewList": "Lista"
+  },
+  "card": {
+    "intake": "Entrou {date}",
+    "candidates": "{count, plural, one {# candidato} other {# candidatos}}"
+  },
+  "detail": {
+    "breadcrumb": "Todos os animais",
+    "edit": "Editar",
+    "archivedAt": "Arquivado {date}",
+    "factSpecies": "Espécie",
+    "factSex": "Sexo",
+    "factSize": "Porte",
+    "factAge": "Idade",
+    "factNeutered": "Castração",
+    "factEnergy": "Energia",
+    "factIntake": "Na casa desde",
+    "empty": "—",
+    "sociabilityTitle": "— Convivência",
+    "specialConditionsTitle": "— Condições especiais",
+    "clinicalConditionTitle": "— Condição clínica",
+    "needsSpecialAdopter": "Precisa de um adotante preparado pra esse cuidado.",
+    "quirksTitle": "— Manias",
+    "timelineTitle": "— Linha do tempo",
+    "timelineEmpty": "Nada registrado ainda.",
+    "sociability": {
+      "children": "Crianças",
+      "dogs": "Cachorros",
+      "cats": "Gatos",
+      "strangers": "Estranhos"
+    },
+    "events": {
+      "animal.created": "Cadastrado na casa",
+      "animal.archived": "Arquivado",
+      "animal.unarchived": "Reativado"
+    }
+  },
+  "new": {
+    "backLabel": "Voltar para animais",
+    "eyebrow": "NOVO CADASTRO",
+    "titleBefore": "Vamos começar pelo ",
+    "titleEm": "básico",
+    "description": "Sem stress — preencha o que você sabe agora, o resto pode entrar depois. Os campos com • são obrigatórios."
+  },
+  "editPage": {
+    "backLabel": "Voltar para {name}",
+    "eyebrow": "EDITAR FICHA",
+    "titleBefore": "Ajustando a ",
+    "description": "Atualize o que mudou. As alterações entram na hora — sem etapas extras."
+  },
+  "form": {
+    "sectionBasic": "Básico",
+    "sectionBasicHint": "O essencial pra começar a ficha.",
+    "nameLabel": "Nome",
+    "namePlaceholder": "Frida, Bidu, Maracujá…",
+    "nameRequired": "Informe o nome do animal.",
+    "speciesLabel": "Espécie",
+    "sexLabel": "Sexo",
+    "sizeLabel": "Porte",
+    "notInformed": "Não informado",
+    "birthDateLabel": "Nascimento estimado",
+    "ageAtIntakeLabel": "Idade na entrada (meses)",
+    "ageAtIntakePlaceholder": "ex: 8",
+    "ageHint": "Preencha a data de nascimento <em>ou</em> a idade na entrada — uma das duas basta.",
+    "sectionHealth": "Saúde",
+    "sectionHealthHint": "Castração, condições e tratamentos em curso.",
+    "neuteredLabel": "Castração",
+    "specialConditionsLabel": "Condições especiais",
+    "removeTag": "Remover {tag}",
+    "specialConditionsPlaceholder": "FIV+, três patas, epilepsia… (Enter pra adicionar)",
+    "hasClinicalCondition": "Está em tratamento clínico no momento",
+    "clinicalTypeLabel": "Tipo de condição",
+    "clinicalTypeOther": "Outra",
+    "clinicalDescriptionLabel": "Descrição",
+    "clinicalDescriptionPlaceholder": "O que está acontecendo e o cuidado necessário.",
+    "clinicalNeedsSpecialAdopter": "Precisa de um adotante preparado pra esse cuidado",
+    "sectionBehavior": "Comportamento",
+    "sectionBehaviorHint": "O jeitão e a sociabilidade.",
+    "energyLabel": "Energia",
+    "goodWithChildren": "Com crianças",
+    "goodWithDogs": "Com cachorros",
+    "goodWithCats": "Com gatos",
+    "sociabilityUnknown": "Não sei",
+    "sectionStory": "História",
+    "sectionStoryHint": "Como chegou e o que faz dele único.",
+    "shortStoryLabel": "História curta",
+    "shortStoryPlaceholder": "A doce vira-lata que entende quando você precisa de paz.",
+    "quirksLabel": "Manias e jeitinhos",
+    "quirksPlaceholder": "Dorme de barriga pra cima, ama caixa de papelão…",
+    "intakeDateLabel": "Data de entrada",
+    "rescueLocationLabel": "Local do resgate",
+    "rescueLocationPlaceholder": "Bairro, cidade…",
+    "sectionPhotos": "Fotos",
+    "sectionPhotosHint": "O upload de fotos chega numa próxima atualização.",
+    "photosSoon": "Fotos em breve",
+    "cancel": "Cancelar",
+    "saving": "Salvando…",
+    "saveChanges": "Salvar alterações",
+    "create": "Cadastrar animal"
+  },
+  "actions": {
+    "reactivate": "Reativar",
+    "archive": "Arquivar"
+  },
+  "toasts": {
+    "reactivated": "Animal reativado.",
+    "archived": "Animal arquivado.",
+    "updated": "Ficha atualizada.",
+    "created": "{name} foi cadastrado."
+  },
+  "status": {
+    "available": "Disponível",
+    "underReview": "Em avaliação",
+    "reserved": "Reservado",
+    "adopted": "Adotado",
+    "unavailable": "Indisponível"
+  },
+  "labels": {
+    "species": {
+      "dog": "Cachorro",
+      "cat": "Gato"
+    },
+    "sex": {
+      "male": "Macho",
+      "female": "Fêmea"
+    },
+    "size": {
+      "small": "Pequeno",
+      "medium": "Médio",
+      "large": "Grande"
+    },
+    "neutered": {
+      "yes": "Castrado",
+      "no": "Não castrado",
+      "scheduled": "Castração agendada"
+    },
+    "energy": {
+      "calm": "Calmo",
+      "balanced": "Equilibrado",
+      "energetic": "Elétrico"
+    },
+    "sociability": {
+      "yes": "Sim",
+      "no": "Não",
+      "with-care": "Com cuidado",
+      "unknown": "Não sei"
+    },
+    "clinicalType": {
+      "post-surgery-recovery": "Recuperação pós-cirúrgica",
+      "chronic-treatment": "Tratamento contínuo",
+      "behavioral-rehabilitation": "Reabilitação comportamental",
+      "other": "Condição clínica"
+    },
+    "ageMonths": "{months, plural, one {# mês} other {# meses}}",
+    "ageYears": "{years, plural, one {# ano} other {# anos}}"
+  }
+}
