@@ -17,13 +17,13 @@ const COLS = 'lg:grid-cols-[56px_1.4fr_1fr_104px_132px_104px_24px]';
  * · status · candidatos · na casa desde · →); on mobile it collapses to a compact
  * row with the status + meta inline under the name.
  */
-export async function AnimalsTable({
+export const AnimalsTable = async ({
   animals,
   waiting,
 }: {
   animals: Animal[];
   waiting: Record<string, number>;
-}) {
+}) => {
   const t = await getTranslations('animals');
 
   return (
@@ -101,12 +101,8 @@ export async function AnimalsTable({
       })}
     </div>
   );
-}
+};
 
-function ColHead({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] text-ink-mute">
+const ColHead = ({ children }: { children: React.ReactNode }) => <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] text-ink-mute">
       {children}
-    </span>
-  );
-}
+    </span>;

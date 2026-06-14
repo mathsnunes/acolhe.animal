@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { city, db } from '@acolhe-animal/db';
 import { formatCnpj, formatCpf } from '@acolhe-animal/shared';
-import { getOrganizationById } from '@acolhe-animal/domain';
+import { getOrganizationByPk } from '@acolhe-animal/domain';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function ConfigPage() {
   const ctx = await requireCtx();
   const t = await getTranslations('settings');
-  const org = await getOrganizationById(db, ctx.organizationId);
+  const org = await getOrganizationByPk(db, ctx.organizationId);
   if (!org) throw new Error('Organização não encontrada.');
   const cityRow = org.cityId
     ? (
@@ -74,11 +74,7 @@ export default async function ConfigPage() {
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
+const Row = ({ label, value, mono }: { label: string; value: string; mono?: boolean }) => <div className="flex items-center justify-between gap-4">
       <span className="text-ink-mute">{label}</span>
       <span className={mono ? 'font-mono text-xs text-ink' : 'text-ink'}>{value}</span>
-    </div>
-  );
-}
+    </div>;

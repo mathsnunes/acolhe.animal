@@ -8,7 +8,7 @@ import { onlyDigits } from './string';
  * what gets stored and matched. Accepts masked input, with or without country
  * code. Returns `null` when the input cannot be a valid BR mobile/landline.
  */
-export function normalizePhoneBR(input: string): string | null {
+export const normalizePhoneBR = (input: string): string | null => {
   let digits = onlyDigits(input);
 
   // Drop a leading country code if present.
@@ -20,8 +20,6 @@ export function normalizePhoneBR(input: string): string | null {
   if (digits.length !== 10 && digits.length !== 11) return null;
 
   return `+55${digits}`;
-}
+};
 
-export function isValidPhoneBR(input: string): boolean {
-  return normalizePhoneBR(input) !== null;
-}
+export const isValidPhoneBR = (input: string): boolean => normalizePhoneBR(input) !== null;

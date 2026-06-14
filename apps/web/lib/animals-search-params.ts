@@ -35,29 +35,22 @@ const VALUE_TO_PT: Record<Exclude<CanonicalKey, 'search'>, Record<string, string
   view: {},
 };
 
-function invert(map: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(Object.entries(map).map(([k, v]) => [v, k]));
-}
+const invert = (map: Record<string, string>): Record<string, string> => Object.fromEntries(Object.entries(map).map(([k, v]) => [v, k]));
 const VALUE_FROM_PT = Object.fromEntries(
   Object.entries(VALUE_TO_PT).map(([k, m]) => [k, invert(m)]),
 ) as Record<Exclude<CanonicalKey, 'search'>, Record<string, string>>;
 
 /** Encode a canonical (key, value) into the pt-BR (key, value) for the URL. */
-export function encodeAnimalsParam(
-  key: CanonicalKey,
-  value: string,
-): { ptKey: string; ptValue: string } {
+export const encodeAnimalsParam = (key: CanonicalKey, value: string): { ptKey: string; ptValue: string } => {
   const ptKey = ANIMALS_PARAM_KEYS[key];
   if (key === 'search' || !value) return { ptKey, ptValue: value };
   return { ptKey, ptValue: VALUE_TO_PT[key][value] ?? value };
-}
+};
 
 export type DecodedAnimalsParams = Partial<Record<CanonicalKey, string>>;
 
 /** Decode the pt-BR search params object into canonical values. */
-export function decodeAnimalsParams(
-  pt: Partial<Record<string, string>>,
-): DecodedAnimalsParams {
+export const decodeAnimalsParams = (pt: Partial<Record<string, string>>): DecodedAnimalsParams => {
   const out: DecodedAnimalsParams = {};
   for (const key of Object.keys(ANIMALS_PARAM_KEYS) as CanonicalKey[]) {
     const raw = pt[ANIMALS_PARAM_KEYS[key]];
@@ -65,4 +58,4 @@ export function decodeAnimalsParams(
     out[key] = key === 'search' ? raw : (VALUE_FROM_PT[key][raw] ?? raw);
   }
   return out;
-}
+};

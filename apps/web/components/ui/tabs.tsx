@@ -5,41 +5,31 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 
 import { cn } from '@/lib/utils';
 
-function Tabs({
+const Tabs = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
-  return (
-    <TabsPrimitive.Root
+}: React.ComponentProps<typeof TabsPrimitive.Root>) => <TabsPrimitive.Root
       data-slot="tabs"
       className={cn('flex flex-col gap-2', className)}
       {...props}
-    />
-  );
-}
+    />;
 
-function TabsList({
+const TabsList = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return (
-    <TabsPrimitive.List
+}: React.ComponentProps<typeof TabsPrimitive.List>) => <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
         'inline-flex items-center gap-6 border-b border-line',
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
-function TabsTrigger({
+const TabsTrigger = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  return (
-    <TabsPrimitive.Trigger
+}: React.ComponentProps<typeof TabsPrimitive.Trigger>) => <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
         'relative -mb-px inline-flex items-center justify-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-1 pb-2.5 pt-1 text-sm font-medium text-ink-mute transition-colors',
@@ -51,25 +41,19 @@ function TabsTrigger({
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
-function TabsContent({
+const TabsContent = ({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
-  return (
-    <TabsPrimitive.Content
+}: React.ComponentProps<typeof TabsPrimitive.Content>) => <TabsPrimitive.Content
       data-slot="tabs-content"
       className={cn(
         'mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };
 export default Tabs;

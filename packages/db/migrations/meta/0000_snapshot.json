@@ -1,5 +1,5 @@
 {
-  "id": "62030413-7e0d-4959-92c4-c5c9a58f3f16",
+  "id": "d4ed9243-c0a9-4afc-ad8f-f6fd732ad5dc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -509,10 +509,27 @@
       "name": "organization",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "organization_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "name": {
@@ -726,6 +743,13 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "organization_id_unique": {
+          "name": "organization_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        },
         "organization_slug_unique": {
           "name": "organization_slug_unique",
           "nullsNotDistinct": false,
@@ -749,15 +773,32 @@
       "name": "organization_invite",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "organization_invite_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -916,15 +957,15 @@
         }
       },
       "foreignKeys": {
-        "organization_invite_organization_id_organization_id_fk": {
-          "name": "organization_invite_organization_id_organization_id_fk",
+        "organization_invite_organization_id_organization_pk_fk": {
+          "name": "organization_invite_organization_id_organization_pk_fk",
           "tableFrom": "organization_invite",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -958,6 +999,13 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "organization_invite_id_unique": {
+          "name": "organization_invite_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        },
         "organization_invite_token_unique": {
           "name": "organization_invite_token_unique",
           "nullsNotDistinct": false,
@@ -974,10 +1022,27 @@
       "name": "organization_member",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "organization_member_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "user_id": {
@@ -988,7 +1053,7 @@
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1147,15 +1212,15 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "organization_member_organization_id_organization_id_fk": {
-          "name": "organization_member_organization_id_organization_id_fk",
+        "organization_member_organization_id_organization_pk_fk": {
+          "name": "organization_member_organization_id_organization_pk_fk",
           "tableFrom": "organization_member",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -1188,7 +1253,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "organization_member_id_unique": {
+          "name": "organization_member_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1197,15 +1270,32 @@
       "name": "animal",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "animal_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1469,22 +1559,30 @@
         }
       },
       "foreignKeys": {
-        "animal_organization_id_organization_id_fk": {
-          "name": "animal_organization_id_organization_id_fk",
+        "animal_organization_id_organization_pk_fk": {
+          "name": "animal_organization_id_organization_pk_fk",
           "tableFrom": "animal",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "animal_id_unique": {
+          "name": "animal_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "animal_age_present": {
@@ -1498,15 +1596,32 @@
       "name": "animal_instagram_art",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "animal_instagram_art_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1576,22 +1691,30 @@
         }
       },
       "foreignKeys": {
-        "animal_instagram_art_animal_id_animal_id_fk": {
-          "name": "animal_instagram_art_animal_id_animal_id_fk",
+        "animal_instagram_art_animal_id_animal_pk_fk": {
+          "name": "animal_instagram_art_animal_id_animal_pk_fk",
           "tableFrom": "animal_instagram_art",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "animal_instagram_art_id_unique": {
+          "name": "animal_instagram_art_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1600,15 +1723,32 @@
       "name": "animal_photo",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "animal_photo_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1682,22 +1822,30 @@
         }
       },
       "foreignKeys": {
-        "animal_photo_animal_id_animal_id_fk": {
-          "name": "animal_photo_animal_id_animal_id_fk",
+        "animal_photo_animal_id_animal_pk_fk": {
+          "name": "animal_photo_animal_id_animal_pk_fk",
           "tableFrom": "animal_photo",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "animal_photo_id_unique": {
+          "name": "animal_photo_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1706,15 +1854,32 @@
       "name": "animal_video",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "animal_video_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1817,22 +1982,30 @@
         }
       },
       "foreignKeys": {
-        "animal_video_animal_id_animal_id_fk": {
-          "name": "animal_video_animal_id_animal_id_fk",
+        "animal_video_animal_id_animal_pk_fk": {
+          "name": "animal_video_animal_id_animal_pk_fk",
           "tableFrom": "animal_video",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "animal_video_id_unique": {
+          "name": "animal_video_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1841,33 +2014,50 @@
       "name": "adoption",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "adoption_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "person_id": {
           "name": "person_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "application_id": {
           "name": "application_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -2071,61 +2261,69 @@
         }
       },
       "foreignKeys": {
-        "adoption_organization_id_organization_id_fk": {
-          "name": "adoption_organization_id_organization_id_fk",
+        "adoption_organization_id_organization_pk_fk": {
+          "name": "adoption_organization_id_organization_pk_fk",
           "tableFrom": "adoption",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "adoption_person_id_person_id_fk": {
-          "name": "adoption_person_id_person_id_fk",
+        "adoption_person_id_person_pk_fk": {
+          "name": "adoption_person_id_person_pk_fk",
           "tableFrom": "adoption",
           "tableTo": "person",
           "columnsFrom": [
             "person_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "adoption_application_id_application_id_fk": {
-          "name": "adoption_application_id_application_id_fk",
+        "adoption_application_id_application_pk_fk": {
+          "name": "adoption_application_id_application_pk_fk",
           "tableFrom": "adoption",
           "tableTo": "application",
           "columnsFrom": [
             "application_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "adoption_animal_id_animal_id_fk": {
-          "name": "adoption_animal_id_animal_id_fk",
+        "adoption_animal_id_animal_pk_fk": {
+          "name": "adoption_animal_id_animal_pk_fk",
           "tableFrom": "adoption",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "adoption_id_unique": {
+          "name": "adoption_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2134,27 +2332,44 @@
       "name": "application",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "application_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "person_id": {
           "name": "person_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -2360,41 +2575,41 @@
         }
       },
       "foreignKeys": {
-        "application_organization_id_organization_id_fk": {
-          "name": "application_organization_id_organization_id_fk",
+        "application_organization_id_organization_pk_fk": {
+          "name": "application_organization_id_organization_pk_fk",
           "tableFrom": "application",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "application_animal_id_animal_id_fk": {
-          "name": "application_animal_id_animal_id_fk",
+        "application_animal_id_animal_pk_fk": {
+          "name": "application_animal_id_animal_pk_fk",
           "tableFrom": "application",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "application_person_id_person_id_fk": {
-          "name": "application_person_id_person_id_fk",
+        "application_person_id_person_pk_fk": {
+          "name": "application_person_id_person_pk_fk",
           "tableFrom": "application",
           "tableTo": "person",
           "columnsFrom": [
             "person_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2414,7 +2629,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "application_id_unique": {
+          "name": "application_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2423,15 +2646,32 @@
       "name": "person",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "person_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -2601,15 +2841,15 @@
         }
       },
       "foreignKeys": {
-        "person_organization_id_organization_id_fk": {
-          "name": "person_organization_id_organization_id_fk",
+        "person_organization_id_organization_pk_fk": {
+          "name": "person_organization_id_organization_pk_fk",
           "tableFrom": "person",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2629,7 +2869,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "person_id_unique": {
+          "name": "person_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2638,15 +2886,32 @@
       "name": "donor",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "donor_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -2804,15 +3069,15 @@
         }
       },
       "foreignKeys": {
-        "donor_organization_id_organization_id_fk": {
-          "name": "donor_organization_id_organization_id_fk",
+        "donor_organization_id_organization_pk_fk": {
+          "name": "donor_organization_id_organization_pk_fk",
           "tableFrom": "donor",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2832,7 +3097,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "donor_id_unique": {
+          "name": "donor_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2841,21 +3114,38 @@
       "name": "supporter",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "supporter_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "donor_id": {
           "name": "donor_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -2973,28 +3263,28 @@
         }
       },
       "foreignKeys": {
-        "supporter_organization_id_organization_id_fk": {
-          "name": "supporter_organization_id_organization_id_fk",
+        "supporter_organization_id_organization_pk_fk": {
+          "name": "supporter_organization_id_organization_pk_fk",
           "tableFrom": "supporter",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "supporter_donor_id_donor_id_fk": {
-          "name": "supporter_donor_id_donor_id_fk",
+        "supporter_donor_id_donor_pk_fk": {
+          "name": "supporter_donor_id_donor_pk_fk",
           "tableFrom": "supporter",
           "tableTo": "donor",
           "columnsFrom": [
             "donor_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -3002,6 +3292,13 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
+        "supporter_id_unique": {
+          "name": "supporter_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        },
         "supporter_asaasSubscriptionId_unique": {
           "name": "supporter_asaasSubscriptionId_unique",
           "nullsNotDistinct": false,
@@ -3018,21 +3315,38 @@
       "name": "campaign",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "campaign_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -3186,35 +3500,43 @@
         }
       },
       "foreignKeys": {
-        "campaign_organization_id_organization_id_fk": {
-          "name": "campaign_organization_id_organization_id_fk",
+        "campaign_organization_id_organization_pk_fk": {
+          "name": "campaign_organization_id_organization_pk_fk",
           "tableFrom": "campaign",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "campaign_animal_id_animal_id_fk": {
-          "name": "campaign_animal_id_animal_id_fk",
+        "campaign_animal_id_animal_pk_fk": {
+          "name": "campaign_animal_id_animal_pk_fk",
           "tableFrom": "campaign",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "campaign_id_unique": {
+          "name": "campaign_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3223,15 +3545,32 @@
       "name": "campaign_item",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "campaign_item_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "campaign_id": {
           "name": "campaign_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -3286,22 +3625,30 @@
         }
       },
       "foreignKeys": {
-        "campaign_item_campaign_id_campaign_id_fk": {
-          "name": "campaign_item_campaign_id_campaign_id_fk",
+        "campaign_item_campaign_id_campaign_pk_fk": {
+          "name": "campaign_item_campaign_id_campaign_pk_fk",
           "tableFrom": "campaign_item",
           "tableTo": "campaign",
           "columnsFrom": [
             "campaign_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "campaign_item_id_unique": {
+          "name": "campaign_item_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3310,21 +3657,38 @@
       "name": "recurring_need",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "recurring_need_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "animal_id": {
           "name": "animal_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -3415,35 +3779,43 @@
         }
       },
       "foreignKeys": {
-        "recurring_need_organization_id_organization_id_fk": {
-          "name": "recurring_need_organization_id_organization_id_fk",
+        "recurring_need_organization_id_organization_pk_fk": {
+          "name": "recurring_need_organization_id_organization_pk_fk",
           "tableFrom": "recurring_need",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "recurring_need_animal_id_animal_id_fk": {
-          "name": "recurring_need_animal_id_animal_id_fk",
+        "recurring_need_animal_id_animal_pk_fk": {
+          "name": "recurring_need_animal_id_animal_pk_fk",
           "tableFrom": "recurring_need",
           "tableTo": "animal",
           "columnsFrom": [
             "animal_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "recurring_need_id_unique": {
+          "name": "recurring_need_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3452,15 +3824,32 @@
       "name": "cashflow_entry",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "cashflow_entry_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -3498,7 +3887,7 @@
         },
         "donation_id": {
           "name": "donation_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -3624,28 +4013,28 @@
         }
       },
       "foreignKeys": {
-        "cashflow_entry_organization_id_organization_id_fk": {
-          "name": "cashflow_entry_organization_id_organization_id_fk",
+        "cashflow_entry_organization_id_organization_pk_fk": {
+          "name": "cashflow_entry_organization_id_organization_pk_fk",
           "tableFrom": "cashflow_entry",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "cashflow_entry_donation_id_donation_id_fk": {
-          "name": "cashflow_entry_donation_id_donation_id_fk",
+        "cashflow_entry_donation_id_donation_pk_fk": {
+          "name": "cashflow_entry_donation_id_donation_pk_fk",
           "tableFrom": "cashflow_entry",
           "tableTo": "donation",
           "columnsFrom": [
             "donation_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -3665,7 +4054,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "cashflow_entry_id_unique": {
+          "name": "cashflow_entry_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -3674,45 +4071,62 @@
       "name": "donation",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "donation_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "donor_id": {
           "name": "donor_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "campaign_id": {
           "name": "campaign_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
         "campaign_item_id": {
           "name": "campaign_item_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
         "recurring_need_id": {
           "name": "recurring_need_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
         "supporter_id": {
           "name": "supporter_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -3938,80 +4352,80 @@
         }
       },
       "foreignKeys": {
-        "donation_organization_id_organization_id_fk": {
-          "name": "donation_organization_id_organization_id_fk",
+        "donation_organization_id_organization_pk_fk": {
+          "name": "donation_organization_id_organization_pk_fk",
           "tableFrom": "donation",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "donation_donor_id_donor_id_fk": {
-          "name": "donation_donor_id_donor_id_fk",
+        "donation_donor_id_donor_pk_fk": {
+          "name": "donation_donor_id_donor_pk_fk",
           "tableFrom": "donation",
           "tableTo": "donor",
           "columnsFrom": [
             "donor_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "donation_campaign_id_campaign_id_fk": {
-          "name": "donation_campaign_id_campaign_id_fk",
+        "donation_campaign_id_campaign_pk_fk": {
+          "name": "donation_campaign_id_campaign_pk_fk",
           "tableFrom": "donation",
           "tableTo": "campaign",
           "columnsFrom": [
             "campaign_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "donation_campaign_item_id_campaign_item_id_fk": {
-          "name": "donation_campaign_item_id_campaign_item_id_fk",
+        "donation_campaign_item_id_campaign_item_pk_fk": {
+          "name": "donation_campaign_item_id_campaign_item_pk_fk",
           "tableFrom": "donation",
           "tableTo": "campaign_item",
           "columnsFrom": [
             "campaign_item_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "donation_recurring_need_id_recurring_need_id_fk": {
-          "name": "donation_recurring_need_id_recurring_need_id_fk",
+        "donation_recurring_need_id_recurring_need_pk_fk": {
+          "name": "donation_recurring_need_id_recurring_need_pk_fk",
           "tableFrom": "donation",
           "tableTo": "recurring_need",
           "columnsFrom": [
             "recurring_need_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "donation_supporter_id_supporter_id_fk": {
-          "name": "donation_supporter_id_supporter_id_fk",
+        "donation_supporter_id_supporter_pk_fk": {
+          "name": "donation_supporter_id_supporter_pk_fk",
           "tableFrom": "donation",
           "tableTo": "supporter",
           "columnsFrom": [
             "supporter_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -4031,7 +4445,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "donation_id_unique": {
+          "name": "donation_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4040,21 +4462,38 @@
       "name": "payout",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "payout_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
         "payout_account_id": {
           "name": "payout_account_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -4142,7 +4581,7 @@
         },
         "cashflow_entry_id": {
           "name": "cashflow_entry_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -4259,28 +4698,28 @@
         }
       },
       "foreignKeys": {
-        "payout_organization_id_organization_id_fk": {
-          "name": "payout_organization_id_organization_id_fk",
+        "payout_organization_id_organization_pk_fk": {
+          "name": "payout_organization_id_organization_pk_fk",
           "tableFrom": "payout",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "payout_payout_account_id_payout_account_id_fk": {
-          "name": "payout_payout_account_id_payout_account_id_fk",
+        "payout_payout_account_id_payout_account_pk_fk": {
+          "name": "payout_payout_account_id_payout_account_pk_fk",
           "tableFrom": "payout",
           "tableTo": "payout_account",
           "columnsFrom": [
             "payout_account_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -4298,22 +4737,30 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "payout_cashflow_entry_id_cashflow_entry_id_fk": {
-          "name": "payout_cashflow_entry_id_cashflow_entry_id_fk",
+        "payout_cashflow_entry_id_cashflow_entry_pk_fk": {
+          "name": "payout_cashflow_entry_id_cashflow_entry_pk_fk",
           "tableFrom": "payout",
           "tableTo": "cashflow_entry",
           "columnsFrom": [
             "cashflow_entry_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "payout_id_unique": {
+          "name": "payout_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4322,15 +4769,32 @@
       "name": "payout_account",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "payout_account_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -4499,22 +4963,30 @@
         }
       },
       "foreignKeys": {
-        "payout_account_organization_id_organization_id_fk": {
-          "name": "payout_account_organization_id_organization_id_fk",
+        "payout_account_organization_id_organization_pk_fk": {
+          "name": "payout_account_organization_id_organization_pk_fk",
           "tableFrom": "payout_account",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "payout_account_id_unique": {
+          "name": "payout_account_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4523,15 +4995,32 @@
       "name": "audit_log",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "audit_log_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -4705,15 +5194,15 @@
         }
       },
       "foreignKeys": {
-        "audit_log_organization_id_organization_id_fk": {
-          "name": "audit_log_organization_id_organization_id_fk",
+        "audit_log_organization_id_organization_pk_fk": {
+          "name": "audit_log_organization_id_organization_pk_fk",
           "tableFrom": "audit_log",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -4733,7 +5222,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "audit_log_id_unique": {
+          "name": "audit_log_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -4742,15 +5239,32 @@
       "name": "timeline_event",
       "schema": "",
       "columns": {
+        "pk": {
+          "name": "pk",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "timeline_event_pk_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
         "id": {
           "name": "id",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
-          "type": "text",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -4884,15 +5398,15 @@
         }
       },
       "foreignKeys": {
-        "timeline_event_organization_id_organization_id_fk": {
-          "name": "timeline_event_organization_id_organization_id_fk",
+        "timeline_event_organization_id_organization_pk_fk": {
+          "name": "timeline_event_organization_id_organization_pk_fk",
           "tableFrom": "timeline_event",
           "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
           "columnsTo": [
-            "id"
+            "pk"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -4912,7 +5426,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "timeline_event_id_unique": {
+          "name": "timeline_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

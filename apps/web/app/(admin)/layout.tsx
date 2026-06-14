@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getTranslations } from 'next-intl/server';
 
 import { city, db, user as userTable } from '@acolhe-animal/db';
-import { getOrganizationById, listAnimals, listApplications } from '@acolhe-animal/domain';
+import { getOrganizationByPk, listAnimals, listApplications } from '@acolhe-animal/domain';
 
 import { AdminShell } from '@/components/nav/admin-shell';
 import { requireCtx } from '@/lib/auth-context';
@@ -13,7 +13,7 @@ import { requireCtx } from '@/lib/auth-context';
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireCtx();
-  const org = await getOrganizationById(db, ctx.organizationId);
+  const org = await getOrganizationByPk(db, ctx.organizationId);
   if (!org) throw new Error('Organização não encontrada.');
 
   const [animals, applications, currentUser, cityRow] = await Promise.all([

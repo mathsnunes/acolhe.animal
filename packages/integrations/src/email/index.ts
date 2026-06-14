@@ -9,9 +9,9 @@ export { getMockEmailOutbox } from './mock';
 
 let cached: EmailProvider | null = null;
 
-export function getEmail(): EmailProvider {
+export const getEmail = (): EmailProvider => {
   if (!cached) {
     cached = isLiveIntegrations() ? new ResendEmailProvider() : new MockEmailProvider();
   }
   return cached;
-}
+};

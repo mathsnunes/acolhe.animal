@@ -14,18 +14,18 @@ import { Button } from '@/components/ui/button';
  * Archive / unarchive toggle for the detail header. Wraps the bound Server
  * Action, shows a toast and refreshes the route on success.
  */
-export function ArchiveButton({
+export const ArchiveButton = ({
   archived,
   action,
 }: {
   archived: boolean;
   action: () => Promise<ActionResult>;
-}) {
+}) => {
   const t = useTranslations('animals');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  function run() {
+  const run = () => {
     startTransition(async () => {
       const result = await action();
       if (result.ok) {
@@ -35,7 +35,7 @@ export function ArchiveButton({
         toast.error(result.error.message);
       }
     });
-  }
+  };
 
   return (
     <Button type="button" variant="outline" onClick={run} pending={isPending}>
@@ -43,4 +43,4 @@ export function ArchiveButton({
       {archived ? t('actions.reactivate') : t('actions.archive')}
     </Button>
   );
-}
+};

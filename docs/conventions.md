@@ -16,9 +16,17 @@
 - `strict` on, `noUncheckedIndexedAccess`. No `any` — use `unknown` and refine.
 - DB types (Drizzle `InferSelectModel`) are the source of truth for DTOs.
 - `import type { … }` for type-only imports (`verbatimModuleSyntax`).
+- **Arrow functions, always.** Write functions as arrow expressions, not `function`
+  declarations — including React components and Next pages/layouts
+  (`const Page = () => …; export default Page;`). Server Action exports stay
+  `export const fooAction = async (...) => …`. Class methods (e.g. integration
+  adapters) stay methods. Enforced via ESLint (`func-style` +
+  `eslint-plugin-prefer-arrow-functions`); `eslint --fix` converts.
+- Lean on modern TS: `satisfies`, `as const`, discriminated unions, `infer`-based
+  DB types — over hand-maintained shapes.
 
 ## Names and data
-- Prefixed IDs via `createId(kind)`; never generate an id in the database.
+- Hybrid IDs: internal `pk` (`bigint` identity — real PK + FK target, never exposed) + public `id` (prefixed string via `createId(kind)`, app-generated). URLs/API use `id`; FKs/joins use `pk`. Helpers in `packages/db/src/schema/_id.ts`.
 - DB is `snake_case` (mapped from camelCase by Drizzle), singular table names.
 - Documents (CPF/CNPJ) and phones are stored digits-only / E.164; normalize at the boundary with the `@acolhe-animal/shared` helpers.
 - Soft-delete (`archivedAt`/`removedAt`/`cancelledAt`) for historical entities; never hard-delete an adoption/donation.

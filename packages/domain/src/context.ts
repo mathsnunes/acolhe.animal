@@ -22,19 +22,17 @@ export type Actor =
  */
 export interface Ctx {
   db: DbExecutor;
-  organizationId: string;
+  /** The tenant's internal surrogate key (`organization.pk`), resolved by the web layer. */
+  organizationId: number;
   actor: Actor;
 }
 
 /** Run a function within a transaction, threading a tx-scoped Ctx. */
-export async function withTransaction<T>(
-  ctx: Ctx,
-  fn: (txCtx: Ctx) => Promise<T>,
-): Promise<T> {
+export const withTransaction = async <T>(ctx: Ctx, fn: (txCtx: Ctx) => Promise<T>): Promise<T> => {
   // If we're already inside a tx, reuse it; otherwise open one.
   const exec = ctx.db;
   if ('transaction' in exec && typeof exec.transaction === 'function') {
     return exec.transaction((tx) => fn({ ...ctx, db: tx }));
   }
   return fn(ctx);
-}
+};

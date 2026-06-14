@@ -23,7 +23,7 @@ export interface OrgMember {
  * Pick who is taking care of this candidacy. Assigning a `new` candidacy also
  * nudges it into análise — someone is now holding it.
  */
-export function AssignControl({
+export const AssignControl = ({
   applicationId,
   members,
   assignedToUserId,
@@ -31,12 +31,12 @@ export function AssignControl({
   applicationId: string;
   members: OrgMember[];
   assignedToUserId: string | null;
-}) {
+}) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [pending, startTransition] = useTransition();
 
-  function onChange(userId: string) {
+  const onChange = (userId: string) => {
     startTransition(async () => {
       const res = await assignAction(applicationId, userId);
       if (res.ok) {
@@ -46,7 +46,7 @@ export function AssignControl({
         toast.error(res.error.message);
       }
     });
-  }
+  };
 
   return (
     <Select
@@ -66,4 +66,4 @@ export function AssignControl({
       </SelectContent>
     </Select>
   );
-}
+};

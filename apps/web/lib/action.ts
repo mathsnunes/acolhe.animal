@@ -8,7 +8,7 @@ import { isDomainError, type ActionResult } from '@acolhe-animal/shared';
  *   export const createAnimalAction = (input) =>
  *     action(async () => { const ctx = await requireCtx(); return createAnimal(ctx, input); });
  */
-export async function action<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
+export const action = async <T>(fn: () => Promise<T>): Promise<ActionResult<T>> => {
   try {
     const data = await fn();
     return { ok: true, data };
@@ -22,4 +22,4 @@ export async function action<T>(fn: () => Promise<T>): Promise<ActionResult<T>> 
       error: { code: 'internal', message: 'Algo deu errado. Tente novamente em instantes.' },
     };
   }
-}
+};

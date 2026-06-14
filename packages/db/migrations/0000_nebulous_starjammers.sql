@@ -106,7 +106,8 @@ CREATE TABLE "city" (
 );
 --> statement-breakpoint
 CREATE TABLE "organization" (
-	"id" text PRIMARY KEY NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
 	"name" text NOT NULL,
 	"slug" text NOT NULL,
 	"document" text NOT NULL,
@@ -132,13 +133,15 @@ CREATE TABLE "organization" (
 	"asaas_pix_key_cached" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "organization_id_unique" UNIQUE("id"),
 	CONSTRAINT "organization_slug_unique" UNIQUE("slug"),
 	CONSTRAINT "organization_document_unique" UNIQUE("document")
 );
 --> statement-breakpoint
 CREATE TABLE "organization_invite" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_invite_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"invited_by_user_id" text NOT NULL,
 	"phone_number" text NOT NULL,
 	"name" text,
@@ -150,25 +153,29 @@ CREATE TABLE "organization_invite" (
 	"accepted_at" timestamp with time zone,
 	"accepted_by_user_id" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "organization_invite_id_unique" UNIQUE("id"),
 	CONSTRAINT "organization_invite_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
 CREATE TABLE "organization_member" (
-	"id" text PRIMARY KEY NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "organization_member_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
 	"user_id" text NOT NULL,
-	"organization_id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"role" "member_role" NOT NULL,
 	"invited_by_user_id" text,
 	"joined_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"removed_at" timestamp with time zone,
 	"removed_by_user_id" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "organization_member_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "animal" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "animal_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"name" text NOT NULL,
 	"species" "animal_species" NOT NULL,
 	"sex" "animal_sex" NOT NULL,
@@ -198,33 +205,39 @@ CREATE TABLE "animal" (
 	"archived_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "animal_id_unique" UNIQUE("id"),
 	CONSTRAINT "animal_age_present" CHECK ("animal"."estimated_birth_date" is not null or ("animal"."age_months_at_intake" is not null and "animal"."age_reference_date" is not null))
 );
 --> statement-breakpoint
 CREATE TABLE "animal_instagram_art" (
-	"id" text PRIMARY KEY NOT NULL,
-	"animal_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "animal_instagram_art_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"animal_id" bigint NOT NULL,
 	"type" "instagram_art_type" NOT NULL,
 	"image_url" text NOT NULL,
 	"caption" text,
-	"generated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"generated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "animal_instagram_art_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "animal_photo" (
-	"id" text PRIMARY KEY NOT NULL,
-	"animal_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "animal_photo_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"animal_id" bigint NOT NULL,
 	"original_url" text NOT NULL,
 	"thumb_url" text NOT NULL,
 	"medium_url" text NOT NULL,
 	"alt_text" text,
 	"display_order" integer DEFAULT 0 NOT NULL,
 	"is_primary" boolean DEFAULT false NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "animal_photo_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "animal_video" (
-	"id" text PRIMARY KEY NOT NULL,
-	"animal_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "animal_video_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"animal_id" bigint NOT NULL,
 	"original_url" text NOT NULL,
 	"processed_url" text,
 	"poster_url" text,
@@ -233,15 +246,17 @@ CREATE TABLE "animal_video" (
 	"processing_status" "video_processing_status" DEFAULT 'pending' NOT NULL,
 	"caption" text,
 	"display_order" integer DEFAULT 0 NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "animal_video_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "adoption" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"person_id" text NOT NULL,
-	"application_id" text,
-	"animal_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "adoption_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"person_id" bigint NOT NULL,
+	"application_id" bigint,
+	"animal_id" bigint NOT NULL,
 	"source" "adoption_source" NOT NULL,
 	"adopter_name" text NOT NULL,
 	"adopter_document" text NOT NULL,
@@ -254,14 +269,16 @@ CREATE TABLE "adoption" (
 	"adopted_at" timestamp with time zone NOT NULL,
 	"cancelled_at" timestamp with time zone,
 	"cancellation_reason" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "adoption_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "application" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"animal_id" text NOT NULL,
-	"person_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "application_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"animal_id" bigint NOT NULL,
+	"person_id" bigint NOT NULL,
 	"application_data" jsonb,
 	"form_version" text NOT NULL,
 	"status" "application_status" DEFAULT 'draft' NOT NULL,
@@ -271,12 +288,14 @@ CREATE TABLE "application" (
 	"submitted_at" timestamp with time zone,
 	"expires_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "application_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "person" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "person_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"global_person_id" text,
 	"name" text NOT NULL,
 	"phone" text NOT NULL,
@@ -289,12 +308,14 @@ CREATE TABLE "person" (
 	"address_complement" text,
 	"postal_code" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "person_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "donor" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "donor_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"global_donor_id" text,
 	"name" text NOT NULL,
 	"phone" text,
@@ -304,13 +325,15 @@ CREATE TABLE "donor" (
 	"is_anonymous" boolean DEFAULT false NOT NULL,
 	"notes" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "donor_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "supporter" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"donor_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "supporter_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"donor_id" bigint NOT NULL,
 	"monthly_amount" numeric(10, 2) NOT NULL,
 	"status" "supporter_status" DEFAULT 'active' NOT NULL,
 	"asaas_subscription_id" text NOT NULL,
@@ -320,13 +343,15 @@ CREATE TABLE "supporter" (
 	"next_billing_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "supporter_id_unique" UNIQUE("id"),
 	CONSTRAINT "supporter_asaasSubscriptionId_unique" UNIQUE("asaas_subscription_id")
 );
 --> statement-breakpoint
 CREATE TABLE "campaign" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"animal_id" text,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "campaign_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"animal_id" bigint,
 	"title" text NOT NULL,
 	"pitch" text,
 	"story" text,
@@ -337,54 +362,62 @@ CREATE TABLE "campaign" (
 	"status" "campaign_status" DEFAULT 'draft' NOT NULL,
 	"behavior_on_goal_reached" "campaign_goal_behavior" DEFAULT 'keep_open' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "campaign_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "campaign_item" (
-	"id" text PRIMARY KEY NOT NULL,
-	"campaign_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "campaign_item_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"campaign_id" bigint NOT NULL,
 	"name" text NOT NULL,
 	"amount" numeric(10, 2) NOT NULL,
 	"display_order" integer DEFAULT 0 NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "campaign_item_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "recurring_need" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"animal_id" text,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "recurring_need_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"animal_id" bigint,
 	"title" text NOT NULL,
 	"description" text,
 	"cover_url" text,
 	"suggested_monthly_amount" numeric(10, 2),
 	"status" "recurring_need_status" DEFAULT 'active' NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "recurring_need_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "cashflow_entry" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "cashflow_entry_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"type" "cashflow_type" NOT NULL,
 	"category" "cashflow_category" NOT NULL,
 	"amount" numeric(10, 2) NOT NULL,
 	"entry_date" timestamp NOT NULL,
 	"description" text NOT NULL,
-	"donation_id" text,
+	"donation_id" bigint,
 	"payment_method" "cashflow_payment_method",
 	"created_by_user_id" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "cashflow_entry_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "donation" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"donor_id" text NOT NULL,
-	"campaign_id" text,
-	"campaign_item_id" text,
-	"recurring_need_id" text,
-	"supporter_id" text,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "donation_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"donor_id" bigint NOT NULL,
+	"campaign_id" bigint,
+	"campaign_item_id" bigint,
+	"recurring_need_id" bigint,
+	"supporter_id" bigint,
 	"webhook_event_id" text,
 	"amount" numeric(10, 2) NOT NULL,
 	"payment_method" "payment_method" NOT NULL,
@@ -399,13 +432,15 @@ CREATE TABLE "donation" (
 	"refunded_at" timestamp with time zone,
 	"refund_reason" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "donation_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "payout" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
-	"payout_account_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "payout_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
+	"payout_account_id" bigint NOT NULL,
 	"destination_snapshot" jsonb NOT NULL,
 	"amount" numeric(10, 2) NOT NULL,
 	"fee_amount" numeric(10, 2) DEFAULT '0' NOT NULL,
@@ -419,14 +454,16 @@ CREATE TABLE "payout" (
 	"completed_at" timestamp with time zone,
 	"failed_at" timestamp with time zone,
 	"failure_reason" text,
-	"cashflow_entry_id" text,
+	"cashflow_entry_id" bigint,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "payout_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "payout_account" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "payout_account_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"type" "payout_account_type" NOT NULL,
 	"nickname" text,
 	"holder_name" text NOT NULL,
@@ -441,12 +478,14 @@ CREATE TABLE "payout_account" (
 	"is_active" boolean DEFAULT true NOT NULL,
 	"last_validated_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "payout_account_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "audit_log" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "audit_log_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint,
 	"actor_type" "audit_actor_type" NOT NULL,
 	"actor_user_id" text,
 	"actor_context" jsonb,
@@ -458,12 +497,14 @@ CREATE TABLE "audit_log" (
 	"reason" text,
 	"request_metadata" jsonb,
 	"retention_until" timestamp with time zone DEFAULT now() + interval '2 years' NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "audit_log_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "timeline_event" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organization_id" text NOT NULL,
+	"pk" bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "timeline_event_pk_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"id" text NOT NULL,
+	"organization_id" bigint NOT NULL,
 	"event_type" text NOT NULL,
 	"entity_type" text NOT NULL,
 	"entity_id" text NOT NULL,
@@ -471,7 +512,8 @@ CREATE TABLE "timeline_event" (
 	"actor_context" jsonb,
 	"payload" jsonb,
 	"occurred_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "timeline_event_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
 CREATE TABLE "webhook_event" (
@@ -489,54 +531,54 @@ CREATE TABLE "webhook_event" (
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization" ADD CONSTRAINT "organization_city_id_city_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."city"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "organization_invite" ADD CONSTRAINT "organization_invite_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "organization_invite" ADD CONSTRAINT "organization_invite_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization_invite" ADD CONSTRAINT "organization_invite_invited_by_user_id_user_id_fk" FOREIGN KEY ("invited_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization_invite" ADD CONSTRAINT "organization_invite_accepted_by_user_id_user_id_fk" FOREIGN KEY ("accepted_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization_member" ADD CONSTRAINT "organization_member_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "organization_member" ADD CONSTRAINT "organization_member_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "organization_member" ADD CONSTRAINT "organization_member_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization_member" ADD CONSTRAINT "organization_member_invited_by_user_id_user_id_fk" FOREIGN KEY ("invited_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "organization_member" ADD CONSTRAINT "organization_member_removed_by_user_id_user_id_fk" FOREIGN KEY ("removed_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animal" ADD CONSTRAINT "animal_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animal_instagram_art" ADD CONSTRAINT "animal_instagram_art_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animal_photo" ADD CONSTRAINT "animal_photo_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "animal_video" ADD CONSTRAINT "animal_video_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "adoption" ADD CONSTRAINT "adoption_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "adoption" ADD CONSTRAINT "adoption_person_id_person_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."person"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "adoption" ADD CONSTRAINT "adoption_application_id_application_id_fk" FOREIGN KEY ("application_id") REFERENCES "public"."application"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "adoption" ADD CONSTRAINT "adoption_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application" ADD CONSTRAINT "application_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application" ADD CONSTRAINT "application_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "application" ADD CONSTRAINT "application_person_id_person_id_fk" FOREIGN KEY ("person_id") REFERENCES "public"."person"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "animal" ADD CONSTRAINT "animal_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "animal_instagram_art" ADD CONSTRAINT "animal_instagram_art_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "animal_photo" ADD CONSTRAINT "animal_photo_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "animal_video" ADD CONSTRAINT "animal_video_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "adoption" ADD CONSTRAINT "adoption_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "adoption" ADD CONSTRAINT "adoption_person_id_person_pk_fk" FOREIGN KEY ("person_id") REFERENCES "public"."person"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "adoption" ADD CONSTRAINT "adoption_application_id_application_pk_fk" FOREIGN KEY ("application_id") REFERENCES "public"."application"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "adoption" ADD CONSTRAINT "adoption_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application" ADD CONSTRAINT "application_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application" ADD CONSTRAINT "application_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "application" ADD CONSTRAINT "application_person_id_person_pk_fk" FOREIGN KEY ("person_id") REFERENCES "public"."person"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "application" ADD CONSTRAINT "application_assigned_to_user_id_user_id_fk" FOREIGN KEY ("assigned_to_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "person" ADD CONSTRAINT "person_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "person" ADD CONSTRAINT "person_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "person" ADD CONSTRAINT "person_city_id_city_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."city"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donor" ADD CONSTRAINT "donor_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donor" ADD CONSTRAINT "donor_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "donor" ADD CONSTRAINT "donor_city_id_city_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."city"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "supporter" ADD CONSTRAINT "supporter_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "supporter" ADD CONSTRAINT "supporter_donor_id_donor_id_fk" FOREIGN KEY ("donor_id") REFERENCES "public"."donor"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "campaign" ADD CONSTRAINT "campaign_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "campaign" ADD CONSTRAINT "campaign_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "campaign_item" ADD CONSTRAINT "campaign_item_campaign_id_campaign_id_fk" FOREIGN KEY ("campaign_id") REFERENCES "public"."campaign"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "recurring_need" ADD CONSTRAINT "recurring_need_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "recurring_need" ADD CONSTRAINT "recurring_need_animal_id_animal_id_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "cashflow_entry" ADD CONSTRAINT "cashflow_entry_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "cashflow_entry" ADD CONSTRAINT "cashflow_entry_donation_id_donation_id_fk" FOREIGN KEY ("donation_id") REFERENCES "public"."donation"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "supporter" ADD CONSTRAINT "supporter_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "supporter" ADD CONSTRAINT "supporter_donor_id_donor_pk_fk" FOREIGN KEY ("donor_id") REFERENCES "public"."donor"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "campaign" ADD CONSTRAINT "campaign_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "campaign" ADD CONSTRAINT "campaign_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "campaign_item" ADD CONSTRAINT "campaign_item_campaign_id_campaign_pk_fk" FOREIGN KEY ("campaign_id") REFERENCES "public"."campaign"("pk") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "recurring_need" ADD CONSTRAINT "recurring_need_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "recurring_need" ADD CONSTRAINT "recurring_need_animal_id_animal_pk_fk" FOREIGN KEY ("animal_id") REFERENCES "public"."animal"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "cashflow_entry" ADD CONSTRAINT "cashflow_entry_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "cashflow_entry" ADD CONSTRAINT "cashflow_entry_donation_id_donation_pk_fk" FOREIGN KEY ("donation_id") REFERENCES "public"."donation"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cashflow_entry" ADD CONSTRAINT "cashflow_entry_created_by_user_id_user_id_fk" FOREIGN KEY ("created_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_donor_id_donor_id_fk" FOREIGN KEY ("donor_id") REFERENCES "public"."donor"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_campaign_id_campaign_id_fk" FOREIGN KEY ("campaign_id") REFERENCES "public"."campaign"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_campaign_item_id_campaign_item_id_fk" FOREIGN KEY ("campaign_item_id") REFERENCES "public"."campaign_item"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_recurring_need_id_recurring_need_id_fk" FOREIGN KEY ("recurring_need_id") REFERENCES "public"."recurring_need"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "donation" ADD CONSTRAINT "donation_supporter_id_supporter_id_fk" FOREIGN KEY ("supporter_id") REFERENCES "public"."supporter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_donor_id_donor_pk_fk" FOREIGN KEY ("donor_id") REFERENCES "public"."donor"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_campaign_id_campaign_pk_fk" FOREIGN KEY ("campaign_id") REFERENCES "public"."campaign"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_campaign_item_id_campaign_item_pk_fk" FOREIGN KEY ("campaign_item_id") REFERENCES "public"."campaign_item"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_recurring_need_id_recurring_need_pk_fk" FOREIGN KEY ("recurring_need_id") REFERENCES "public"."recurring_need"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "donation" ADD CONSTRAINT "donation_supporter_id_supporter_pk_fk" FOREIGN KEY ("supporter_id") REFERENCES "public"."supporter"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "donation" ADD CONSTRAINT "donation_webhook_event_id_webhook_event_id_fk" FOREIGN KEY ("webhook_event_id") REFERENCES "public"."webhook_event"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payout" ADD CONSTRAINT "payout_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payout" ADD CONSTRAINT "payout_payout_account_id_payout_account_id_fk" FOREIGN KEY ("payout_account_id") REFERENCES "public"."payout_account"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payout" ADD CONSTRAINT "payout_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payout" ADD CONSTRAINT "payout_payout_account_id_payout_account_pk_fk" FOREIGN KEY ("payout_account_id") REFERENCES "public"."payout_account"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "payout" ADD CONSTRAINT "payout_requested_by_user_id_user_id_fk" FOREIGN KEY ("requested_by_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payout" ADD CONSTRAINT "payout_cashflow_entry_id_cashflow_entry_id_fk" FOREIGN KEY ("cashflow_entry_id") REFERENCES "public"."cashflow_entry"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payout_account" ADD CONSTRAINT "payout_account_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payout" ADD CONSTRAINT "payout_cashflow_entry_id_cashflow_entry_pk_fk" FOREIGN KEY ("cashflow_entry_id") REFERENCES "public"."cashflow_entry"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "payout_account" ADD CONSTRAINT "payout_account_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_actor_user_id_user_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "timeline_event" ADD CONSTRAINT "timeline_event_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "timeline_event" ADD CONSTRAINT "timeline_event_organization_id_organization_pk_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("pk") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "timeline_event" ADD CONSTRAINT "timeline_event_actor_user_id_user_id_fk" FOREIGN KEY ("actor_user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "city_normalized_name_idx" ON "city" USING btree ("normalized_name");--> statement-breakpoint
 CREATE INDEX "city_state_normalized_idx" ON "city" USING btree ("state_code","normalized_name");--> statement-breakpoint

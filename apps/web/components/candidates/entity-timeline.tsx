@@ -16,14 +16,14 @@ const EVENT_META: Record<string, { textKey?: string; dot?: string }> = {
 };
 
 /** A quiet vertical history of what happened with this entity. */
-export function EntityTimeline({ events }: { events: TimelineEvent[] }) {
+export const EntityTimeline = ({ events }: { events: TimelineEvent[] }) => {
   const t = useTranslations('candidates');
 
   if (events.length === 0) {
     return <p className="text-sm text-ink-mute">{t('timeline.empty')}</p>;
   }
 
-  function renderEvent(event: TimelineEvent): string {
+  const renderEvent = (event: TimelineEvent): string => {
     const payload = (event.payload ?? {}) as Record<string, unknown>;
     if (event.eventType === 'adoption.cancelled') {
       return typeof payload.reason === 'string'
@@ -32,7 +32,7 @@ export function EntityTimeline({ events }: { events: TimelineEvent[] }) {
     }
     const key = EVENT_META[event.eventType]?.textKey;
     return key ? t(`timeline.${key}`) : event.eventType;
-  }
+  };
 
   return (
     <ol className="relative ml-1.5 border-l border-line pl-6">
@@ -56,4 +56,4 @@ export function EntityTimeline({ events }: { events: TimelineEvent[] }) {
       })}
     </ol>
   );
-}
+};

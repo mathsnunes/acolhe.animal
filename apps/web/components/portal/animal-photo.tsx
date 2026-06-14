@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
  * first letter of the name over a muted paw mark so a "raw" portal (org with
  * no uploads yet) still looks intentional rather than broken.
  */
-export function AnimalPhoto({
+export const AnimalPhoto = ({
   src,
   name,
   className,
@@ -15,7 +15,7 @@ export function AnimalPhoto({
   name: string;
   className?: string;
   rounded?: string;
-}) {
+}) => {
   if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -39,4 +39,4 @@ export function AnimalPhoto({
       <span className="display select-none text-4xl">{name.charAt(0).toUpperCase()}</span>
     </div>
   );
-}
+};

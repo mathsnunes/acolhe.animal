@@ -27,8 +27,7 @@ const nextConfig: NextConfig = {
    * otherwise capture single-segment pt-BR URLs (e.g. `/animais`) before a normal
    * rewrite runs. Most-specific paths first. Query strings are preserved.
    */
-  async rewrites() {
-    return {
+  rewrites: async () => ({
       beforeFiles: [
         // Animais (nested create / edit / detail)
         { source: '/animais/novo', destination: '/animals/new' },
@@ -56,8 +55,7 @@ const nextConfig: NextConfig = {
         { source: '/:slug/adotar/:animalId', destination: '/:slug/adopt/:animalId' },
         { source: '/:slug/animais/:animalId', destination: '/:slug/animals/:animalId' },
       ],
-    };
-  },
+    }),
 };
 
 export default withNextIntl(nextConfig);

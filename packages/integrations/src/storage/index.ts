@@ -9,9 +9,9 @@ export * from './types';
 let cached: StorageProvider | null = null;
 
 /** The active storage provider, chosen by `INTEGRATIONS_MODE`. */
-export function getStorage(): StorageProvider {
+export const getStorage = (): StorageProvider => {
   if (!cached) {
     cached = isLiveIntegrations() ? new R2StorageProvider() : new MockStorageProvider();
   }
   return cached;
-}
+};

@@ -36,7 +36,7 @@ export interface AdoptableAnimal {
  * Register an adoption that already happened in person (fair, event). We capture
  * who adopted, the animal, the address snapshot, and the link to the signed term.
  */
-export function OfflineAdoptionForm({ animals }: { animals: AdoptableAnimal[] }) {
+export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] }) => {
   const router = useRouter();
   const t = useTranslations('adoptions');
   const [open, setOpen] = useState(false);
@@ -56,7 +56,7 @@ export function OfflineAdoptionForm({ animals }: { animals: AdoptableAnimal[] })
   const [termPdfUrl, setTermPdfUrl] = useState('');
   const [adoptedAt, setAdoptedAt] = useState(() => new Date().toISOString().slice(0, 10));
 
-  function onSubmit(e: FormEvent) {
+  const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!animalId) {
       toast.error(t('toasts.chooseAnimal'));
@@ -91,7 +91,7 @@ export function OfflineAdoptionForm({ animals }: { animals: AdoptableAnimal[] })
         toast.error(res.error.message);
       }
     });
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -271,4 +271,4 @@ export function OfflineAdoptionForm({ animals }: { animals: AdoptableAnimal[] })
       </DialogContent>
     </Dialog>
   );
-}
+};

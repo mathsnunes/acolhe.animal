@@ -39,20 +39,20 @@ export interface AnimalsCurrentFilters {
   view: string;
 }
 
-export function AnimalsFilters({
+export const AnimalsFilters = ({
   counts,
   current,
 }: {
   counts: Record<'all' | AnimalStatus, number>;
   current: AnimalsCurrentFilters;
-}) {
+}) => {
   const t = useTranslations('animals');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  function setParam(key: CanonicalKey, value: string) {
+  const setParam = (key: CanonicalKey, value: string) => {
     // The URL is pt-BR; translate the canonical (key, value) before writing.
     const { ptKey, ptValue } = encodeAnimalsParam(key, value);
     const params = new URLSearchParams(searchParams.toString());
@@ -62,7 +62,7 @@ export function AnimalsFilters({
     startTransition(() => {
       router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
     });
-  }
+  };
 
   const activeStatus = current.status || 'all';
   const isList = current.view === 'list';
@@ -215,7 +215,7 @@ export function AnimalsFilters({
       </div>
     </div>
   );
-}
+};
 
 const ALL_VALUE = '__all__';
 
@@ -224,7 +224,7 @@ const ALL_VALUE = '__all__';
  * matches the design system (paper surface, hairline border, terra check). Radix
  * forbids an empty item value, so the "todas/todos" option uses a sentinel.
  */
-function FilterDropdown({
+const FilterDropdown = ({
   prefix,
   ariaLabel,
   value,
@@ -236,9 +236,7 @@ function FilterDropdown({
   value: string;
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
-}) {
-  return (
-    <Select
+}) => <Select
       value={value || ALL_VALUE}
       onValueChange={(v) => onChange(v === ALL_VALUE ? '' : v)}
     >
@@ -259,6 +257,4 @@ function FilterDropdown({
           </SelectItem>
         ))}
       </SelectContent>
-    </Select>
-  );
-}
+    </Select>;

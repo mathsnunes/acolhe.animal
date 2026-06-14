@@ -14,8 +14,7 @@ import { createAnimalSchema, updateAnimalSchema } from './schemas';
  * schemas so the domain owns its invariants regardless of caller.
  */
 
-function toRow(data: ReturnType<typeof createAnimalSchema.parse>, organizationId: string) {
-  return {
+const toRow = (data: ReturnType<typeof createAnimalSchema.parse>, organizationId: number) => ({
     id: createId('animal'),
     organizationId,
     name: data.name,
@@ -44,10 +43,9 @@ function toRow(data: ReturnType<typeof createAnimalSchema.parse>, organizationId
     shortStory: data.shortStory ?? null,
     visibleOnPortal: data.visibleOnPortal,
     listedForAdoption: data.listedForAdoption,
-  };
-}
+  });
 
-export async function createAnimal(ctx: Ctx, input: unknown): Promise<Animal> {
+export const createAnimal = async (ctx: Ctx, input: unknown): Promise<Animal> => {
   assertCanManageAnimals(ctx);
   const data = createAnimalSchema.parse(input);
 
@@ -61,9 +59,9 @@ export async function createAnimal(ctx: Ctx, input: unknown): Promise<Animal> {
     payload: { name: row.name },
   });
   return row;
-}
+};
 
-export async function updateAnimal(ctx: Ctx, id: string, input: unknown): Promise<Animal> {
+export const updateAnimal = async (ctx: Ctx, id: string, input: unknown): Promise<Animal> => {
   assertCanManageAnimals(ctx);
   await getAnimal(ctx, id); // ensures it exists in this org
   const data = updateAnimalSchema.parse(input);
@@ -78,9 +76,9 @@ export async function updateAnimal(ctx: Ctx, id: string, input: unknown): Promis
     .returning();
   if (!row) throw new NotFoundError('Animal não encontrado.');
   return row;
-}
+};
 
-export async function archiveAnimal(ctx: Ctx, id: string): Promise<void> {
+export const archiveAnimal = async (ctx: Ctx, id: string): Promise<void> => {
   assertCanManageAnimals(ctx);
   await getAnimal(ctx, id);
   await ctx.db
@@ -88,9 +86,9 @@ export async function archiveAnimal(ctx: Ctx, id: string): Promise<void> {
     .set({ archivedAt: new Date() })
     .where(and(eq(animal.id, id), eq(animal.organizationId, ctx.organizationId)));
   await emitTimelineEvent(ctx, { eventType: 'animal.archived', entityType: 'animal', entityId: id });
-}
+};
 
-export async function unarchiveAnimal(ctx: Ctx, id: string): Promise<void> {
+export const unarchiveAnimal = async (ctx: Ctx, id: string): Promise<void> => {
   assertCanManageAnimals(ctx);
   await ctx.db
     .update(animal)
@@ -101,7 +99,7 @@ export async function unarchiveAnimal(ctx: Ctx, id: string): Promise<void> {
     entityType: 'animal',
     entityId: id,
   });
-}
+};
 
 export interface ListAnimalsFilters {
   status?: Animal['status'][];
@@ -113,7 +111,7 @@ export interface ListAnimalsFilters {
   orderBy?: 'recent' | 'name';
 }
 
-export async function listAnimals(ctx: Ctx, filters: ListAnimalsFilters = {}): Promise<Animal[]> {
+export const listAnimals = async (ctx: Ctx, filters: ListAnimalsFilters = {}): Promise<Animal[]> => {
   const conditions = [eq(animal.organizationId, ctx.organizationId)];
   if (!filters.includeArchived) conditions.push(isNull(animal.archivedAt));
   if (filters.status?.length) conditions.push(inArray(animal.status, filters.status));
@@ -127,9 +125,9 @@ export async function listAnimals(ctx: Ctx, filters: ListAnimalsFilters = {}): P
     .from(animal)
     .where(and(...conditions))
     .orderBy(order);
-}
+};
 
-export async function getAnimal(ctx: Ctx, id: string): Promise<Animal> {
+export const getAnimal = async (ctx: Ctx, id: string): Promise<Animal> => {
   const [row] = await ctx.db
     .select()
     .from(animal)
@@ -137,4 +135,15 @@ export async function getAnimal(ctx: Ctx, id: string): Promise<Animal> {
     .limit(1);
   if (!row) throw new NotFoundError('Animal não encontrado.');
   return row;
-}
+};
+
+/** Look up an Animal by its surrogate key (`animalId` foreign keys carry the pk). */
+export const getAnimalByPk = async (ctx: Ctx, pk: number): Promise<Animal> => {
+  const [row] = await ctx.db
+    .select()
+    .from(animal)
+    .where(and(eq(animal.pk, pk), eq(animal.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!row) throw new NotFoundError('Animal não encontrado.');
+  return row;
+};

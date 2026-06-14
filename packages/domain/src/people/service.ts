@@ -26,16 +26,16 @@ export const personIdentitySchema = z.object({
 
 export type PersonIdentityInput = z.input<typeof personIdentitySchema>;
 
-export async function findPersonByPhone(ctx: Ctx, phone: string): Promise<Person | null> {
+export const findPersonByPhone = async (ctx: Ctx, phone: string): Promise<Person | null> => {
   const [row] = await ctx.db
     .select()
     .from(person)
     .where(and(eq(person.organizationId, ctx.organizationId), eq(person.phone, phone)))
     .limit(1);
   return row ?? null;
-}
+};
 
-export async function getPerson(ctx: Ctx, id: string): Promise<Person> {
+export const getPerson = async (ctx: Ctx, id: string): Promise<Person> => {
   const [row] = await ctx.db
     .select()
     .from(person)
@@ -43,14 +43,25 @@ export async function getPerson(ctx: Ctx, id: string): Promise<Person> {
     .limit(1);
   if (!row) throw new NotFoundError('Pessoa não encontrada.');
   return row;
-}
+};
+
+/** Look up a Person by its surrogate key (`personId` foreign keys carry the pk). */
+export const getPersonByPk = async (ctx: Ctx, pk: number): Promise<Person> => {
+  const [row] = await ctx.db
+    .select()
+    .from(person)
+    .where(and(eq(person.pk, pk), eq(person.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!row) throw new NotFoundError('Pessoa não encontrada.');
+  return row;
+};
 
 /**
  * Match a Person by phone within the org; update identity if found, create
  * otherwise. The canonical "current identity" is always the latest — historical
  * answers live frozen in `application.applicationData`.
  */
-export async function upsertPersonByPhone(ctx: Ctx, input: unknown): Promise<Person> {
+export const upsertPersonByPhone = async (ctx: Ctx, input: unknown): Promise<Person> => {
   const data = personIdentitySchema.parse(input);
   const existing = await findPersonByPhone(ctx, data.phone);
 
@@ -79,4 +90,4 @@ export async function upsertPersonByPhone(ctx: Ctx, input: unknown): Promise<Per
     .values({ id: createId('person'), organizationId: ctx.organizationId, phone: data.phone, ...values })
     .returning();
   return row!;
-}
+};

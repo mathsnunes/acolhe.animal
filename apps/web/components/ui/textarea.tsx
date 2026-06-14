@@ -2,9 +2,7 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
-  return (
-    <textarea
+const Textarea = ({ className, ...props }: React.ComponentProps<'textarea'>) => <textarea
       data-slot="textarea"
       className={cn(
         'flex min-h-20 w-full rounded-md border border-line bg-bg px-3 py-2 text-sm text-ink shadow-sm transition-colors',
@@ -14,9 +12,7 @@ function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
 export { Textarea };
 export default Textarea;

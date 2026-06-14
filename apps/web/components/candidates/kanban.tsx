@@ -24,7 +24,7 @@ const COLUMN_DOT: Record<KanbanColumnKey, string> = {
  * usable width. The closed column (recusados/desistiram) starts collapsed so the
  * focus stays on the live funnel.
  */
-export function Kanban({ applications }: { applications: ApplicationWithRelations[] }) {
+export const Kanban = ({ applications }: { applications: ApplicationWithRelations[] }) => {
   const t = useTranslations('candidates');
   return (
     <div
@@ -51,9 +51,9 @@ export function Kanban({ applications }: { applications: ApplicationWithRelation
       })}
     </div>
   );
-}
+};
 
-function KanbanColumn({
+const KanbanColumn = ({
   label,
   dot,
   count,
@@ -65,7 +65,7 @@ function KanbanColumn({
   count: number;
   collapsible?: boolean;
   children: ReactNode;
-}) {
+}) => {
   const t = useTranslations('candidates');
   const [open, setOpen] = useState(!collapsible);
   const empty = count === 0;
@@ -106,4 +106,4 @@ function KanbanColumn({
       )}
     </section>
   );
-}
+};

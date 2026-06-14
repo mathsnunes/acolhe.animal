@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
+import { fk, surrogatePk } from './_id';
 import { city } from './city';
 import {
   asaasKycStatus,
@@ -21,7 +22,8 @@ import type { PortalConfig } from './types';
 export const organization = pgTable(
   'organization',
   {
-    id: text().primaryKey(),
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
     name: text().notNull(),
     /** Portal URL: acolhe.animal/<slug>. Globally unique. */
     slug: text().notNull().unique(),
@@ -79,13 +81,14 @@ export const organization = pgTable(
 export const organizationMember = pgTable(
   'organization_member',
   {
-    id: text().primaryKey(),
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
     userId: text()
       .notNull()
       .references(() => user.id),
-    organizationId: text()
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     role: memberRole().notNull(),
     invitedByUserId: text().references(() => user.id),
     joinedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -124,10 +127,11 @@ export const organizationMember = pgTable(
 export const organizationInvite = pgTable(
   'organization_invite',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     invitedByUserId: text()
       .notNull()
       .references(() => user.id),

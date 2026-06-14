@@ -12,32 +12,32 @@ import type { Ctx } from '../context';
 import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
 import { emitTimelineEvent } from '../timeline/timeline';
-import { getPerson, upsertPersonByPhone } from '../people/service';
+import { getPerson, getPersonByPk, upsertPersonByPhone } from '../people/service';
 import { startApplicationSchema, saveDraftSchema } from './schemas';
 
 const DRAFT_TTL_DAYS = 7;
 const ACTIVE_STATUSES = ['draft', 'new', 'in-progress', 'approved'] as const;
 
 /** Fire-and-forget WhatsApp send; never let a messaging hiccup break the flow. */
-async function notify(to: string, body: string): Promise<void> {
+const notify = async (to: string, body: string): Promise<void> => {
   try {
     await getMessaging().sendText({ to, body });
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.error('[applications] notification failed:', err);
   }
-}
+};
 
 /**
  * Public form entry point: identify/create the Person and return their active
  * application for this animal, creating a draft if none exists. The active-unique
  * index guarantees a single open candidacy per (person, animal).
  */
-export async function startOrResumeApplication(ctx: Ctx, input: unknown): Promise<Application> {
+export const startOrResumeApplication = async (ctx: Ctx, input: unknown): Promise<Application> => {
   const data = startApplicationSchema.parse(input);
 
   const [animalRow] = await ctx.db
-    .select({ id: animal.id, species: animal.species, organizationId: animal.organizationId })
+    .select({ pk: animal.pk, species: animal.species, organizationId: animal.organizationId })
     .from(animal)
     .where(and(eq(animal.id, data.animalId), eq(animal.organizationId, ctx.organizationId)))
     .limit(1);
@@ -51,8 +51,8 @@ export async function startOrResumeApplication(ctx: Ctx, input: unknown): Promis
     .where(
       and(
         eq(application.organizationId, ctx.organizationId),
-        eq(application.personId, personRow.id),
-        eq(application.animalId, data.animalId),
+        eq(application.personId, personRow.pk),
+        eq(application.animalId, animalRow.pk),
         notInArray(application.status, ['rejected', 'withdrew']),
       ),
     )
@@ -65,18 +65,18 @@ export async function startOrResumeApplication(ctx: Ctx, input: unknown): Promis
     .values({
       id: createId('application'),
       organizationId: ctx.organizationId,
-      animalId: data.animalId,
-      personId: personRow.id,
+      animalId: animalRow.pk,
+      personId: personRow.pk,
       formVersion: `${animalRow.species}-v1`,
       status: 'draft',
       expiresAt,
     })
     .returning();
   return row!;
-}
+};
 
 /** Autosave a draft's partial answers and refresh its expiry. */
-export async function saveDraft(ctx: Ctx, applicationId: string, input: unknown): Promise<void> {
+export const saveDraft = async (ctx: Ctx, applicationId: string, input: unknown): Promise<void> => {
   const data = saveDraftSchema.parse(input);
   const expiresAt = new Date(Date.now() + DRAFT_TTL_DAYS * 24 * 60 * 60 * 1000);
   await ctx.db
@@ -89,10 +89,10 @@ export async function saveDraft(ctx: Ctx, applicationId: string, input: unknown)
         eq(application.status, 'draft'),
       ),
     );
-}
+};
 
 /** Submit a draft → `new`. Notifies the candidate. */
-export async function submitApplication(ctx: Ctx, applicationId: string): Promise<Application> {
+export const submitApplication = async (ctx: Ctx, applicationId: string): Promise<Application> => {
   const app = await getApplication(ctx, applicationId);
   if (app.status !== 'draft') return app; // already submitted — idempotent
 
@@ -108,11 +108,11 @@ export async function submitApplication(ctx: Ctx, applicationId: string): Promis
     entityId: applicationId,
   });
 
-  const person = await getPerson(ctx, app.personId);
+  const person = await getPersonByPk(ctx, app.personId);
   const [animalRow] = await ctx.db
     .select({ name: animal.name })
     .from(animal)
-    .where(eq(animal.id, app.animalId))
+    .where(eq(animal.pk, app.animalId))
     .limit(1);
   if (animalRow) {
     const msg = applicationReceivedWhatsApp({
@@ -123,14 +123,10 @@ export async function submitApplication(ctx: Ctx, applicationId: string): Promis
     await notify(person.phone, msg.text);
   }
   return row!;
-}
+};
 
 /** Assign a member as responsible; moves `new` → `in-progress`. */
-export async function assignApplication(
-  ctx: Ctx,
-  applicationId: string,
-  userId: string,
-): Promise<void> {
+export const assignApplication = async (ctx: Ctx, applicationId: string, userId: string): Promise<void> => {
   assertCanManageAnimals(ctx);
   const app = await getApplication(ctx, applicationId);
   await ctx.db
@@ -147,19 +143,14 @@ export async function assignApplication(
     entityId: applicationId,
     payload: { userId },
   });
-}
+};
 
 /**
  * Move an application through the funnel. Approving reserves the animal; reverting
  * away from `approved` frees it again if no other approved application remains —
  * both in a single transaction. See `modelagem-dados.md` › Application.
  */
-export async function setApplicationStatus(
-  ctx: Ctx,
-  applicationId: string,
-  status: 'in-progress' | 'approved' | 'rejected' | 'withdrew',
-  options?: { internalNotes?: string },
-): Promise<Application> {
+export const setApplicationStatus = async (ctx: Ctx, applicationId: string, status: 'in-progress' | 'approved' | 'rejected' | 'withdrew', options?: { internalNotes?: string }): Promise<Application> => {
   assertCanManageAnimals(ctx);
   const app = await getApplication(ctx, applicationId);
 
@@ -179,7 +170,7 @@ export async function setApplicationStatus(
       await tx.db
         .update(animal)
         .set({ status: 'reserved' })
-        .where(eq(animal.id, app.animalId));
+        .where(eq(animal.pk, app.animalId));
     }
 
     // Reverting away from approval frees the animal if nothing else holds it.
@@ -196,7 +187,7 @@ export async function setApplicationStatus(
         )
         .limit(1);
       if (!stillApproved) {
-        await tx.db.update(animal).set({ status: 'available' }).where(eq(animal.id, app.animalId));
+        await tx.db.update(animal).set({ status: 'available' }).where(eq(animal.pk, app.animalId));
       }
     }
 
@@ -212,8 +203,8 @@ export async function setApplicationStatus(
     // Notify the candidate outside the transaction.
     if (status === 'in-progress' || status === 'approved' || status === 'rejected') {
       const [person, [animalRow]] = await Promise.all([
-        getPerson(ctx, app.personId),
-        ctx.db.select({ name: animal.name }).from(animal).where(eq(animal.id, app.animalId)).limit(1),
+        getPersonByPk(ctx, app.personId),
+        ctx.db.select({ name: animal.name }).from(animal).where(eq(animal.pk, app.animalId)).limit(1),
       ]);
       if (animalRow) {
         const msg = applicationStatusWhatsApp({
@@ -226,7 +217,7 @@ export async function setApplicationStatus(
     }
     return row;
   });
-}
+};
 
 export interface ApplicationWithRelations extends Application {
   person: { id: string; name: string; phone: string };
@@ -234,10 +225,7 @@ export interface ApplicationWithRelations extends Application {
 }
 
 /** Kanban listing: applications for the org joined with person + animal. */
-export async function listApplications(
-  ctx: Ctx,
-  filters: { includeDrafts?: boolean } = {},
-): Promise<ApplicationWithRelations[]> {
+export const listApplications = async (ctx: Ctx, filters: { includeDrafts?: boolean } = {}): Promise<ApplicationWithRelations[]> => {
   const rows = await ctx.db.query.application.findMany({
     where: filters.includeDrafts
       ? eq(application.organizationId, ctx.organizationId)
@@ -252,30 +240,30 @@ export async function listApplications(
     },
   });
   return rows as unknown as ApplicationWithRelations[];
-}
+};
 
 /**
  * Count "waiting" candidates (status `new` or `in-progress`) per animal, for the
  * candidates-waiting indicator on the animals listing. Returns a map keyed by
  * animalId; animals with none are simply absent.
  */
-export async function countWaitingApplicationsByAnimal(
-  ctx: Ctx,
-): Promise<Record<string, number>> {
+export const countWaitingApplicationsByAnimal = async (ctx: Ctx): Promise<Record<string, number>> => {
+  // Keyed by the animal's public id (what the listing UI holds), not the surrogate pk.
   const rows = await ctx.db
-    .select({ animalId: application.animalId, count: sql<number>`count(*)::int` })
+    .select({ animalId: animal.id, count: sql<number>`count(*)::int` })
     .from(application)
+    .innerJoin(animal, eq(application.animalId, animal.pk))
     .where(
       and(
         eq(application.organizationId, ctx.organizationId),
         inArray(application.status, ['new', 'in-progress']),
       ),
     )
-    .groupBy(application.animalId);
+    .groupBy(animal.id);
   return Object.fromEntries(rows.map((r) => [r.animalId, Number(r.count)]));
-}
+};
 
-export async function getApplication(ctx: Ctx, id: string): Promise<Application> {
+export const getApplication = async (ctx: Ctx, id: string): Promise<Application> => {
   const [row] = await ctx.db
     .select()
     .from(application)
@@ -283,6 +271,6 @@ export async function getApplication(ctx: Ctx, id: string): Promise<Application>
     .limit(1);
   if (!row) throw new NotFoundError('Candidatura não encontrada.');
   return row;
-}
+};
 
 export { ACTIVE_STATUSES };

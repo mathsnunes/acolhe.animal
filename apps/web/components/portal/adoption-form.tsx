@@ -52,7 +52,7 @@ const STEP_NAME_KEYS = [
 type FormData = Record<string, unknown>;
 type SaveState = 'idle' | 'saving' | 'saved';
 
-export function AdoptionForm({
+export const AdoptionForm = ({
   slug,
   animalId,
   animalName,
@@ -68,7 +68,7 @@ export function AdoptionForm({
   animalPhotoUrl?: string | null;
   animalMeta?: string;
   animalStory?: string | null;
-}) {
+}) => {
   const t = useTranslations('form');
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -104,13 +104,13 @@ export function AdoptionForm({
     };
   }, [data, applicationId, slug]);
 
-  function goTo(next: number) {
+  const goTo = (next: number) => {
     setStep(next);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  };
 
   // ── Per-step validation ───────────────────────────────────────
-  function validateStep(current: number): boolean {
+  const validateStep = (current: number): boolean => {
     const next: Record<string, string> = {};
     if (current === 1) {
       if (!str('name').trim()) next.name = t('validation.name');
@@ -132,10 +132,10 @@ export function AdoptionForm({
     }
     setErrors(next);
     return Object.keys(next).length === 0;
-  }
+  };
 
   // ── Step 1 creates/resumes the draft, then advances ───────────
-  async function handleContinue() {
+  const handleContinue = async () => {
     if (!validateStep(step)) return;
 
     if (step === 1 && !applicationId) {
@@ -155,9 +155,9 @@ export function AdoptionForm({
     }
 
     if (step < TOTAL_STEPS) goTo(step + 1);
-  }
+  };
 
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     if (!validateStep(6)) return;
     if (!applicationId) {
       toast.error(t('errors.lostState'));
@@ -173,7 +173,7 @@ export function AdoptionForm({
       return;
     }
     router.push(`/${slug}/adotar/${animalId}/enviada`);
-  }
+  };
 
   const progress = (step / TOTAL_STEPS) * 100;
 
@@ -295,7 +295,7 @@ export function AdoptionForm({
       </p>
     </div>
   );
-}
+};
 
 /* ─────────────────────────────────────────────────────────────────
    Steps — small, focused components
@@ -303,18 +303,14 @@ export function AdoptionForm({
 
 type Setter = (key: string, value: unknown) => void;
 
-function StepHeading({ title, em, lede }: { title: string; em?: string; lede: string }) {
-  return (
-    <>
+const StepHeading = ({ title, em, lede }: { title: string; em?: string; lede: string }) => <>
       <h2 className="display mb-3 text-3xl text-ink sm:text-4xl">
         {title} {em && <em>{em}</em>}
       </h2>
       <p className="mb-8 max-w-xl text-[15px] leading-relaxed text-ink-soft">{lede}</p>
-    </>
-  );
-}
+    </>;
 
-function StepIdentification({
+const StepIdentification = ({
   name,
   phone,
   errors,
@@ -326,7 +322,7 @@ function StepIdentification({
   errors: Record<string, string>;
   set: Setter;
   animalName: string;
-}) {
+}) => {
   const t = useTranslations('form');
   return (
     <>
@@ -356,9 +352,9 @@ function StepIdentification({
       </div>
     </>
   );
-}
+};
 
-function StepAboutYou({ str, set }: { str: (k: string) => string; set: Setter }) {
+const StepAboutYou = ({ str, set }: { str: (k: string) => string; set: Setter }) => {
   const t = useTranslations('form');
   return (
     <>
@@ -400,9 +396,9 @@ function StepAboutYou({ str, set }: { str: (k: string) => string; set: Setter })
       </div>
     </>
   );
-}
+};
 
-function StepHousing({
+const StepHousing = ({
   str,
   arr,
   set,
@@ -414,7 +410,7 @@ function StepHousing({
   set: Setter;
   errors: Record<string, string>;
   animalName: string;
-}) {
+}) => {
   const t = useTranslations('form');
   return (
     <>
@@ -449,9 +445,9 @@ function StepHousing({
       </div>
     </>
   );
-}
+};
 
-function StepPets({
+const StepPets = ({
   str,
   set,
   animalSpecies,
@@ -459,7 +455,7 @@ function StepPets({
   str: (k: string) => string;
   set: Setter;
   animalSpecies: 'dog' | 'cat';
-}) {
+}) => {
   const t = useTranslations('form');
   const species = animalSpecies === 'dog' ? t('pets.speciesDog') : t('pets.speciesCat');
   return (
@@ -512,9 +508,9 @@ function StepPets({
       </div>
     </>
   );
-}
+};
 
-function StepRoutine({
+const StepRoutine = ({
   str,
   set,
   errors,
@@ -524,7 +520,7 @@ function StepRoutine({
   set: Setter;
   errors: Record<string, string>;
   animalName: string;
-}) {
+}) => {
   const t = useTranslations('form');
   return (
     <>
@@ -564,9 +560,9 @@ function StepRoutine({
       </div>
     </>
   );
-}
+};
 
-function StepReview({
+const StepReview = ({
   data,
   str,
   arr,
@@ -582,7 +578,7 @@ function StepReview({
   errors: Record<string, string>;
   animalName: string;
   onEdit: (step: number) => void;
-}) {
+}) => {
   const t = useTranslations('form');
   const labels = valueLabels(t);
   const label = (v: string) => labels[v] ?? v;
@@ -656,9 +652,9 @@ function StepReview({
       </div>
     </>
   );
-}
+};
 
-function ReviewBlock({
+const ReviewBlock = ({
   num,
   title,
   onEdit,
@@ -668,7 +664,7 @@ function ReviewBlock({
   title: string;
   onEdit: () => void;
   children: React.ReactNode;
-}) {
+}) => {
   const t = useTranslations('form');
   return (
     <div className="rounded-xl border border-line-soft bg-bg px-5 py-5">
@@ -690,9 +686,9 @@ function ReviewBlock({
       <div className="flex flex-col gap-2.5">{children}</div>
     </div>
   );
-}
+};
 
-function ReviewRow({
+const ReviewRow = ({
   label,
   value,
   strong,
@@ -702,13 +698,9 @@ function ReviewRow({
   value: string;
   strong?: boolean;
   italic?: boolean;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-[130px_1fr] sm:gap-4">
+}) => <div className="grid grid-cols-1 gap-1 text-sm sm:grid-cols-[130px_1fr] sm:gap-4">
       <span className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink-mute">{label}</span>
       <span className={cn('leading-relaxed text-ink-soft', strong && 'font-medium text-ink', italic && 'italic')}>
         {value}
       </span>
-    </div>
-  );
-}
+    </div>;

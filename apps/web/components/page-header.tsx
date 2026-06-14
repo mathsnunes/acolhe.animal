@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
  */
 
 /** Variant 1 — listing with an optional big metric on the right. */
-export function PageHeaderHero({
+export const PageHeaderHero = ({
   title,
   description,
   metric,
@@ -18,9 +18,7 @@ export function PageHeaderHero({
   description?: ReactNode;
   metric?: { value: ReactNode; label: string };
   actions?: ReactNode;
-}) {
-  return (
-    <header className="px-6 pb-8 pt-7 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-12 sm:px-10 sm:pb-11">
+}) => <header className="px-6 pb-8 pt-7 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-12 sm:px-10 sm:pb-11">
       {/* Metric: a compact "12 ativos" line above the title on mobile; top-right on
           desktop (DOM-first + `order` keeps both layouts from one node). The number
           is terra, the label muted (ink-mute), no leading dash. */}
@@ -37,12 +35,10 @@ export function PageHeaderHero({
         )}
         {actions && <div className="mt-5 flex flex-wrap gap-3">{actions}</div>}
       </div>
-    </header>
-  );
-}
+    </header>;
 
 /** Variant 2 — create/form screen: narrow, centered, with a back link. */
-export function PageHeaderForm({
+export const PageHeaderForm = ({
   backHref,
   backLabel,
   eyebrow,
@@ -54,9 +50,7 @@ export function PageHeaderForm({
   eyebrow: string;
   title: ReactNode;
   description?: ReactNode;
-}) {
-  return (
-    <header className="mx-auto max-w-[680px] px-6 pb-6 pt-8 text-center">
+}) => <header className="mx-auto max-w-[680px] px-6 pb-6 pt-8 text-center">
       <Link
         href={backHref}
         className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-terra hover:underline"
@@ -66,18 +60,12 @@ export function PageHeaderForm({
       <p className="eyebrow mb-2">— {eyebrow}</p>
       <h1 className="display text-[40px] text-ink">{title}</h1>
       {description && <p className="mx-auto mt-3 max-w-md text-sm text-ink-soft">{description}</p>}
-    </header>
-  );
-}
+    </header>;
 
 /** Variant 3 — detail breadcrumb (eyebrow + name live in the page top). */
-export function DetailBreadcrumb({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
+export const DetailBreadcrumb = ({ href, label }: { href: string; label: string }) => <Link
       href={href}
       className="inline-flex items-center gap-1.5 text-[13px] text-ink-mute hover:text-ink"
     >
       <ArrowLeft className="size-4" /> {label}
-    </Link>
-  );
-}
+    </Link>;

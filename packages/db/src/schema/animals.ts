@@ -23,6 +23,7 @@ import {
   sociability,
   videoProcessingStatus,
 } from './enums';
+import { fk, surrogatePk } from './_id';
 import { organization } from './organization';
 import type { ClinicalCondition, Vaccination } from './types';
 
@@ -30,10 +31,11 @@ import type { ClinicalCondition, Vaccination } from './types';
 export const animal = pgTable(
   'animal',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     name: text().notNull(),
     species: animalSpecies().notNull(),
     sex: animalSex().notNull(),
@@ -99,10 +101,11 @@ export const animal = pgTable(
 export const animalPhoto = pgTable(
   'animal_photo',
   {
-    id: text().primaryKey(),
-    animalId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    animalId: fk()
       .notNull()
-      .references(() => animal.id, { onDelete: 'cascade' }),
+      .references(() => animal.pk, { onDelete: 'cascade' }),
     originalUrl: text().notNull(),
     thumbUrl: text().notNull(),
     mediumUrl: text().notNull(),
@@ -118,10 +121,11 @@ export const animalPhoto = pgTable(
 export const animalVideo = pgTable(
   'animal_video',
   {
-    id: text().primaryKey(),
-    animalId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    animalId: fk()
       .notNull()
-      .references(() => animal.id, { onDelete: 'cascade' }),
+      .references(() => animal.pk, { onDelete: 'cascade' }),
     originalUrl: text().notNull(),
     processedUrl: text(),
     posterUrl: text(),
@@ -144,10 +148,11 @@ export const animalVideo = pgTable(
 export const animalInstagramArt = pgTable(
   'animal_instagram_art',
   {
-    id: text().primaryKey(),
-    animalId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    animalId: fk()
       .notNull()
-      .references(() => animal.id, { onDelete: 'cascade' }),
+      .references(() => animal.pk, { onDelete: 'cascade' }),
     type: instagramArtType().notNull(),
     imageUrl: text().notNull(),
     caption: text(),

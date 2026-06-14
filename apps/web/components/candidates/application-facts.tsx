@@ -3,27 +3,27 @@ import { useTranslations } from 'next-intl';
 import type { JsonRecord } from '@acolhe-animal/db';
 
 /** Turn a snake/camelCase form key into a human label. */
-function humanize(key: string): string {
+const humanize = (key: string): string => {
   const spaced = key
     .replace(/[_-]+/g, ' ')
     .replace(/([a-z\d])([A-Z])/g, '$1 $2')
     .trim();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
+};
 
-function renderValue(value: unknown, labels: { yes: string; no: string }): string {
+const renderValue = (value: unknown, labels: { yes: string; no: string }): string => {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') return value ? labels.yes : labels.no;
   if (Array.isArray(value)) return value.map((v) => renderValue(v, labels)).join(', ');
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
-}
+};
 
 /**
  * Render the candidate's form answers (the application's jsonb payload) as a
  * readable list of labeled facts.
  */
-export function ApplicationFacts({ data }: { data: JsonRecord | null }) {
+export const ApplicationFacts = ({ data }: { data: JsonRecord | null }) => {
   const t = useTranslations('candidates');
   const entries = data ? Object.entries(data) : [];
   const boolLabels = { yes: t('facts.yes'), no: t('facts.no') };
@@ -44,4 +44,4 @@ export function ApplicationFacts({ data }: { data: JsonRecord | null }) {
       ))}
     </dl>
   );
-}
+};

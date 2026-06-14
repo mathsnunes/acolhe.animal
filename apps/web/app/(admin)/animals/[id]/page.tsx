@@ -28,11 +28,13 @@ import { archiveAnimalAction, unarchiveAnimalAction } from '../actions';
 export const dynamic = 'force-dynamic';
 
 /** Timeline event types known to this view; falls back to the raw type. */
-const EVENT_LABEL_KEYS = [
-  'animal.created',
-  'animal.archived',
-  'animal.unarchived',
-] as const;
+/** Timeline event types known to this view → their `detail.events.*` message key
+ *  (next-intl forbids "." in keys, so eventType ids are mapped to camelCase). */
+const EVENT_LABEL_KEY: Record<string, string> = {
+  'animal.created': 'animalCreated',
+  'animal.archived': 'animalArchived',
+  'animal.unarchived': 'animalUnarchived',
+};
 
 export default async function AnimalDetailPage({
   params,
@@ -202,37 +204,33 @@ export default async function AnimalDetailPage({
 }
 
 /** Quick-stat cell in the detail hero strip: uppercase mute label, Fraunces value. */
-function QuickStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
+const QuickStat = ({ label, value }: { label: string; value: string }) => <div className="min-w-0">
       <dt className="mb-1 whitespace-nowrap text-[10.5px] font-medium uppercase tracking-[0.18em] text-ink-mute">
         — {label}
       </dt>
       <dd className="font-display text-lg leading-snug text-ink">{value}</dd>
-    </div>
-  );
-}
+    </div>;
 
-function Timeline({ events, t }: { events: TimelineEvent[]; t: Translator }) {
+const Timeline = ({ events, t }: { events: TimelineEvent[]; t: Translator }) => {
   if (events.length === 0) {
     return <p className="text-sm text-ink-soft">{t('detail.timelineEmpty')}</p>;
   }
-  const known = new Set<string>(EVENT_LABEL_KEYS);
   return (
     <ul className="space-y-3">
-      {events.map((event) => (
+      {events.map((event) => {
+        const labelKey = EVENT_LABEL_KEY[event.eventType];
+        return (
         <li key={event.id} className="flex items-baseline gap-3 text-sm">
           <span className="size-1.5 shrink-0 translate-y-1.5 rounded-full bg-terra" />
           <span className="text-ink">
-            {known.has(event.eventType)
-              ? t(`detail.events.${event.eventType}`)
-              : event.eventType}
+            {labelKey ? t(`detail.events.${labelKey}`) : event.eventType}
           </span>
           <span className="ml-auto shrink-0 text-xs text-ink-mute">
             {formatRelative(event.occurredAt)}
           </span>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
-}
+};

@@ -40,19 +40,19 @@ export const statusMeta: Record<AnimalStatus, { dot: string; pill: string }> = {
 export const ANIMAL_STATUSES = Object.keys(statusMeta) as AnimalStatus[];
 
 /** Resolve the pt-BR label for a status using an `animals`-scoped translator. */
-export function statusLabel(t: Translator, status: AnimalStatus): string {
+export const statusLabel = (t: Translator, status: AnimalStatus): string => {
   const key = status === 'under-review' ? 'underReview' : status;
   return t(`status.${key}`);
-}
+};
 
 /** A colored dot + status label, the soft pill used on detail + cards. */
-export function StatusPill({
+export const StatusPill = ({
   status,
   className,
 }: {
   status: AnimalStatus;
   className?: string;
-}) {
+}) => {
   const t = useTranslations('animals');
   const meta = statusMeta[status];
   return (
@@ -67,20 +67,16 @@ export function StatusPill({
       {statusLabel(t, status)}
     </span>
   );
-}
+};
 
 /** Just the dot — used inside the filter tabs and compact rows. */
-export function StatusDot({
+export const StatusDot = ({
   status,
   className,
 }: {
   status: AnimalStatus;
   className?: string;
-}) {
-  return (
-    <span
+}) => <span
       className={cn('size-[7px] shrink-0 rounded-full', statusMeta[status].dot, className)}
       aria-hidden
-    />
-  );
-}
+    />;

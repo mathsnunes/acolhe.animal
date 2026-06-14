@@ -30,29 +30,21 @@ interface AdminShellProps {
   children: ReactNode;
 }
 
-function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
+const isActive = (pathname: string, href: string): boolean => pathname === href || pathname.startsWith(`${href}/`);
 
-function visibleItems(items: NavItem[], role: ShellUser['role']): NavItem[] {
-  return items.filter((i) => !i.adminOnly || role === 'admin');
-}
+const visibleItems = (items: NavItem[], role: ShellUser['role']): NavItem[] => items.filter((i) => !i.adminOnly || role === 'admin');
 
 /** Circular initials avatar (org uses Fraunces, user uses sans). */
-function InitialsAvatar({ name, variant }: { name: string; variant: 'org' | 'user' }) {
-  return (
-    <span
+const InitialsAvatar = ({ name, variant }: { name: string; variant: 'org' | 'user' }) => <span
       className={cn(
         'flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-medium uppercase text-paper',
         variant === 'org' ? 'bg-terra font-display' : 'bg-green',
       )}
     >
       {initials(name)}
-    </span>
-  );
-}
+    </span>;
 
-function NavLink({ item, counts, pathname }: { item: NavItem; counts: NavCounts; pathname: string }) {
+const NavLink = ({ item, counts, pathname }: { item: NavItem; counts: NavCounts; pathname: string }) => {
   const t = useTranslations('nav');
   const active = isActive(pathname, item.href);
   const count = item.countKey ? counts[item.countKey] : undefined;
@@ -79,9 +71,9 @@ function NavLink({ item, counts, pathname }: { item: NavItem; counts: NavCounts;
       )}
     </Link>
   );
-}
+};
 
-function SidebarContent({
+const SidebarContent = ({
   org,
   user,
   counts,
@@ -91,7 +83,7 @@ function SidebarContent({
   user: ShellUser;
   counts: NavCounts;
   pathname: string;
-}) {
+}) => {
   const t = useTranslations('nav');
   const tc = useTranslations('common');
   return (
@@ -153,9 +145,9 @@ function SidebarContent({
       </div>
     </>
   );
-}
+};
 
-export function AdminShell({ org, user, counts, children }: AdminShellProps) {
+export const AdminShell = ({ org, user, counts, children }: AdminShellProps) => {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const t = useTranslations('nav');
@@ -254,4 +246,4 @@ export function AdminShell({ org, user, counts, children }: AdminShellProps) {
       )}
     </div>
   );
-}
+};

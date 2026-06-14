@@ -33,16 +33,13 @@ export type TimelineEntityType =
   | 'campaign'
   | 'donation';
 
-export async function emitTimelineEvent(
-  ctx: Ctx,
-  input: {
+export const emitTimelineEvent = async (ctx: Ctx, input: {
     eventType: TimelineEventType;
     entityType: TimelineEntityType;
     entityId: string;
     payload?: JsonRecord;
     occurredAt?: Date;
-  },
-): Promise<void> {
+  }): Promise<void> => {
   const actorUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
   const actorContext =
     ctx.actor.type === 'public'
@@ -62,26 +59,18 @@ export async function emitTimelineEvent(
     payload: input.payload ?? null,
     occurredAt: input.occurredAt ?? new Date(),
   });
-}
+};
 
 /** The org's recent activity feed (Início). */
-export async function listOrgTimeline(ctx: Ctx, limit = 30): Promise<TimelineEvent[]> {
-  return ctx.db
+export const listOrgTimeline = async (ctx: Ctx, limit = 30): Promise<TimelineEvent[]> => ctx.db
     .select()
     .from(timelineEvent)
     .where(eq(timelineEvent.organizationId, ctx.organizationId))
     .orderBy(desc(timelineEvent.occurredAt))
     .limit(limit);
-}
 
 /** Timeline for a single entity (animal/application/adoption detail). */
-export async function listEntityTimeline(
-  ctx: Ctx,
-  entityType: TimelineEntityType,
-  entityId: string,
-  limit = 50,
-): Promise<TimelineEvent[]> {
-  return ctx.db
+export const listEntityTimeline = async (ctx: Ctx, entityType: TimelineEntityType, entityId: string, limit = 50): Promise<TimelineEvent[]> => ctx.db
     .select()
     .from(timelineEvent)
     .where(
@@ -93,4 +82,3 @@ export async function listEntityTimeline(
     )
     .orderBy(desc(timelineEvent.occurredAt))
     .limit(limit);
-}

@@ -11,12 +11,12 @@ import { getPortalAnimal, getPublicOrganization } from '../../data';
 
 type PageProps = { params: Promise<{ slug: string; animalId: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export const generateMetadata = async ({ params }: PageProps): Promise<Metadata> => {
   const { slug, animalId } = await params;
   const t = await getTranslations('portal');
   const org = await getPublicOrganization(slug);
   if (!org) return { title: t('metadata.portalNotFound') };
-  const found = await getPortalAnimal(org.id, animalId);
+  const found = await getPortalAnimal(org.pk, animalId);
   if (!found) return { title: t('metadata.animalNotFound') };
 
   const description =
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...(found.photoUrl ? { images: [{ url: found.photoUrl }] } : {}),
     },
   };
-}
+};
 
 export default async function AnimalDetailPage({ params }: PageProps) {
   const { slug, animalId } = await params;
@@ -40,7 +40,7 @@ export default async function AnimalDetailPage({ params }: PageProps) {
   const org = await getPublicOrganization(slug);
   if (!org) notFound();
 
-  const found = await getPortalAnimal(org.id, animalId);
+  const found = await getPortalAnimal(org.pk, animalId);
   if (!found || !found.animal.visibleOnPortal || !found.animal.listedForAdoption) {
     notFound();
   }

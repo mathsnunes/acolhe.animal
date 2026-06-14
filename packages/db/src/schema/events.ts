@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { index, integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { auditActorType, webhookProvider, webhookStatus } from './enums';
+import { fk, surrogatePk } from './_id';
 import { organization } from './organization';
 import { user } from './auth';
 import type { ActorContext, JsonRecord } from './types';
@@ -16,10 +17,11 @@ import type { ActorContext, JsonRecord } from './types';
 export const timelineEvent = pgTable(
   'timeline_event',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     eventType: text().notNull(),
     entityType: text().notNull(),
     /** No FK — entities may become inaccessible (archived); the event survives. */
@@ -46,8 +48,9 @@ export const timelineEvent = pgTable(
 export const auditLog = pgTable(
   'audit_log',
   {
-    id: text().primaryKey(),
-    organizationId: text().references(() => organization.id),
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk().references(() => organization.pk),
     actorType: auditActorType().notNull(),
     actorUserId: text().references(() => user.id),
     actorContext: jsonb().$type<ActorContext>(),

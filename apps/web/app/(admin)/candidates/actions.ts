@@ -80,11 +80,7 @@ export const finalizeAdoptionAction = async (input: {
  * candidacy) we move it to `in-progress`, since editing notes means someone is
  * already looking at it.
  */
-async function setApplicationStatusKeepingStage(
-  ctx: Ctx,
-  id: string,
-  internalNotes: string,
-) {
+const setApplicationStatusKeepingStage = async (ctx: Ctx, id: string, internalNotes: string) => {
   const app = await getApplication(ctx, id);
   const stage: TriageStatus =
     app.status === 'in-progress' ||
@@ -94,4 +90,4 @@ async function setApplicationStatusKeepingStage(
       ? app.status
       : 'in-progress';
   return setApplicationStatus(ctx, id, stage, { internalNotes });
-}
+};

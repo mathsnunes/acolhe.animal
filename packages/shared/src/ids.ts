@@ -44,11 +44,7 @@ export const ID_PREFIX = {
 export type EntityKind = keyof typeof ID_PREFIX;
 
 /** Generate a prefixed ID for a given entity kind. */
-export function createId(kind: EntityKind): string {
-  return `${ID_PREFIX[kind]}_${nano()}`;
-}
+export const createId = (kind: EntityKind): string => `${ID_PREFIX[kind]}_${nano()}`;
 
 /** Generate a raw (unprefixed) token — useful for invite tokens, etc. */
-export function createToken(length = 32): string {
-  return customAlphabet(ALPHABET, length)();
-}
+export const createToken = (length = 32): string => customAlphabet(ALPHABET, length)();

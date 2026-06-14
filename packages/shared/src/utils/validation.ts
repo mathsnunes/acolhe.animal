@@ -8,7 +8,7 @@ import { onlyDigits } from './string';
  * standard Receita Federal modulo-11 algorithms.
  */
 
-export function isValidCpf(value: string): boolean {
+export const isValidCpf = (value: string): boolean => {
   const cpf = onlyDigits(value);
   if (cpf.length !== 11) return false;
   // Reject known invalid sequences (all same digit).
@@ -26,9 +26,9 @@ export function isValidCpf(value: string): boolean {
   };
 
   return checkDigit(9) === digits[9] && checkDigit(10) === digits[10];
-}
+};
 
-export function isValidCnpj(value: string): boolean {
+export const isValidCnpj = (value: string): boolean => {
   const cnpj = onlyDigits(value);
   if (cnpj.length !== 14) return false;
   if (/^(\d)\1{13}$/.test(cnpj)) return false;
@@ -49,9 +49,7 @@ export function isValidCnpj(value: string): boolean {
   };
 
   return checkDigit(12) === digits[12] && checkDigit(13) === digits[13];
-}
+};
 
 /** Validate a document against the declared type. */
-export function isValidDocument(value: string, type: 'cpf' | 'cnpj'): boolean {
-  return type === 'cpf' ? isValidCpf(value) : isValidCnpj(value);
-}
+export const isValidDocument = (value: string, type: 'cpf' | 'cnpj'): boolean => type === 'cpf' ? isValidCpf(value) : isValidCnpj(value);

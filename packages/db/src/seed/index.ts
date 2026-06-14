@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 // Load the repo-root .env before importing anything that reads process.env.
 config({ path: '../../.env' });
 
-async function main() {
+const main = async () => {
   const { db } = await import('../client');
   const schema = await import('../schema');
   const { DEV_CITIES } = await import('./cities');
@@ -27,7 +27,7 @@ async function main() {
   console.log('\n✅ Seed complete.');
   console.log('   Dev login → telefone +55 48 99999-0000 · senha "acolhe123"');
   process.exit(0);
-}
+};
 
 main().catch((err) => {
   console.error('Seed failed:', err);

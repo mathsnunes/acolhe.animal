@@ -81,9 +81,9 @@
       "strangers": "Estranhos"
     },
     "events": {
-      "animal.created": "Cadastrado na casa",
-      "animal.archived": "Arquivado",
-      "animal.unarchived": "Reativado"
+      "animalCreated": "Cadastrado na casa",
+      "animalArchived": "Arquivado",
+      "animalUnarchived": "Reativado"
     }
   },
   "new": {

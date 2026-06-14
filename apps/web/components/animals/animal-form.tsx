@@ -62,13 +62,12 @@ type FormValues = {
   rescueLocation: string;
 };
 
-function toDateInput(value: Date | string | null | undefined): string {
+const toDateInput = (value: Date | string | null | undefined): string => {
   if (!value) return '';
   return new Date(value).toISOString().slice(0, 10);
-}
+};
 
-function defaultsFor(animal?: Animal): FormValues {
-  return {
+const defaultsFor = (animal?: Animal): FormValues => ({
     name: animal?.name ?? '',
     species: animal?.species ?? 'dog',
     sex: animal?.sex ?? 'female',
@@ -90,10 +89,9 @@ function defaultsFor(animal?: Animal): FormValues {
     quirks: animal?.quirks ?? '',
     intakeDate: toDateInput(animal?.intakeDate) || toDateInput(new Date()),
     rescueLocation: animal?.rescueLocation ?? '',
-  };
-}
+  });
 
-function buildInput(values: FormValues): CreateAnimalInput {
+const buildInput = (values: FormValues): CreateAnimalInput => {
   const input: CreateAnimalInput = {
     name: values.name.trim(),
     species: values.species,
@@ -126,9 +124,9 @@ function buildInput(values: FormValues): CreateAnimalInput {
   }
 
   return input;
-}
+};
 
-export function AnimalForm({
+export const AnimalForm = ({
   animal,
   onCreate,
   onUpdate,
@@ -136,7 +134,7 @@ export function AnimalForm({
   animal?: Animal;
   onCreate?: (input: CreateAnimalInput) => Promise<ActionResult<Animal>>;
   onUpdate?: (input: CreateAnimalInput) => Promise<ActionResult<Animal>>;
-}) {
+}) => {
   const t = useTranslations('animals');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -155,7 +153,7 @@ export function AnimalForm({
   const specialConditions = watch('specialConditions');
   const hasClinicalCondition = watch('hasClinicalCondition');
 
-  function addTag() {
+  const addTag = () => {
     const value = tagDraft.trim();
     if (!value || specialConditions.includes(value)) {
       setTagDraft('');
@@ -163,14 +161,14 @@ export function AnimalForm({
     }
     setValue('specialConditions', [...specialConditions, value]);
     setTagDraft('');
-  }
+  };
 
-  function removeTag(tag: string) {
+  const removeTag = (tag: string) => {
     setValue(
       'specialConditions',
       specialConditions.filter((t) => t !== tag),
     );
-  }
+  };
 
   const onSubmit: SubmitHandler<FormValues> = (values) => {
     const input = buildInput(values);
@@ -431,11 +429,11 @@ export function AnimalForm({
       </div>
     </form>
   );
-}
+};
 
 /* ── Small presentational helpers ────────────────────────── */
 
-function Section({
+const Section = ({
   eyebrow,
   hint,
   children,
@@ -443,19 +441,15 @@ function Section({
   eyebrow: string;
   hint?: string;
   children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-4">
+}) => <section className="space-y-4">
       <div>
         <p className="eyebrow">— {eyebrow}</p>
         {hint && <p className="mt-1 text-xs text-ink-mute">{hint}</p>}
       </div>
       {children}
-    </section>
-  );
-}
+    </section>;
 
-function Field({
+const Field = ({
   label,
   required,
   error,
@@ -465,47 +459,35 @@ function Field({
   required?: boolean;
   error?: string;
   children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
+}) => <div className="space-y-1.5">
       <Label>
         {label}
         {required && <span className="ml-1 text-terra">•</span>}
       </Label>
       {children}
       {error && <p className="text-xs text-rose">{error}</p>}
-    </div>
-  );
-}
+    </div>;
 
-const NativeSelect = function NativeSelect({
+const NativeSelect = ({
   className,
   ...props
-}: React.ComponentProps<'select'>) {
-  return (
-    <select
+}: React.ComponentProps<'select'>) => <select
       className={cn(
         'flex h-10 w-full rounded-md border border-line bg-bg px-3 text-sm text-ink shadow-sm',
         'focus-visible:border-terra focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
         className,
       )}
       {...props}
-    />
-  );
-};
+    />;
 
-function SociabilitySelect({
+const SociabilitySelect = ({
   t,
   ...props
-}: React.ComponentProps<'select'> & { t: Translator }) {
-  return (
-    <NativeSelect {...props}>
+}: React.ComponentProps<'select'> & { t: Translator }) => <NativeSelect {...props}>
       <option value="">{t('form.sociabilityUnknown')}</option>
       {SOCIABILITY_KEYS.map((key) => (
         <option key={key} value={key}>
           {sociabilityLabel(t, key)}
         </option>
       ))}
-    </NativeSelect>
-  );
-}
+    </NativeSelect>;

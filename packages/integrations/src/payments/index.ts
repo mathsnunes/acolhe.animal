@@ -8,9 +8,9 @@ export * from './types';
 
 let cached: PaymentsProvider | null = null;
 
-export function getPayments(): PaymentsProvider {
+export const getPayments = (): PaymentsProvider => {
   if (!cached) {
     cached = isLiveIntegrations() ? new AsaasPaymentsProvider() : new MockPaymentsProvider();
   }
   return cached;
-}
+};

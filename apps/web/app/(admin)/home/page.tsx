@@ -9,9 +9,7 @@ import { requireCtx } from '@/lib/auth-context';
 
 export const dynamic = 'force-dynamic';
 
-function str(v: unknown): string | undefined {
-  return typeof v === 'string' ? v : undefined;
-}
+const str = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined;
 
 export default async function InicioPage() {
   const ctx = await requireCtx();
@@ -27,7 +25,7 @@ export default async function InicioPage() {
   return <HomeView timeline={timeline} total={animals.length} available={available} waiting={waiting} />;
 }
 
-function HomeView({
+const HomeView = ({
   timeline,
   total,
   available,
@@ -37,7 +35,7 @@ function HomeView({
   total: number;
   available: number;
   waiting: number;
-}) {
+}) => {
   const t = useTranslations('home');
 
   const eventText = (e: TimelineEvent): string => {
@@ -102,16 +100,12 @@ function HomeView({
       )}
     </div>
   );
-}
+};
 
-function Stat({ value, label, href }: { value: number; label: string; href: string }) {
-  return (
-    <Link
+const Stat = ({ value, label, href }: { value: number; label: string; href: string }) => <Link
       href={href}
       className="rounded-lg border border-line bg-paper p-5 shadow-card transition hover:-translate-y-0.5"
     >
       <div className="display text-4xl text-terra">{value}</div>
       <div className="eyebrow mt-1">— {label}</div>
-    </Link>
-  );
-}
+    </Link>;

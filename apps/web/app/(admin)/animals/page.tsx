@@ -18,21 +18,11 @@ import { requireCtx } from '@/lib/auth-context';
 
 export const dynamic = 'force-dynamic';
 
-function asStatus(v?: string): AnimalStatus | undefined {
-  return ANIMAL_STATUSES.find((s) => s === v);
-}
-function asSpecies(v?: string): Animal['species'] | undefined {
-  return v === 'dog' || v === 'cat' ? v : undefined;
-}
-function asSize(v?: string): NonNullable<Animal['size']> | undefined {
-  return v === 'small' || v === 'medium' || v === 'large' ? v : undefined;
-}
-function asAge(v?: string): AgeGroup | undefined {
-  return v === 'baby' || v === 'adult' || v === 'senior' ? v : undefined;
-}
-function asSort(v?: string): 'name' | undefined {
-  return v === 'name' ? v : undefined;
-}
+const asStatus = (v?: string): AnimalStatus | undefined => ANIMAL_STATUSES.find((s) => s === v);
+const asSpecies = (v?: string): Animal['species'] | undefined => v === 'dog' || v === 'cat' ? v : undefined;
+const asSize = (v?: string): NonNullable<Animal['size']> | undefined => v === 'small' || v === 'medium' || v === 'large' ? v : undefined;
+const asAge = (v?: string): AgeGroup | undefined => v === 'baby' || v === 'adult' || v === 'senior' ? v : undefined;
+const asSort = (v?: string): 'name' | undefined => v === 'name' ? v : undefined;
 
 export default async function AnimaisPage({
   searchParams,

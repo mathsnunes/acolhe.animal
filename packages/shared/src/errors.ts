@@ -64,6 +64,4 @@ export class ValidationError extends DomainError {
   }
 }
 
-export function isDomainError(err: unknown): err is DomainError {
-  return err instanceof DomainError;
-}
+export const isDomainError = (err: unknown): err is DomainError => err instanceof DomainError;

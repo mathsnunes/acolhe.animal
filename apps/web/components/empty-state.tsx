@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 /** Calm empty state with an optional CTA. Used across not-yet-active areas. */
-export function EmptyState({
+export const EmptyState = ({
   eyebrow,
   title,
   description,
@@ -16,9 +16,7 @@ export function EmptyState({
   actionHref?: string;
   actionLabel?: string;
   children?: ReactNode;
-}) {
-  return (
-    <div className="mx-auto flex max-w-md flex-col items-center px-6 py-24 text-center">
+}) => <div className="mx-auto flex max-w-md flex-col items-center px-6 py-24 text-center">
       {eyebrow && <p className="eyebrow mb-3">— {eyebrow}</p>}
       <h2 className="display text-3xl text-ink">{title}</h2>
       {description && <p className="mt-3 text-sm text-ink-soft">{description}</p>}
@@ -31,6 +29,4 @@ export function EmptyState({
         </Link>
       )}
       {children}
-    </div>
-  );
-}
+    </div>;

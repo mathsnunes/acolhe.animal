@@ -12,39 +12,19 @@ import type { Translator } from '@/lib/i18n';
 
 type Sociability = NonNullable<Animal['goodWithChildren']>;
 
-export function speciesLabel(t: Translator, value: Animal['species']): string {
-  return t(`labels.species.${value}`);
-}
+export const speciesLabel = (t: Translator, value: Animal['species']): string => t(`labels.species.${value}`);
 
-export function sexLabel(t: Translator, value: Animal['sex']): string {
-  return t(`labels.sex.${value}`);
-}
+export const sexLabel = (t: Translator, value: Animal['sex']): string => t(`labels.sex.${value}`);
 
-export function sizeLabel(t: Translator, value: NonNullable<Animal['size']>): string {
-  return t(`labels.size.${value}`);
-}
+export const sizeLabel = (t: Translator, value: NonNullable<Animal['size']>): string => t(`labels.size.${value}`);
 
-export function neuteredLabel(t: Translator, value: Animal['neutered']): string {
-  return t(`labels.neutered.${value}`);
-}
+export const neuteredLabel = (t: Translator, value: Animal['neutered']): string => t(`labels.neutered.${value}`);
 
-export function energyLabel(
-  t: Translator,
-  value: NonNullable<Animal['energyLevel']>,
-): string {
-  return t(`labels.energy.${value}`);
-}
+export const energyLabel = (t: Translator, value: NonNullable<Animal['energyLevel']>): string => t(`labels.energy.${value}`);
 
-export function sociabilityLabel(t: Translator, value: Sociability): string {
-  return t(`labels.sociability.${value}`);
-}
+export const sociabilityLabel = (t: Translator, value: Sociability): string => t(`labels.sociability.${value}`);
 
-export function clinicalTypeLabel(
-  t: Translator,
-  value: NonNullable<Animal['clinicalCondition']>['type'],
-): string {
-  return t(`labels.clinicalType.${value}`);
-}
+export const clinicalTypeLabel = (t: Translator, value: NonNullable<Animal['clinicalCondition']>['type']): string => t(`labels.clinicalType.${value}`);
 
 /** The enum keys, exposed so forms can iterate over the available options. */
 export const SPECIES_KEYS: Animal['species'][] = ['dog', 'cat'];
@@ -59,7 +39,7 @@ export const ENERGY_KEYS: NonNullable<Animal['energyLevel']>[] = [
 export const SOCIABILITY_KEYS: Sociability[] = ['yes', 'no', 'with-care', 'unknown'];
 
 /** The animal's current age in months, derived from birth date or months-at-intake. */
-export function ageInMonths(animal: Animal): number | null {
+export const ageInMonths = (animal: Animal): number | null => {
   let months: number | null = null;
 
   if (animal.estimatedBirthDate) {
@@ -78,31 +58,30 @@ export function ageInMonths(animal: Animal): number | null {
   }
 
   return months != null && months >= 0 ? months : null;
-}
+};
 
 export type AgeGroup = 'baby' | 'adult' | 'senior';
 
 /** Bucket for the age filter: filhote (<1y), adulto (1–7y), idoso (7y+). */
-export function ageGroupOf(animal: Animal): AgeGroup | null {
+export const ageGroupOf = (animal: Animal): AgeGroup | null => {
   const months = ageInMonths(animal);
   if (months == null) return null;
   if (months < 12) return 'baby';
   if (months < 84) return 'adult';
   return 'senior';
-}
+};
 
 /** "2 anos", "8 meses" — derived from birth date or months-at-intake. */
-export function formatAge(t: Translator, animal: Animal): string | null {
+export const formatAge = (t: Translator, animal: Animal): string | null => {
   const months = ageInMonths(animal);
   if (months == null) return null;
   if (months < 12) return t('labels.ageMonths', { months });
   const years = Math.floor(months / 12);
   return t('labels.ageYears', { years });
-}
+};
 
 /** "Cachorro · Fêmea · Médio" — the compact meta line shown under the name. */
-export function formatMetaLine(t: Translator, animal: Animal): string {
-  return [
+export const formatMetaLine = (t: Translator, animal: Animal): string => [
     speciesLabel(t, animal.species),
     sexLabel(t, animal.sex),
     formatAge(t, animal),
@@ -110,4 +89,3 @@ export function formatMetaLine(t: Translator, animal: Animal): string {
   ]
     .filter(Boolean)
     .join(' · ');
-}

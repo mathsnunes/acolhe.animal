@@ -21,7 +21,7 @@ export interface AdoptionTermParams {
   extraClauses?: string | null;
 }
 
-export function composeAdoptionTerm(params: AdoptionTermParams): string {
+export const composeAdoptionTerm = (params: AdoptionTermParams): string => {
   const species = params.animalSpecies === 'dog' ? 'cão' : 'gato';
   const dateStr = params.date.toLocaleDateString('pt-BR');
 
@@ -48,20 +48,18 @@ A adoção é um ato de amor e responsabilidade que dura toda a vida do animal.
   const footer = `\n\nCriciúma/região, ${dateStr}.\n\n_______________________________\n${params.adopterName}\n\n_______________________________\n${params.organizationName}`;
 
   return canonical + extras + footer;
-}
+};
 
 /** Wrap the term text in a minimal printable HTML document. */
-export function renderTermHtml(termText: string): string {
+export const renderTermHtml = (termText: string): string => {
   const body = termText
     .split('\n')
     .map((line) => `<p>${escapeHtml(line) || '&nbsp;'}</p>`)
     .join('');
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Termo de adoção</title><style>body{font-family:Georgia,serif;max-width:720px;margin:48px auto;line-height:1.6;color:#1E2A22}p{margin:0 0 8px}</style></head><body>${body}</body></html>`;
-}
+};
 
-function escapeHtml(s: string): string {
-  return s
+const escapeHtml = (s: string): string => s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-}

@@ -9,11 +9,11 @@ export { getMockOutbox } from './mock';
 
 let cached: MessagingProvider | null = null;
 
-export function getMessaging(): MessagingProvider {
+export const getMessaging = (): MessagingProvider => {
   if (!cached) {
     cached = isLiveIntegrations()
       ? new EvolutionMessagingProvider()
       : new MockMessagingProvider();
   }
   return cached;
-}
+};

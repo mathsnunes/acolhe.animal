@@ -9,13 +9,13 @@ import { getPortalAnimal, getPublicOrganization } from '../../../data';
 
 type PageProps = { params: Promise<{ slug: string; animalId: string }> };
 
-export async function generateMetadata(): Promise<Metadata> {
+export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations('portal');
   return {
     title: t('metadata.submittedTitle'),
     robots: { index: false },
   };
-}
+};
 
 export default async function SentPage({ params }: PageProps) {
   const { slug, animalId } = await params;
@@ -23,7 +23,7 @@ export default async function SentPage({ params }: PageProps) {
   const org = await getPublicOrganization(slug);
   if (!org) notFound();
 
-  const found = await getPortalAnimal(org.id, animalId);
+  const found = await getPortalAnimal(org.pk, animalId);
   const animalName = found?.animal.name ?? t('submitted.fallbackAnimalName');
 
   return (
@@ -127,7 +127,7 @@ export default async function SentPage({ params }: PageProps) {
   );
 }
 
-function NextStep({
+const NextStep = ({
   num,
   title,
   time,
@@ -137,15 +137,11 @@ function NextStep({
   title: string;
   time: string;
   children: React.ReactNode;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-2 border-b border-line-soft py-6 last:border-none sm:grid-cols-[64px_1fr] sm:gap-7">
+}) => <div className="grid grid-cols-1 gap-2 border-b border-line-soft py-6 last:border-none sm:grid-cols-[64px_1fr] sm:gap-7">
       <span className="display text-5xl leading-none text-terra">{num}</span>
       <div className="pt-1">
         <h3 className="font-display text-xl text-ink">{title}</h3>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{children}</p>
         <p className="mt-2.5 font-mono text-[10.5px] uppercase tracking-[0.15em] text-ink-mute">{time}</p>
       </div>
-    </div>
-  );
-}
+    </div>;

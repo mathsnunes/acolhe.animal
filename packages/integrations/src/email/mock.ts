@@ -11,12 +11,10 @@ export class MockEmailProvider implements EmailProvider {
   async send(input: SendEmailInput): Promise<SendEmailResult> {
     const id = createId('timelineEvent');
     outbox.push({ ...input, id, at: new Date() });
-    // eslint-disable-next-line no-console
+     
     console.log(`\n✉️  [Email → ${input.to}] ${input.subject}\n`);
     return { id };
   }
 }
 
-export function getMockEmailOutbox(): ReadonlyArray<SendEmailInput & { id: string; at: Date }> {
-  return outbox;
-}
+export const getMockEmailOutbox = (): ReadonlyArray<SendEmailInput & { id: string; at: Date }> => outbox;

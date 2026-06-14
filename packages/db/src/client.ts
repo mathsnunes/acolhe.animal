@@ -17,14 +17,14 @@ import * as schema from './schema';
  */
 const globalForDb = globalThis as unknown as { __acolheAnimalPool?: Pool };
 
-function getPool(): Pool {
+const getPool = (): Pool => {
   if (!globalForDb.__acolheAnimalPool) {
     globalForDb.__acolheAnimalPool = new Pool({
       connectionString: serverEnv().DATABASE_URL,
     });
   }
   return globalForDb.__acolheAnimalPool;
-}
+};
 
 export const db = drizzle(getPool(), { schema, casing: 'snake_case' });
 

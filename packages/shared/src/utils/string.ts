@@ -6,35 +6,29 @@ const DIACRITICS = new RegExp('[\\u0300-\\u036f]', 'g');
  * search/matching across the product (city autocomplete, special-conditions
  * tags, etc.). "Criciúma" → "criciuma".
  */
-export function normalizeForSearch(input: string): string {
-  return input
+export const normalizeForSearch = (input: string): string => input
     .normalize('NFD')
     .replace(DIACRITICS, '')
     .toLowerCase()
     .trim()
     .replace(/\s+/g, ' ');
-}
 
 /** Turn a free-text name into a URL-safe kebab-case slug. */
-export function slugify(input: string): string {
-  return input
+export const slugify = (input: string): string => input
     .normalize('NFD')
     .replace(DIACRITICS, '')
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
 
 /** Keep only digits — used to strip masks from phone, CPF, CNPJ, CEP. */
-export function onlyDigits(input: string): string {
-  return input.replace(/\D+/g, '');
-}
+export const onlyDigits = (input: string): string => input.replace(/\D+/g, '');
 
 /** Initials for avatar fallbacks: "Maria Silva" → "MS". */
-export function initials(name: string, max = 2): string {
+export const initials = (name: string, max = 2): string => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '';
   if (parts.length === 1) return parts[0]!.slice(0, max).toUpperCase();
   return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
-}
+};

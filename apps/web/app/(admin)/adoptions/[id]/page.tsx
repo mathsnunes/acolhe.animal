@@ -149,11 +149,7 @@ export default async function AdocaoDetalhePage({
   );
 }
 
-function Fact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[120px_1fr] sm:gap-4">
+const Fact = ({ label, value }: { label: string; value: ReactNode }) => <div className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[120px_1fr] sm:gap-4">
       <dt className="text-xs font-medium uppercase tracking-wide text-ink-mute">{label}</dt>
       <dd className="text-sm leading-relaxed text-ink">{value}</dd>
-    </div>
-  );
-}
+    </div>;

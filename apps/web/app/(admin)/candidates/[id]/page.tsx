@@ -5,8 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
 import {
   getApplication,
-  getAnimal,
-  getPerson,
+  getAnimalByPk,
+  getPersonByPk,
   listEntityTimeline,
 } from '@acolhe-animal/domain';
 import { db, organizationMember, user } from '@acolhe-animal/db';
@@ -26,7 +26,7 @@ import { whatsappHref } from '@/components/candidates/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
-async function listOrgMembers(organizationId: string): Promise<OrgMember[]> {
+const listOrgMembers = async (organizationId: number): Promise<OrgMember[]> => {
   const rows = await db
     .select({ userId: organizationMember.userId, name: user.name })
     .from(organizationMember)
@@ -38,7 +38,7 @@ async function listOrgMembers(organizationId: string): Promise<OrgMember[]> {
       ),
     );
   return rows;
-}
+};
 
 export default async function CandidatoDetalhePage({
   params,
@@ -51,8 +51,8 @@ export default async function CandidatoDetalhePage({
 
   const application = await getApplication(ctx, id);
   const [person, animal, timeline, members] = await Promise.all([
-    getPerson(ctx, application.personId),
-    getAnimal(ctx, application.animalId),
+    getPersonByPk(ctx, application.personId),
+    getAnimalByPk(ctx, application.animalId),
     listEntityTimeline(ctx, 'application', id),
     listOrgMembers(ctx.organizationId),
   ]);

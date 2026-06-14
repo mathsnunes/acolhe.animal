@@ -16,12 +16,10 @@ export class MockMessagingProvider implements MessagingProvider {
   async sendText(input: SendMessageInput): Promise<SendMessageResult> {
     const id = createId('timelineEvent');
     outbox.push({ ...input, id, at: new Date() });
-    // eslint-disable-next-line no-console
+     
     console.log(`\n📲 [WhatsApp → ${input.to}]\n${input.body}\n`);
     return { id };
   }
 }
 
-export function getMockOutbox(): ReadonlyArray<SendMessageInput & { id: string; at: Date }> {
-  return outbox;
-}
+export const getMockOutbox = (): ReadonlyArray<SendMessageInput & { id: string; at: Date }> => outbox;

@@ -19,7 +19,7 @@ import type { Ctx } from '../context';
 import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
 import { emitTimelineEvent } from '../timeline/timeline';
-import { getPerson, upsertPersonByPhone } from '../people/service';
+import { getPersonByPk, upsertPersonByPhone } from '../people/service';
 import { composeAdoptionTerm, renderTermHtml } from './term';
 
 const addressSnapshotSchema = z.object({
@@ -55,7 +55,7 @@ export const registerOfflineSchema = z.object({
 });
 
 /** Store the rendered term and return its public URL + sha256 hash. */
-async function storeTerm(adoptionId: string, termText: string): Promise<{ url: string; hash: string }> {
+const storeTerm = async (adoptionId: string, termText: string): Promise<{ url: string; hash: string }> => {
   const html = renderTermHtml(termText);
   const bytes = Buffer.from(html, 'utf-8');
   const hash = createHash('sha256').update(bytes).digest('hex');
@@ -65,14 +65,14 @@ async function storeTerm(adoptionId: string, termText: string): Promise<{ url: s
     contentType: 'text/html; charset=utf-8',
   });
   return { url, hash };
-}
+};
 
 /**
  * Finalize a digital adoption from an approved application: collect the adopter's
  * CPF, compose + store the term, create the immutable Adoption, mark the animal
  * adopted. See `modelagem-dados.md` › Adoption (digital flow).
  */
-export async function finalizeDigitalAdoption(ctx: Ctx, input: unknown): Promise<Adoption> {
+export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise<Adoption> => {
   assertCanManageAnimals(ctx);
   const data = finalizeDigitalSchema.parse(input);
 
@@ -87,12 +87,12 @@ export async function finalizeDigitalAdoption(ctx: Ctx, input: unknown): Promise
   }
 
   const [personRow, [animalRow], [org]] = await Promise.all([
-    getPerson(ctx, app.personId),
-    ctx.db.select().from(animal).where(eq(animal.id, app.animalId)).limit(1),
+    getPersonByPk(ctx, app.personId),
+    ctx.db.select().from(animal).where(eq(animal.pk, app.animalId)).limit(1),
     ctx.db
       .select({ name: organization.name })
       .from(organization)
-      .where(eq(organization.id, ctx.organizationId))
+      .where(eq(organization.pk, ctx.organizationId))
       .limit(1),
   ]);
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
@@ -118,8 +118,8 @@ export async function finalizeDigitalAdoption(ctx: Ctx, input: unknown): Promise
       .values({
         id: adoptionId,
         organizationId: ctx.organizationId,
-        personId: personRow.id,
-        applicationId: app.id,
+        personId: personRow.pk,
+        applicationId: app.pk,
         animalId: app.animalId,
         source: 'digital',
         adopterName: personRow.name,
@@ -134,7 +134,7 @@ export async function finalizeDigitalAdoption(ctx: Ctx, input: unknown): Promise
       })
       .returning();
 
-    await tx.db.update(animal).set({ status: 'adopted' }).where(eq(animal.id, app.animalId));
+    await tx.db.update(animal).set({ status: 'adopted' }).where(eq(animal.pk, app.animalId));
 
     await emitTimelineEvent(tx, {
       eventType: 'adoption.completed',
@@ -144,10 +144,10 @@ export async function finalizeDigitalAdoption(ctx: Ctx, input: unknown): Promise
     });
     return row!;
   });
-}
+};
 
 /** Register an adoption that happened offline (fair, event). No application. */
-export async function registerOfflineAdoption(ctx: Ctx, input: unknown): Promise<Adoption> {
+export const registerOfflineAdoption = async (ctx: Ctx, input: unknown): Promise<Adoption> => {
   assertCanManageAnimals(ctx);
   const data = registerOfflineSchema.parse(input);
 
@@ -176,9 +176,9 @@ export async function registerOfflineAdoption(ctx: Ctx, input: unknown): Promise
       .values({
         id: adoptionId,
         organizationId: ctx.organizationId,
-        personId: personRow.id,
+        personId: personRow.pk,
         applicationId: null,
-        animalId: data.animalId,
+        animalId: animalRow.pk,
         source: 'offline',
         adopterName: data.adopter.name,
         adopterDocument: data.adopter.document,
@@ -191,7 +191,7 @@ export async function registerOfflineAdoption(ctx: Ctx, input: unknown): Promise
       })
       .returning();
 
-    await tx.db.update(animal).set({ status: 'adopted' }).where(eq(animal.id, data.animalId));
+    await tx.db.update(animal).set({ status: 'adopted' }).where(eq(animal.pk, animalRow.pk));
 
     await emitTimelineEvent(tx, {
       eventType: 'adoption.completed',
@@ -201,10 +201,10 @@ export async function registerOfflineAdoption(ctx: Ctx, input: unknown): Promise
     });
     return row!;
   });
-}
+};
 
 /** Cancel an adoption (return/giveback). Frees the animal again. */
-export async function cancelAdoption(ctx: Ctx, adoptionId: string, reason: string): Promise<void> {
+export const cancelAdoption = async (ctx: Ctx, adoptionId: string, reason: string): Promise<void> => {
   assertCanManageAnimals(ctx);
   const [row] = await ctx.db
     .select()
@@ -218,7 +218,7 @@ export async function cancelAdoption(ctx: Ctx, adoptionId: string, reason: strin
       .update(adoption)
       .set({ cancelledAt: new Date(), cancellationReason: reason })
       .where(eq(adoption.id, adoptionId));
-    await tx.db.update(animal).set({ status: 'available' }).where(eq(animal.id, row.animalId));
+    await tx.db.update(animal).set({ status: 'available' }).where(eq(animal.pk, row.animalId));
     await emitTimelineEvent(tx, {
       eventType: 'adoption.cancelled',
       entityType: 'adoption',
@@ -226,4 +226,4 @@ export async function cancelAdoption(ctx: Ctx, adoptionId: string, reason: strin
       payload: { reason },
     });
   });
-}
+};

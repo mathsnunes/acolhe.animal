@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { adoptionSource, applicationStatus } from './enums';
+import { fk, surrogatePk } from './_id';
 import { animal } from './animals';
 import { city } from './city';
 import { organization } from './organization';
@@ -15,10 +16,11 @@ import type { AdopterAddress, JsonRecord, SignatureMetadata } from './types';
 export const person = pgTable(
   'person',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     /** Reserved hook for a future cross-org network. Null in the MVP. */
     globalPersonId: text(),
     name: text().notNull(),
@@ -58,17 +60,18 @@ export const person = pgTable(
 export const application = pgTable(
   'application',
   {
-    id: text().primaryKey(),
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
     /** Denormalized from animal.organizationId to avoid a JOIN on the hot path. */
-    organizationId: text()
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    animalId: text()
+      .references(() => organization.pk),
+    animalId: fk()
       .notNull()
-      .references(() => animal.id),
-    personId: text()
+      .references(() => animal.pk),
+    personId: fk()
       .notNull()
-      .references(() => person.id),
+      .references(() => person.pk),
     /** Immutable snapshot of the form answers at submit (validated by Zod). */
     applicationData: jsonb().$type<JsonRecord>(),
     formVersion: text().notNull(),
@@ -112,17 +115,18 @@ export const application = pgTable(
 export const adoption = pgTable(
   'adoption',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    personId: text()
+      .references(() => organization.pk),
+    personId: fk()
       .notNull()
-      .references(() => person.id),
-    applicationId: text().references(() => application.id),
-    animalId: text()
+      .references(() => person.pk),
+    applicationId: fk().references(() => application.pk),
+    animalId: fk()
       .notNull()
-      .references(() => animal.id),
+      .references(() => animal.pk),
     source: adoptionSource().notNull(),
 
     // Snapshots — frozen at signature time.

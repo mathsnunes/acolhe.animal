@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { index, integer, numeric, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 import { campaignGoalBehavior, campaignStatus, recurringNeedStatus } from './enums';
+import { fk, surrogatePk } from './_id';
 import { animal } from './animals';
 import { organization } from './organization';
 
@@ -9,11 +10,12 @@ import { organization } from './organization';
 export const campaign = pgTable(
   'campaign',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    animalId: text().references(() => animal.id),
+      .references(() => organization.pk),
+    animalId: fk().references(() => animal.pk),
     title: text().notNull(),
     pitch: text(),
     story: text(),
@@ -45,10 +47,11 @@ export const campaign = pgTable(
 export const campaignItem = pgTable(
   'campaign_item',
   {
-    id: text().primaryKey(),
-    campaignId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    campaignId: fk()
       .notNull()
-      .references(() => campaign.id, { onDelete: 'cascade' }),
+      .references(() => campaign.pk, { onDelete: 'cascade' }),
     name: text().notNull(),
     amount: numeric({ precision: 10, scale: 2 }).notNull(),
     displayOrder: integer().notNull().default(0),
@@ -61,11 +64,12 @@ export const campaignItem = pgTable(
 export const recurringNeed = pgTable(
   'recurring_need',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    animalId: text().references(() => animal.id),
+      .references(() => organization.pk),
+    animalId: fk().references(() => animal.pk),
     title: text().notNull(),
     description: text(),
     coverUrl: text(),

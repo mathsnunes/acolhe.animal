@@ -23,19 +23,14 @@ import { requireCtx } from '@/lib/auth-context';
  * against its Zod schema, so these stay thin.
  */
 
-export async function createAnimalAction(
-  input: CreateAnimalInput,
-): Promise<ActionResult<Animal>> {
+export const createAnimalAction = async (input: CreateAnimalInput): Promise<ActionResult<Animal>> => {
   const ctx = await requireCtx();
   const result = await action(() => createAnimal(ctx, input));
   if (result.ok) revalidatePath('/animais');
   return result;
-}
+};
 
-export async function updateAnimalAction(
-  id: string,
-  input: UpdateAnimalInput,
-): Promise<ActionResult<Animal>> {
+export const updateAnimalAction = async (id: string, input: UpdateAnimalInput): Promise<ActionResult<Animal>> => {
   const ctx = await requireCtx();
   const result = await action(() => updateAnimal(ctx, id, input));
   if (result.ok) {
@@ -43,9 +38,9 @@ export async function updateAnimalAction(
     revalidatePath(`/animais/${id}`);
   }
   return result;
-}
+};
 
-export async function archiveAnimalAction(id: string): Promise<ActionResult> {
+export const archiveAnimalAction = async (id: string): Promise<ActionResult> => {
   const ctx = await requireCtx();
   const result = await action(() => archiveAnimal(ctx, id));
   if (result.ok) {
@@ -53,9 +48,9 @@ export async function archiveAnimalAction(id: string): Promise<ActionResult> {
     revalidatePath(`/animais/${id}`);
   }
   return result;
-}
+};
 
-export async function unarchiveAnimalAction(id: string): Promise<ActionResult> {
+export const unarchiveAnimalAction = async (id: string): Promise<ActionResult> => {
   const ctx = await requireCtx();
   const result = await action(() => unarchiveAnimal(ctx, id));
   if (result.ok) {
@@ -63,4 +58,4 @@ export async function unarchiveAnimalAction(id: string): Promise<ActionResult> {
     revalidatePath(`/animais/${id}`);
   }
   return result;
-}
+};

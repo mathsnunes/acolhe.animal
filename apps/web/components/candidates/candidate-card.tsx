@@ -13,7 +13,7 @@ import { STATUS_META, statusLabelKey } from './status-meta';
  * (new → terra, em análise → gold, aprovado → green, encerrado → ink-mute). New
  * ones get a pulsing terra dot so the eye lands on what still needs a first look.
  */
-export function CandidateCard({ application }: { application: ApplicationWithRelations }) {
+export const CandidateCard = ({ application }: { application: ApplicationWithRelations }) => {
   const t = useTranslations('candidates');
   const isNew = application.status === 'new';
   const isApproved = application.status === 'approved';
@@ -87,4 +87,4 @@ export function CandidateCard({ application }: { application: ApplicationWithRel
       )}
     </Link>
   );
-}
+};

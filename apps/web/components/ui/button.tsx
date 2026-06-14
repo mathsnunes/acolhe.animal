@@ -40,7 +40,7 @@ export interface ButtonProps
   pending?: boolean;
 }
 
-function Button({
+const Button = ({
   className,
   variant,
   size,
@@ -49,7 +49,7 @@ function Button({
   disabled,
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps) => {
   const Comp = asChild ? Slot : 'button';
 
   // `pending` only applies to a real button (Slot/asChild forwards a single child).
@@ -80,7 +80,7 @@ function Button({
       {children}
     </Comp>
   );
-}
+};
 
 export { Button, buttonVariants };
 export default Button;

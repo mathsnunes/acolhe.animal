@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 /** Warm, large-touch form primitives shared by the adoption-form steps. */
 
-export function Field({
+export const Field = ({
   label,
   required,
   hint,
@@ -19,9 +19,7 @@ export function Field({
   hint?: ReactNode;
   error?: string;
   children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
+}) => <div className="flex flex-col gap-2">
       <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
         {label}
         {required && <span className="text-[10px] leading-none text-terra">●</span>}
@@ -32,24 +30,18 @@ export function Field({
       ) : (
         hint && <span className="text-xs leading-relaxed text-ink-mute">{hint}</span>
       )}
-    </div>
-  );
-}
+    </div>;
 
 /** A subtle "por que perguntamos" explainer block. */
-export function FieldExplanation({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="mt-1 rounded-r-md border-l-[3px] border-terra bg-terra-bg px-4 py-3 text-xs leading-relaxed text-ink-soft">
+export const FieldExplanation = ({ title, children }: { title: string; children: ReactNode }) => <div className="mt-1 rounded-r-md border-l-[3px] border-terra bg-terra-bg px-4 py-3 text-xs leading-relaxed text-ink-soft">
       <strong className="mb-0.5 block font-medium text-ink">{title}</strong>
       {children}
-    </div>
-  );
-}
+    </div>;
 
 export type Option = { value: string; label: string; sub?: string };
 
 /** Single-select grid of radio cards (large touch targets, single column on phones). */
-export function RadioCards({
+export const RadioCards = ({
   name,
   options,
   value,
@@ -61,9 +53,7 @@ export function RadioCards({
   value: string | undefined;
   onChange: (value: string) => void;
   columns?: 1 | 2;
-}) {
-  return (
-    <div className={cn('grid gap-2.5', columns === 2 ? 'sm:grid-cols-2' : 'grid-cols-1')}>
+}) => <div className={cn('grid gap-2.5', columns === 2 ? 'sm:grid-cols-2' : 'grid-cols-1')}>
       {options.map((opt) => {
         const selected = value === opt.value;
         return (
@@ -97,12 +87,10 @@ export function RadioCards({
           </label>
         );
       })}
-    </div>
-  );
-}
+    </div>;
 
 /** Multi-select list of check items. */
-export function CheckList({
+export const CheckList = ({
   options,
   values,
   onChange,
@@ -110,12 +98,12 @@ export function CheckList({
   options: Option[];
   values: string[];
   onChange: (values: string[]) => void;
-}) {
-  function toggle(value: string) {
+}) => {
+  const toggle = (value: string) => {
     onChange(
       values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
     );
-  }
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -162,10 +150,10 @@ export function CheckList({
       })}
     </div>
   );
-}
+};
 
 /** Phone input with a fixed BR prefix, matching the prototype. */
-export function PhoneInput({
+export const PhoneInput = ({
   value,
   onChange,
   error,
@@ -173,7 +161,7 @@ export function PhoneInput({
   value: string;
   onChange: (value: string) => void;
   error?: string;
-}) {
+}) => {
   const t = useTranslations('form');
   return (
     <div
@@ -195,14 +183,10 @@ export function PhoneInput({
       />
     </div>
   );
-}
+};
 
 /** Section heading inside a step (mono eyebrow with a terra rule). */
-export function SectionTitle({ children }: { children: ReactNode }) {
-  return (
-    <div className="mb-5 flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-mute">
+export const SectionTitle = ({ children }: { children: ReactNode }) => <div className="mb-5 flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-mute">
       <span className="h-px w-3.5 bg-terra" />
       {children}
-    </div>
-  );
-}
+    </div>;

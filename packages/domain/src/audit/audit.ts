@@ -25,9 +25,7 @@ export type AuditAction =
   | 'payout_account.bank_account.changed'
   | 'payout_account.set_as_default';
 
-export async function emitAuditLog(
-  ctx: Ctx,
-  input: {
+export const emitAuditLog = async (ctx: Ctx, input: {
     action: AuditAction;
     entityType?: string;
     entityId?: string;
@@ -35,8 +33,7 @@ export async function emitAuditLog(
     newValue?: JsonRecord;
     reason?: string;
     requestMetadata?: JsonRecord;
-  },
-): Promise<void> {
+  }): Promise<void> => {
   const actorType =
     ctx.actor.type === 'user' ? 'user' : ctx.actor.type === 'system' ? 'system' : 'webhook';
   const actorUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
@@ -56,4 +53,4 @@ export async function emitAuditLog(
     reason: input.reason ?? null,
     requestMetadata: input.requestMetadata ?? null,
   });
-}
+};

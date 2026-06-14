@@ -13,13 +13,13 @@ import { saveNotesAction } from '@/app/(admin)/candidates/actions';
  * Private notes the ONG keeps about a candidacy — the "feeling" of the
  * conversation. Never shown to the candidate.
  */
-export function InternalNotes({
+export const InternalNotes = ({
   applicationId,
   initialNotes,
 }: {
   applicationId: string;
   initialNotes: string;
-}) {
+}) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [notes, setNotes] = useState(initialNotes);
@@ -27,7 +27,7 @@ export function InternalNotes({
 
   const dirty = notes.trim() !== initialNotes.trim();
 
-  function onSave() {
+  const onSave = () => {
     startTransition(async () => {
       const res = await saveNotesAction(applicationId, notes.trim());
       if (res.ok) {
@@ -37,7 +37,7 @@ export function InternalNotes({
         toast.error(res.error.message);
       }
     });
-  }
+  };
 
   return (
     <div className="space-y-3">
@@ -54,4 +54,4 @@ export function InternalNotes({
       </div>
     </div>
   );
-}
+};

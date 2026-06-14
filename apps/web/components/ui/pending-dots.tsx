@@ -6,9 +6,7 @@ import { cn } from '@/lib/utils';
  * so it reads correctly on a terra button (paper) or on a light surface (set
  * `text-terra`).
  */
-export function PendingDots({ className }: { className?: string }) {
-  return (
-    <span
+export const PendingDots = ({ className }: { className?: string }) => <span
       className={cn('inline-flex items-center gap-1', className)}
       role="status"
       aria-label="Carregando"
@@ -16,6 +14,4 @@ export function PendingDots({ className }: { className?: string }) {
       <span className="size-1.5 rounded-full bg-current animate-pulse-dot" />
       <span className="size-1.5 rounded-full bg-current animate-pulse-dot [animation-delay:200ms]" />
       <span className="size-1.5 rounded-full bg-current animate-pulse-dot [animation-delay:400ms]" />
-    </span>
-  );
-}
+    </span>;

@@ -33,7 +33,7 @@ interface Step {
 }
 
 /** The actions available from each current status. */
-function stepsFor(status: ApplicationStatus): Step[] {
+const stepsFor = (status: ApplicationStatus): Step[] => {
   switch (status) {
     case 'new':
       return [
@@ -87,15 +87,15 @@ function stepsFor(status: ApplicationStatus): Step[] {
         { status: 'in-progress', labelKey: 'reopen', variant: 'outline' },
       ];
   }
-}
+};
 
-export function StatusControl({
+export const StatusControl = ({
   applicationId,
   status,
 }: {
   applicationId: string;
   status: ApplicationStatus;
-}) {
+}) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [pending, startTransition] = useTransition();
@@ -103,7 +103,7 @@ export function StatusControl({
 
   const steps = stepsFor(status);
 
-  function commit(next: TriageStatus) {
+  const commit = (next: TriageStatus) => {
     startTransition(async () => {
       const res = await setStatusAction(applicationId, next);
       if (res.ok) {
@@ -114,12 +114,12 @@ export function StatusControl({
       }
       setConfirming(null);
     });
-  }
+  };
 
-  function onClick(step: Step) {
+  const onClick = (step: Step) => {
     if (step.confirm) setConfirming(step);
     else commit(step.status);
-  }
+  };
 
   if (steps.length === 0) return null;
 
@@ -164,4 +164,4 @@ export function StatusControl({
       </Dialog>
     </div>
   );
-}
+};

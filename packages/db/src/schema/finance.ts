@@ -22,6 +22,7 @@ import {
   payoutStatus,
   pixKeyType,
 } from './enums';
+import { fk, surrogatePk } from './_id';
 import { campaign, campaignItem, recurringNeed } from './campaigns';
 import { donor, supporter } from './donors';
 import { organization } from './organization';
@@ -33,17 +34,18 @@ import type { PayoutDestinationSnapshot } from './types';
 export const donation = pgTable(
   'donation',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    donorId: text()
+      .references(() => organization.pk),
+    donorId: fk()
       .notNull()
-      .references(() => donor.id),
-    campaignId: text().references(() => campaign.id),
-    campaignItemId: text().references(() => campaignItem.id),
-    recurringNeedId: text().references(() => recurringNeed.id),
-    supporterId: text().references(() => supporter.id),
+      .references(() => donor.pk),
+    campaignId: fk().references(() => campaign.pk),
+    campaignItemId: fk().references(() => campaignItem.pk),
+    recurringNeedId: fk().references(() => recurringNeed.pk),
+    supporterId: fk().references(() => supporter.pk),
     webhookEventId: text().references(() => webhookEvent.id),
     amount: numeric({ precision: 10, scale: 2 }).notNull(),
     paymentMethod: paymentMethod().notNull(),
@@ -88,16 +90,17 @@ export const donation = pgTable(
 export const cashflowEntry = pgTable(
   'cashflow_entry',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     type: cashflowType().notNull(),
     category: cashflowCategory().notNull(),
     amount: numeric({ precision: 10, scale: 2 }).notNull(),
     entryDate: timestamp({ mode: 'date', withTimezone: false }).notNull(),
     description: text().notNull(),
-    donationId: text().references(() => donation.id),
+    donationId: fk().references(() => donation.pk),
     paymentMethod: cashflowPaymentMethod(),
     createdByUserId: text().references(() => user.id),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -120,10 +123,11 @@ export const cashflowEntry = pgTable(
 export const payoutAccount = pgTable(
   'payout_account',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     type: payoutAccountType().notNull(),
     nickname: text(),
     holderName: text().notNull(),
@@ -157,13 +161,14 @@ export const payoutAccount = pgTable(
 export const payout = pgTable(
   'payout',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    payoutAccountId: text()
+      .references(() => organization.pk),
+    payoutAccountId: fk()
       .notNull()
-      .references(() => payoutAccount.id),
+      .references(() => payoutAccount.pk),
     destinationSnapshot: jsonb().$type<PayoutDestinationSnapshot>().notNull(),
     amount: numeric({ precision: 10, scale: 2 }).notNull(),
     feeAmount: numeric({ precision: 10, scale: 2 }).notNull().default('0'),
@@ -177,7 +182,7 @@ export const payout = pgTable(
     completedAt: timestamp({ withTimezone: true }),
     failedAt: timestamp({ withTimezone: true }),
     failureReason: text(),
-    cashflowEntryId: text().references(() => cashflowEntry.id),
+    cashflowEntryId: fk().references(() => cashflowEntry.pk),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })
       .notNull()

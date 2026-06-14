@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { supporterStatus } from './enums';
+import { fk, surrogatePk } from './_id';
 import { city } from './city';
 import { organization } from './organization';
 
@@ -17,10 +18,11 @@ import { organization } from './organization';
 export const donor = pgTable(
   'donor',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
+      .references(() => organization.pk),
     globalDonorId: text(),
     name: text().notNull(),
     phone: text(),
@@ -54,13 +56,14 @@ export const donor = pgTable(
 export const supporter = pgTable(
   'supporter',
   {
-    id: text().primaryKey(),
-    organizationId: text()
+    pk: surrogatePk(),
+    id: text().notNull().unique(),
+    organizationId: fk()
       .notNull()
-      .references(() => organization.id),
-    donorId: text()
+      .references(() => organization.pk),
+    donorId: fk()
       .notNull()
-      .references(() => donor.id),
+      .references(() => donor.pk),
     monthlyAmount: numeric({ precision: 10, scale: 2 }).notNull(),
     status: supporterStatus().notNull().default('active'),
     asaasSubscriptionId: text().notNull().unique(),

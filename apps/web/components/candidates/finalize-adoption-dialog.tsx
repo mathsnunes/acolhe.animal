@@ -26,7 +26,7 @@ import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
  * clauses, then formalize a digital adoption. On success we land on the new
  * adoption record.
  */
-export function FinalizeAdoptionDialog({
+export const FinalizeAdoptionDialog = ({
   applicationId,
   adopterName,
   animalName,
@@ -34,7 +34,7 @@ export function FinalizeAdoptionDialog({
   applicationId: string;
   adopterName: string;
   animalName: string;
-}) {
+}) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [open, setOpen] = useState(false);
@@ -49,7 +49,7 @@ export function FinalizeAdoptionDialog({
   const [postalCode, setPostalCode] = useState('');
   const [extraClauses, setExtraClauses] = useState('');
 
-  function onSubmit(e: FormEvent) {
+  const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
       const res = await finalizeAdoptionAction({
@@ -77,7 +77,7 @@ export function FinalizeAdoptionDialog({
         toast.error(res.error.message);
       }
     });
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -193,4 +193,4 @@ export function FinalizeAdoptionDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};

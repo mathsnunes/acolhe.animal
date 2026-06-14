@@ -2,6 +2,30 @@ import { normalizeForSearch } from '@acolhe-animal/shared';
 
 import type { City } from '../types';
 
+const c = (
+  id: string,
+  name: string,
+  stateCode: string,
+  stateName: string,
+  region: City['region'],
+  latitude: number,
+  longitude: number,
+  isCapital = false,
+): City => ({
+  id,
+  name,
+  normalizedName: normalizeForSearch(name),
+  stateCode,
+  stateName,
+  region,
+  microregion: null,
+  mesoregion: null,
+  metroArea: null,
+  latitude: String(latitude),
+  longitude: String(longitude),
+  isCapital,
+});
+
 /**
  * Development city seed — a curated subset of the IBGE catalog.
  *
@@ -35,29 +59,3 @@ export const DEV_CITIES: City[] = [
   c('5002704', 'Campo Grande', 'MS', 'Mato Grosso do Sul', 'central-west', -20.4697, -54.6201, true),
   c('5103403', 'Cuiabá', 'MT', 'Mato Grosso', 'central-west', -15.601, -56.0974, true),
 ];
-
-function c(
-  id: string,
-  name: string,
-  stateCode: string,
-  stateName: string,
-  region: City['region'],
-  latitude: number,
-  longitude: number,
-  isCapital = false,
-): City {
-  return {
-    id,
-    name,
-    normalizedName: normalizeForSearch(name),
-    stateCode,
-    stateName,
-    region,
-    microregion: null,
-    mesoregion: null,
-    metroArea: null,
-    latitude: String(latitude),
-    longitude: String(longitude),
-    isCapital,
-  };
-}

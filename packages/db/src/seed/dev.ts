@@ -13,6 +13,10 @@ import type { NewAnimal } from '../types';
  * without registering everything by hand (`modelagem-dados.md` › Notas).
  *
  * Idempotent by wipe-then-insert on the demo tables. NEVER runs in production.
+ *
+ * Hybrid ids: the public `id` (org_…, animal_…) is set explicitly; the internal
+ * `pk` (bigint identity) is assigned by Postgres and captured via `.returning`
+ * so foreign keys point at the surrogate key.
  */
 
 const DEMO_ORG_ID = 'org_angelifelice00000';
@@ -22,7 +26,7 @@ const CRICIUMA = '4204608';
 const ADMIN_PHONE = '+5548999990000';
 const ADMIN_PASSWORD = 'acolhe123';
 
-export async function seedDev(): Promise<void> {
+export const seedDev = async (): Promise<void> => {
   await db.transaction(async (tx) => {
     // Wipe demo domain data (FK-safe order). City + auth-of-other-users untouched.
     await tx.delete(s.adoption);
@@ -35,21 +39,25 @@ export async function seedDev(): Promise<void> {
     await tx.delete(s.organization);
 
     // ── Organization ──
-    await tx.insert(s.organization).values({
-      id: DEMO_ORG_ID,
-      name: 'Angeli Felice',
-      slug: 'angeli-felice',
-      document: '12345678000190',
-      documentType: 'cnpj',
-      status: 'active',
-      phone: '+5548999990000',
-      email: 'contato@angelifelice.org',
-      cityId: CRICIUMA,
-      aboutText:
-        'Protegemos e cuidamos de cães e gatos resgatados em Criciúma e região, ' +
-        'buscando lares responsáveis e amorosos.',
-      foundedAt: new Date('2018-03-01'),
-    });
+    const [orgRow] = await tx
+      .insert(s.organization)
+      .values({
+        id: DEMO_ORG_ID,
+        name: 'Angeli Felice',
+        slug: 'angeli-felice',
+        document: '12345678000190',
+        documentType: 'cnpj',
+        status: 'active',
+        phone: '+5548999990000',
+        email: 'contato@angelifelice.org',
+        cityId: CRICIUMA,
+        aboutText:
+          'Protegemos e cuidamos de cães e gatos resgatados em Criciúma e região, ' +
+          'buscando lares responsáveis e amorosos.',
+        foundedAt: new Date('2018-03-01'),
+      })
+      .returning({ pk: s.organization.pk });
+    const orgPk = orgRow!.pk;
 
     // ── Admin user + credential + membership ──
     await tx
@@ -79,7 +87,7 @@ export async function seedDev(): Promise<void> {
     await tx.insert(s.organizationMember).values({
       id: createId('organizationMember'),
       userId: ADMIN_USER_ID,
-      organizationId: DEMO_ORG_ID,
+      organizationId: orgPk,
       role: 'admin',
       joinedAt: new Date('2018-03-01'),
     });
@@ -130,42 +138,36 @@ export async function seedDev(): Promise<void> {
         },
       }),
       buildAnimal('Bel', 'cat', 'female', 'unavailable', { size: 'small', energyLevel: 'calm' }),
-    ];
-    const inserted = await tx.insert(s.animal).values(animals).returning({ id: s.animal.id });
+    ].map((a) => ({ ...a, organizationId: orgPk }));
+    const inserted = await tx.insert(s.animal).values(animals).returning({ pk: s.animal.pk });
 
     // ── Candidates for the triage kanban ──
-    const fridaId = inserted[0]!.id;
-    const bentoId = inserted[1]!.id;
+    const fridaPk = inserted[0]!.pk;
+    const bentoPk = inserted[1]!.pk;
 
-    const maria = createId('person');
-    const joao = createId('person');
-    const ana = createId('person');
-    await tx.insert(s.person).values([
-      person(maria, 'Maria Silva', '+5548988887777'),
-      person(joao, 'João Pereira', '+5548977776666'),
-      person(ana, 'Ana Souza', '+5548966665555'),
-    ]);
+    const people = await tx
+      .insert(s.person)
+      .values([
+        person('Maria Silva', '+5548988887777', orgPk),
+        person('João Pereira', '+5548977776666', orgPk),
+        person('Ana Souza', '+5548966665555', orgPk),
+      ])
+      .returning({ pk: s.person.pk });
+    const [mariaPk, joaoPk, anaPk] = [people[0]!.pk, people[1]!.pk, people[2]!.pk];
 
     await tx.insert(s.application).values([
-      application(fridaId, maria, 'new'),
-      application(fridaId, joao, 'in-progress'),
-      application(bentoId, ana, 'approved'),
+      application(fridaPk, mariaPk, 'new', orgPk),
+      application(fridaPk, joaoPk, 'in-progress', orgPk),
+      application(bentoPk, anaPk, 'approved', orgPk),
     ]);
   });
-}
+};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function buildAnimal(
-  name: string,
-  species: 'dog' | 'cat',
-  sex: 'male' | 'female',
-  status: NewAnimal['status'],
-  extra: Partial<NewAnimal>,
-): NewAnimal {
-  return {
+/** Builds an animal row sans `organizationId` (injected by the caller's `.map`). */
+const buildAnimal = (name: string, species: 'dog' | 'cat', sex: 'male' | 'female', status: NewAnimal['status'], extra: Partial<NewAnimal>): Omit<NewAnimal, 'organizationId'> => ({
     id: createId('animal'),
-    organizationId: DEMO_ORG_ID,
     name,
     species,
     sex,
@@ -175,23 +177,19 @@ function buildAnimal(
     ageMonthsAtIntake: 24,
     ageReferenceDate: new Date('2024-06-01'),
     ...extra,
-  };
-}
+  });
 
-function person(id: string, name: string, phone: string) {
-  return {
-    id,
-    organizationId: DEMO_ORG_ID,
+const person = (name: string, phone: string, organizationId: number) => ({
+    id: createId('person'),
+    organizationId,
     name,
     phone,
     cityId: CRICIUMA,
-  };
-}
+  });
 
-function application(animalId: string, personId: string, status: 'new' | 'in-progress' | 'approved') {
-  return {
+const application = (animalId: number, personId: number, status: 'new' | 'in-progress' | 'approved', organizationId: number) => ({
     id: createId('application'),
-    organizationId: DEMO_ORG_ID,
+    organizationId,
     animalId,
     personId,
     formVersion: 'dog-v1',
@@ -203,5 +201,4 @@ function application(animalId: string, personId: string, status: 'new' | 'in-pro
     },
     submittedAt: new Date(),
     statusChangedAt: new Date(),
-  };
-}
+  });

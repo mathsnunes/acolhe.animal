@@ -9,7 +9,7 @@ import { getPortalAnimals, getPrimaryPhotos, getPublicOrganization } from './dat
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export const generateMetadata = async ({ params }: PageProps): Promise<Metadata> => {
   const { slug } = await params;
   const t = await getTranslations('portal');
   const org = await getPublicOrganization(slug);
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         : {}),
     },
   };
-}
+};
 
 export default async function PortalPage({ params }: PageProps) {
   const { slug } = await params;
@@ -42,8 +42,8 @@ export default async function PortalPage({ params }: PageProps) {
   const sections = org.portalConfig?.sections;
   const showAnimals = sections?.animals !== false; // animals on by default for MVP
 
-  const animals = showAnimals ? await getPortalAnimals(org.id) : [];
-  const photos = await getPrimaryPhotos(animals.map((a) => a.id));
+  const animals = showAnimals ? await getPortalAnimals(org.pk) : [];
+  const photos = await getPrimaryPhotos(animals.map((a) => a.pk));
 
   return (
     <div className="min-h-dvh bg-bg">

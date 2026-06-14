@@ -15,7 +15,7 @@ import { statusLabel, statusMeta } from './status-pill';
  * couple of tags and an intake footer. Hover lifts and warms the border —
  * prototype `animais_13.html` › `.animal-card`.
  */
-export function AnimalCard({ animal, waiting = 0 }: { animal: Animal; waiting?: number }) {
+export const AnimalCard = ({ animal, waiting = 0 }: { animal: Animal; waiting?: number }) => {
   const t = useTranslations('animals');
   const meta = statusMeta[animal.status];
   const tags = animal.specialConditions.slice(0, 3);
@@ -75,4 +75,4 @@ export function AnimalCard({ animal, waiting = 0 }: { animal: Animal; waiting?: 
       </div>
     </Link>
   );
-}
+};

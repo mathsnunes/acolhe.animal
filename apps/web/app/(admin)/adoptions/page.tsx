@@ -28,7 +28,7 @@ interface AdoptionRow {
   animalName: string;
 }
 
-async function listAdoptions(organizationId: string): Promise<AdoptionRow[]> {
+const listAdoptions = async (organizationId: number): Promise<AdoptionRow[]> => {
   const rows = await db
     .select({
       id: adoption.id,
@@ -40,11 +40,11 @@ async function listAdoptions(organizationId: string): Promise<AdoptionRow[]> {
       animalName: animal.name,
     })
     .from(adoption)
-    .innerJoin(animal, eq(adoption.animalId, animal.id))
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
     .where(eq(adoption.organizationId, organizationId))
     .orderBy(desc(adoption.adoptedAt));
   return rows as AdoptionRow[];
-}
+};
 
 export default async function AdocoesPage() {
   const ctx = await requireCtx();
@@ -98,7 +98,7 @@ export default async function AdocoesPage() {
   );
 }
 
-function AdoptionListItem({
+const AdoptionListItem = ({
   row,
   labels,
 }: {
@@ -110,7 +110,7 @@ function AdoptionListItem({
     cancelled: string;
     term: string;
   };
-}) {
+}) => {
   const cancelled = row.cancelledAt !== null;
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
@@ -149,4 +149,4 @@ function AdoptionListItem({
       </a>
     </li>
   );
-}
+};

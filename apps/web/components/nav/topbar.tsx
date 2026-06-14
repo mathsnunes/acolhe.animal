@@ -27,7 +27,7 @@ import { NAV_GROUPS, type NavCounts } from './nav-config';
  * content below, so the topbar's left stays empty on listing screens. Hidden on
  * mobile (the bottom nav + mobile header cover that).
  */
-export function Topbar({ counts }: { counts: NavCounts }) {
+export const Topbar = ({ counts }: { counts: NavCounts }) => {
   const t = useTranslations('nav');
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -104,4 +104,4 @@ export function Topbar({ counts }: { counts: NavCounts }) {
       </Dialog>
     </header>
   );
-}
+};

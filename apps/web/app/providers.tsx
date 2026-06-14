@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 
 /** Client providers: TanStack Query cache + Sonner toasts (calm, on-brand). */
-export function Providers({ children }: { children: ReactNode }) {
+export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -28,4 +28,4 @@ export function Providers({ children }: { children: ReactNode }) {
       />
     </QueryClientProvider>
   );
-}
+};

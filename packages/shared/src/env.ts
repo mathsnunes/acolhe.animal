@@ -48,7 +48,7 @@ export type ServerEnv = z.infer<typeof envSchema>;
 
 let cached: ServerEnv | null = null;
 
-export function serverEnv(): ServerEnv {
+export const serverEnv = (): ServerEnv => {
   if (cached) return cached;
 
   const parsed = envSchema.safeParse(process.env);
@@ -61,8 +61,6 @@ export function serverEnv(): ServerEnv {
 
   cached = parsed.data;
   return cached;
-}
+};
 
-export function isLiveIntegrations(): boolean {
-  return serverEnv().INTEGRATIONS_MODE === 'live';
-}
+export const isLiveIntegrations = (): boolean => serverEnv().INTEGRATIONS_MODE === 'live';

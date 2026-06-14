@@ -11,7 +11,7 @@ import { animalMeta } from './labels';
  * species/sex/size meta line, and a terra "Quero adotar" affordance. The whole
  * card is a link to the public detail page.
  */
-export function PortalAnimalCard({
+export const PortalAnimalCard = ({
   slug,
   animal,
   photoUrl,
@@ -19,7 +19,7 @@ export function PortalAnimalCard({
   slug: string;
   animal: Animal;
   photoUrl?: string | null;
-}) {
+}) => {
   const t = useTranslations('portal');
   const meta = animalMeta(t, animal);
 
@@ -63,4 +63,4 @@ export function PortalAnimalCard({
       </div>
     </Link>
   );
-}
+};

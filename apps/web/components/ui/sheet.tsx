@@ -7,32 +7,18 @@ import { X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
-}
+const Sheet = (props: React.ComponentProps<typeof SheetPrimitive.Root>) => <SheetPrimitive.Root data-slot="sheet" {...props} />;
 
-function SheetTrigger(
-  props: React.ComponentProps<typeof SheetPrimitive.Trigger>,
-) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-}
+const SheetTrigger = (props: React.ComponentProps<typeof SheetPrimitive.Trigger>) => <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 
-function SheetClose(props: React.ComponentProps<typeof SheetPrimitive.Close>) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
-}
+const SheetClose = (props: React.ComponentProps<typeof SheetPrimitive.Close>) => <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 
-function SheetPortal(
-  props: React.ComponentProps<typeof SheetPrimitive.Portal>,
-) {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
-}
+const SheetPortal = (props: React.ComponentProps<typeof SheetPrimitive.Portal>) => <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 
-function SheetOverlay({
+const SheetOverlay = ({
   className,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
-  return (
-    <SheetPrimitive.Overlay
+}: React.ComponentProps<typeof SheetPrimitive.Overlay>) => <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
         'fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm',
@@ -40,9 +26,7 @@ function SheetOverlay({
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
 const sheetVariants = cva(
   'fixed z-50 flex flex-col gap-4 bg-paper p-6 shadow-modal transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-300',
@@ -67,14 +51,12 @@ interface SheetContentProps
   extends React.ComponentProps<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
-function SheetContent({
+const SheetContent = ({
   className,
   children,
   side = 'right',
   ...props
-}: SheetContentProps) {
-  return (
-    <SheetPortal>
+}: SheetContentProps) => <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
@@ -93,58 +75,40 @@ function SheetContent({
           <span className="sr-only">Fechar</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
-    </SheetPortal>
-  );
-}
+    </SheetPortal>;
 
-function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
+const SheetHeader = ({ className, ...props }: React.ComponentProps<'div'>) => <div
       data-slot="sheet-header"
       className={cn('flex flex-col gap-1.5 text-left', className)}
       {...props}
-    />
-  );
-}
+    />;
 
-function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
+const SheetFooter = ({ className, ...props }: React.ComponentProps<'div'>) => <div
       data-slot="sheet-footer"
       className={cn('mt-auto flex flex-col gap-2', className)}
       {...props}
-    />
-  );
-}
+    />;
 
-function SheetTitle({
+const SheetTitle = ({
   className,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Title>) {
-  return (
-    <SheetPrimitive.Title
+}: React.ComponentProps<typeof SheetPrimitive.Title>) => <SheetPrimitive.Title
       data-slot="sheet-title"
       className={cn(
         'font-display text-lg font-medium leading-tight tracking-tight text-ink',
         className,
       )}
       {...props}
-    />
-  );
-}
+    />;
 
-function SheetDescription({
+const SheetDescription = ({
   className,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Description>) {
-  return (
-    <SheetPrimitive.Description
+}: React.ComponentProps<typeof SheetPrimitive.Description>) => <SheetPrimitive.Description
       data-slot="sheet-description"
       className={cn('text-sm leading-relaxed text-ink-soft', className)}
       {...props}
-    />
-  );
-}
+    />;
 
 export {
   Sheet,
