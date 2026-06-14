@@ -52,7 +52,8 @@ export const animal = pgTable(
 
     /** Temporary, structured health state (does NOT block adoption). */
     clinicalCondition: jsonb().$type<ClinicalCondition>(),
-    neutered: neuteredStatus().notNull(),
+    /** Nullable so a draft can exist before the health step is filled. */
+    neutered: neuteredStatus(),
     vaccinations: jsonb().$type<Vaccination[]>().notNull().default(sql`'[]'::jsonb`),
     /** Permanent free tags (FIV+, three legs, epilepsy). */
     specialConditions: text()
@@ -85,7 +86,8 @@ export const animal = pgTable(
   (t) => [
     check(
       'animal_age_present',
-      sql`${t.estimatedBirthDate} is not null or (${t.ageMonthsAtIntake} is not null and ${t.ageReferenceDate} is not null)`,
+      // Drafts are exempt — age becomes mandatory only when the animal is published.
+      sql`${t.status} = 'draft' or ${t.estimatedBirthDate} is not null or (${t.ageMonthsAtIntake} is not null and ${t.ageReferenceDate} is not null)`,
     ),
     index('animal_org_status_active_idx')
       .on(t.organizationId, t.status)

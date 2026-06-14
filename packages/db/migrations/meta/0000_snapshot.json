@@ -1,5 +1,5 @@
 {
-  "id": "d4ed9243-c0a9-4afc-ad8f-f6fd732ad5dc",
+  "id": "2fe2e3df-f552-49c2-a9ec-c33d9ebd8ffb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1375,7 +1375,7 @@
           "type": "neutered_status",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "vaccinations": {
           "name": "vaccinations",
@@ -1587,7 +1587,7 @@
       "checkConstraints": {
         "animal_age_present": {
           "name": "animal_age_present",
-          "value": "\"animal\".\"estimated_birth_date\" is not null or (\"animal\".\"age_months_at_intake\" is not null and \"animal\".\"age_reference_date\" is not null)"
+          "value": "\"animal\".\"status\" = 'draft' or \"animal\".\"estimated_birth_date\" is not null or (\"animal\".\"age_months_at_intake\" is not null and \"animal\".\"age_reference_date\" is not null)"
         }
       },
       "isRLSEnabled": false
@@ -5599,6 +5599,7 @@
       "name": "animal_status",
       "schema": "public",
       "values": [
+        "draft",
         "available",
         "under-review",
         "reserved",

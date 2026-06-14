@@ -53,6 +53,7 @@ export const animalSpecies = pgEnum('animal_species', ['dog', 'cat']);
 export const animalSex = pgEnum('animal_sex', ['male', 'female']);
 export const animalSize = pgEnum('animal_size', ['small', 'medium', 'large']);
 export const animalStatus = pgEnum('animal_status', [
+  'draft',
   'available',
   'under-review',
   'reserved',

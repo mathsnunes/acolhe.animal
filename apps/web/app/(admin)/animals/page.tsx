@@ -47,7 +47,7 @@ export default async function AnimaisPage({
   // counts need all statuses, and age is derived (no DB column) so it's filtered
   // in-app too.
   const [allRows, waiting] = await Promise.all([
-    listAnimals(ctx, { species, size, search, orderBy: sort }),
+    listAnimals(ctx, { species, size, search, orderBy: sort, includeDrafts: true }),
     countWaitingApplicationsByAnimal(ctx),
   ]);
 

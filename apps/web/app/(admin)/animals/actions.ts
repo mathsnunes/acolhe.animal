@@ -4,11 +4,12 @@ import { revalidatePath } from 'next/cache';
 
 import {
   archiveAnimal,
-  createAnimal,
+  autosaveAnimal,
+  createAnimalDraft,
+  publishAnimal,
   unarchiveAnimal,
-  updateAnimal,
+  type AnimalDraftInput,
   type CreateAnimalInput,
-  type UpdateAnimalInput,
 } from '@acolhe-animal/domain';
 import type { Animal } from '@acolhe-animal/db';
 import type { ActionResult } from '@acolhe-animal/shared';
@@ -23,16 +24,24 @@ import { requireCtx } from '@/lib/auth-context';
  * against its Zod schema, so these stay thin.
  */
 
-export const createAnimalAction = async (input: CreateAnimalInput): Promise<ActionResult<Animal>> => {
+/** Start a draft animal from the wizard's first step. Returns the created row (with its id). */
+export const createAnimalDraftAction = async (input: AnimalDraftInput): Promise<ActionResult<Animal>> => {
   const ctx = await requireCtx();
-  const result = await action(() => createAnimal(ctx, input));
+  const result = await action(() => createAnimalDraft(ctx, input));
   if (result.ok) revalidatePath('/animais');
   return result;
 };
 
-export const updateAnimalAction = async (id: string, input: UpdateAnimalInput): Promise<ActionResult<Animal>> => {
+/** Debounced autosave of partial wizard state into a draft (or an animal being edited). */
+export const autosaveAnimalAction = async (id: string, patch: AnimalDraftInput): Promise<ActionResult<void>> => {
   const ctx = await requireCtx();
-  const result = await action(() => updateAnimal(ctx, id, input));
+  return action(() => autosaveAnimal(ctx, id, patch));
+};
+
+/** Validate the full record and finalize it (draft → available, or save an edit). */
+export const publishAnimalAction = async (id: string, input: CreateAnimalInput): Promise<ActionResult<Animal>> => {
+  const ctx = await requireCtx();
+  const result = await action(() => publishAnimal(ctx, id, input));
   if (result.ok) {
     revalidatePath('/animais');
     revalidatePath(`/animais/${id}`);

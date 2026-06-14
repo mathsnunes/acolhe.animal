@@ -14,6 +14,10 @@ export type AnimalStatus = Animal['status'];
  * from the `animals` i18n namespace via {@link statusLabel}.
  */
 export const statusMeta: Record<AnimalStatus, { dot: string; pill: string }> = {
+  draft: {
+    dot: 'bg-ink-mute',
+    pill: 'bg-bg-2 text-ink-mute',
+  },
   available: {
     dot: 'bg-green-soft',
     pill: 'bg-green/10 text-green',

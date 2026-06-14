@@ -43,6 +43,9 @@
 - Mutation = a thin Server Action: `requireCtx()` → `action(() => domainFn(ctx, input))` → `revalidatePath(...)`.
 - `action()` (`lib/action.ts`) turns a `DomainError` into an `ActionResult` — never leak internals to the user.
 - Images via `next/image`. Colors via tokens (`bg-terra`, `text-ink`), never hardcoded hex.
+- **Hint / secondary text** (the description under a section heading, a field hint, a toggle sub-label) uses the **`hint` utility** (`globals.css` › `@layer components`: 13px, `ink-mute`, `line-height 1.5`) — alongside `eyebrow` and `display`. Never hand-roll `text-sm text-ink-soft` for hints: it's both bigger (14px) and a darker tone, so hints drift out of the design system.
+- **UI primitives come from `apps/web/components/ui/*` (shadcn/Radix).** Dropdowns use the `Select` family (`components/ui/select.tsx`: `Select` / `SelectTrigger` / `SelectValue` / `SelectContent` / `SelectItem`) — **never a raw `<select>`** (it ignores the design tokens and looks off). Same rule for dialogs, inputs, checkboxes, etc.: reach for the `ui/` component first. Radix `Select` is controlled via `value` + `onValueChange` and forbids empty-string item values — use a placeholder for the unset state (or a sentinel value).
+- **Date fields** use `<Input type="date">` (the `ui/input` component) — the native browser picker chrome (calendar indicator, datetime-edit text) is themed in `globals.css` under `@layer base` so it matches the tokens. We keep the native picker (no custom DatePicker yet); never use a bare, unthemed `<input type="date">`. The same `@layer base` rules cover `datetime-local` / `time`.
 - One responsibility per component. A page is a composition of small components.
 
 ## Shared validation

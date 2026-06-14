@@ -124,7 +124,10 @@ export default async function AnimalDetailPage({
               label={t('detail.factSize')}
               value={animal.size ? sizeLabel(t, animal.size) : t('detail.empty')}
             />
-            <QuickStat label={t('detail.factNeutered')} value={neuteredLabel(t, animal.neutered)} />
+            <QuickStat
+              label={t('detail.factNeutered')}
+              value={animal.neutered ? neuteredLabel(t, animal.neutered) : t('detail.empty')}
+            />
             <QuickStat
               label={t('detail.factEnergy')}
               value={animal.energyLevel ? energyLabel(t, animal.energyLevel) : t('detail.empty')}

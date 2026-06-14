@@ -51,7 +51,7 @@ export const AnimalsTable = async ({
         return (
           <Link
             key={a.id}
-            href={`/animais/${a.id}`}
+            href={a.status === 'draft' ? `/animais/${a.id}/editar` : `/animais/${a.id}`}
             aria-label={t('list.open', { name: a.name })}
             className={cn(
               'grid grid-cols-[56px_1fr] items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors hover:bg-bg-2',

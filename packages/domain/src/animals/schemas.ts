@@ -65,5 +65,23 @@ export const createAnimalSchema = z
 
 export const updateAnimalSchema = createAnimalSchema.innerType().partial();
 
+/**
+ * Patch schema for draft autosave: everything optional and — crucially — the
+ * defaulted fields are re-declared WITHOUT their defaults, so a partial save
+ * never silently overwrites existing vaccines/conditions/visibility with the
+ * schema defaults. Only keys actually present in the patch are persisted.
+ */
+export const animalDraftSchema = createAnimalSchema
+  .innerType()
+  .partial()
+  .extend({
+    intakeDate: z.coerce.date().optional(),
+    vaccinations: z.array(vaccinationSchema).optional(),
+    specialConditions: z.array(z.string().trim().min(1)).optional(),
+    visibleOnPortal: z.boolean().optional(),
+    listedForAdoption: z.boolean().optional(),
+  });
+
 export type CreateAnimalInput = z.input<typeof createAnimalSchema>;
 export type UpdateAnimalInput = z.infer<typeof updateAnimalSchema>;
+export type AnimalDraftInput = z.input<typeof animalDraftSchema>;

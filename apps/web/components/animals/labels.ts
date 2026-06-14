@@ -18,7 +18,7 @@ export const sexLabel = (t: Translator, value: Animal['sex']): string => t(`labe
 
 export const sizeLabel = (t: Translator, value: NonNullable<Animal['size']>): string => t(`labels.size.${value}`);
 
-export const neuteredLabel = (t: Translator, value: Animal['neutered']): string => t(`labels.neutered.${value}`);
+export const neuteredLabel = (t: Translator, value: NonNullable<Animal['neutered']>): string => t(`labels.neutered.${value}`);
 
 export const energyLabel = (t: Translator, value: NonNullable<Animal['energyLevel']>): string => t(`labels.energy.${value}`);
 
@@ -30,7 +30,7 @@ export const clinicalTypeLabel = (t: Translator, value: NonNullable<Animal['clin
 export const SPECIES_KEYS: Animal['species'][] = ['dog', 'cat'];
 export const SEX_KEYS: Animal['sex'][] = ['male', 'female'];
 export const SIZE_KEYS: NonNullable<Animal['size']>[] = ['small', 'medium', 'large'];
-export const NEUTERED_KEYS: Animal['neutered'][] = ['yes', 'no', 'scheduled'];
+export const NEUTERED_KEYS: NonNullable<Animal['neutered']>[] = ['yes', 'no', 'scheduled'];
 export const ENERGY_KEYS: NonNullable<Animal['energyLevel']>[] = [
   'calm',
   'balanced',

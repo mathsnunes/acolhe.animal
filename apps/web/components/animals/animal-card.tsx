@@ -19,10 +19,12 @@ export const AnimalCard = ({ animal, waiting = 0 }: { animal: Animal; waiting?: 
   const t = useTranslations('animals');
   const meta = statusMeta[animal.status];
   const tags = animal.specialConditions.slice(0, 3);
+  // Resuming a draft re-opens the wizard; published animals open their detail.
+  const href = animal.status === 'draft' ? `/animais/${animal.id}/editar` : `/animais/${animal.id}`;
 
   return (
     <Link
-      href={`/animais/${animal.id}`}
+      href={href}
       className={cn(
         'group flex flex-col overflow-hidden rounded-lg border border-line bg-paper',
         'transition duration-200 hover:-translate-y-0.5 hover:border-terra hover:shadow-card',

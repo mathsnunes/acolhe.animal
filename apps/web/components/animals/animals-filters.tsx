@@ -18,7 +18,9 @@ import {
 import { encodeAnimalsParam, type CanonicalKey } from '@/lib/animals-search-params';
 import { statusMeta, type AnimalStatus } from './status-pill';
 
-type StatusTab = { key: 'all' | AnimalStatus; labelKey: string };
+/** Drafts are never a status tab — they surface in the list with a badge instead. */
+type TabStatus = Exclude<AnimalStatus, 'draft'>;
+type StatusTab = { key: 'all' | TabStatus; labelKey: string };
 
 const STATUS_TABS: StatusTab[] = [
   { key: 'all', labelKey: 'filters.tabAll' },
@@ -43,7 +45,7 @@ export const AnimalsFilters = ({
   counts,
   current,
 }: {
-  counts: Record<'all' | AnimalStatus, number>;
+  counts: Record<'all' | TabStatus, number>;
   current: AnimalsCurrentFilters;
 }) => {
   const t = useTranslations('animals');

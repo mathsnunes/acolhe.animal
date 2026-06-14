@@ -11,7 +11,7 @@ const Label = ({
 }: React.ComponentProps<typeof LabelPrimitive.Root>) => <LabelPrimitive.Root
       data-slot="label"
       className={cn(
-        'text-sm font-medium leading-none text-ink select-none',
+        'text-xs font-medium leading-none text-ink select-none',
         'peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
         className,
       )}

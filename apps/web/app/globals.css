@@ -113,6 +113,27 @@
     outline-offset: 2px;
     border-radius: 6px;
   }
+
+  /* Native date/time inputs: tame the browser chrome so `<Input type="date">`
+     matches the design system (muted, clickable calendar icon; on-brand text).
+     We keep the native picker on purpose — there's no custom DatePicker yet. */
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='time'] {
+    color: var(--color-ink);
+  }
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+  }
+  input[type='date']:hover::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']:hover::-webkit-calendar-picker-indicator,
+  input[type='time']:hover::-webkit-calendar-picker-indicator {
+    opacity: 0.8;
+  }
 }
 
 /* ── Brand + editorial utilities (design-system.md / 04-componentes) ───────── */
@@ -139,6 +160,14 @@
     color: var(--color-terra);
   }
   .eyebrow-mute {
+    color: var(--color-ink-mute);
+  }
+
+  /* Secondary descriptive text under a label/section heading (form hints, subs).
+     One canonical size + color so hints never drift (design-system: 13px, muted). */
+  .hint {
+    font-size: 13px;
+    line-height: 1.5;
     color: var(--color-ink-mute);
   }
 

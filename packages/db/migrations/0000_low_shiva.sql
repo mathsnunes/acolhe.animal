@@ -2,7 +2,7 @@ CREATE TYPE "public"."adoption_source" AS ENUM('digital', 'offline');--> stateme
 CREATE TYPE "public"."animal_sex" AS ENUM('male', 'female');--> statement-breakpoint
 CREATE TYPE "public"."animal_size" AS ENUM('small', 'medium', 'large');--> statement-breakpoint
 CREATE TYPE "public"."animal_species" AS ENUM('dog', 'cat');--> statement-breakpoint
-CREATE TYPE "public"."animal_status" AS ENUM('available', 'under-review', 'reserved', 'adopted', 'unavailable');--> statement-breakpoint
+CREATE TYPE "public"."animal_status" AS ENUM('draft', 'available', 'under-review', 'reserved', 'adopted', 'unavailable');--> statement-breakpoint
 CREATE TYPE "public"."application_status" AS ENUM('draft', 'new', 'in-progress', 'approved', 'rejected', 'withdrew');--> statement-breakpoint
 CREATE TYPE "public"."asaas_kyc_status" AS ENUM('pending', 'awaiting_documents', 'under_review', 'approved', 'rejected');--> statement-breakpoint
 CREATE TYPE "public"."asaas_onboarding_status" AS ENUM('not_started', 'creating', 'awaiting_revenue', 'documents_pending', 'under_review', 'approved', 'rejected');--> statement-breakpoint
@@ -187,7 +187,7 @@ CREATE TABLE "animal" (
 	"weight_kg" numeric(4, 2),
 	"status" "animal_status" DEFAULT 'available' NOT NULL,
 	"clinical_condition" jsonb,
-	"neutered" "neutered_status" NOT NULL,
+	"neutered" "neutered_status",
 	"vaccinations" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"special_conditions" text[] DEFAULT '{}'::text[] NOT NULL,
 	"energy_level" "energy_level",
@@ -206,7 +206,7 @@ CREATE TABLE "animal" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "animal_id_unique" UNIQUE("id"),
-	CONSTRAINT "animal_age_present" CHECK ("animal"."estimated_birth_date" is not null or ("animal"."age_months_at_intake" is not null and "animal"."age_reference_date" is not null))
+	CONSTRAINT "animal_age_present" CHECK ("animal"."status" = 'draft' or "animal"."estimated_birth_date" is not null or ("animal"."age_months_at_intake" is not null and "animal"."age_reference_date" is not null))
 );
 --> statement-breakpoint
 CREATE TABLE "animal_instagram_art" (
