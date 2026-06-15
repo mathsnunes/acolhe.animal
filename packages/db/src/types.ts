@@ -26,7 +26,11 @@ export type AnimalPhoto = InferSelectModel<typeof schema.animalPhoto>;
 export type NewAnimalPhoto = InferInsertModel<typeof schema.animalPhoto>;
 
 export type AnimalVideo = InferSelectModel<typeof schema.animalVideo>;
+export type NewAnimalVideo = InferInsertModel<typeof schema.animalVideo>;
 export type AnimalInstagramArt = InferSelectModel<typeof schema.animalInstagramArt>;
+
+export type Upload = InferSelectModel<typeof schema.upload>;
+export type NewUpload = InferInsertModel<typeof schema.upload>;
 
 export type Person = InferSelectModel<typeof schema.person>;
 export type NewPerson = InferInsertModel<typeof schema.person>;

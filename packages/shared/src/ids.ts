@@ -39,6 +39,7 @@ export const ID_PREFIX = {
   payout: 'payout',
   timelineEvent: 'tlevt',
   auditLog: 'audit',
+  upload: 'upl',
 } as const;
 
 export type EntityKind = keyof typeof ID_PREFIX;

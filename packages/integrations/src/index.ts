@@ -6,6 +6,7 @@
  * concrete SDK — so swapping a provider is an adapter change, not a domain change.
  */
 export * from './storage';
+export * from './media';
 export * from './messaging';
 export * from './email';
 export * from './payments';

@@ -15,7 +15,15 @@ import { statusLabel, statusMeta } from './status-pill';
  * couple of tags and an intake footer. Hover lifts and warms the border —
  * prototype `animais_13.html` › `.animal-card`.
  */
-export const AnimalCard = ({ animal, waiting = 0 }: { animal: Animal; waiting?: number }) => {
+export const AnimalCard = ({
+  animal,
+  waiting = 0,
+  coverUrl,
+}: {
+  animal: Animal;
+  waiting?: number;
+  coverUrl?: string | null;
+}) => {
   const t = useTranslations('animals');
   const meta = statusMeta[animal.status];
   const tags = animal.specialConditions.slice(0, 3);
@@ -30,8 +38,13 @@ export const AnimalCard = ({ animal, waiting = 0 }: { animal: Animal; waiting?: 
         'transition duration-200 hover:-translate-y-0.5 hover:border-terra hover:shadow-card',
       )}
     >
-      <div className="relative flex aspect-[4/3] items-center justify-center bg-bg-2">
-        <PawPrint className="size-14 text-ink-mute/50" aria-hidden />
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-bg-2">
+        {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- user media on R2/local, not a known-size next/image asset
+          <img src={coverUrl} alt={animal.name} loading="lazy" className="size-full object-cover" />
+        ) : (
+          <PawPrint className="size-14 text-ink-mute/50" aria-hidden />
+        )}
         <span
           className={cn(
             'absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1',

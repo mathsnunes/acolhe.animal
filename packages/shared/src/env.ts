@@ -34,7 +34,13 @@ const envSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET: z.string().default('acolhe-animal'),
-  R2_PUBLIC_URL: z.string().default('http://localhost:3000/local-storage'),
+  /**
+   * Public base for stored objects. In `mock` keep it ORIGIN-RELATIVE
+   * (`/local-storage`) so URLs resolve against whatever host serves the app
+   * (localhost, a dev tunnel, the LAN IP) with no per-run changes. In `live` set
+   * it to the absolute R2 public domain (`https://…`).
+   */
+  R2_PUBLIC_URL: z.string().default('/local-storage'),
 
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('Acolhe.animal <nao-responda@acolhe.animal>'),

@@ -20,9 +20,12 @@ const COLS = 'lg:grid-cols-[56px_1.4fr_1fr_104px_132px_104px_24px]';
 export const AnimalsTable = async ({
   animals,
   waiting,
+  covers = {},
 }: {
   animals: Animal[];
   waiting: Record<string, number>;
+  /** Animal public id → cover thumbnail URL. */
+  covers?: Record<string, string>;
 }) => {
   const t = await getTranslations('animals');
 
@@ -58,8 +61,13 @@ export const AnimalsTable = async ({
               COLS,
             )}
           >
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-[10px] bg-bg-2 text-ink-mute">
-              <PawPrint className="size-5" strokeWidth={1.5} />
+            <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-bg-2 text-ink-mute">
+              {covers[a.id] ? (
+                // eslint-disable-next-line @next/next/no-img-element -- user media on R2/local
+                <img src={covers[a.id]} alt={a.name} loading="lazy" className="size-full object-cover" />
+              ) : (
+                <PawPrint className="size-5" strokeWidth={1.5} />
+              )}
             </div>
 
             <div className="min-w-0">

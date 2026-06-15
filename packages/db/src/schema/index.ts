@@ -8,6 +8,7 @@ export * from './auth';
 export * from './city';
 export * from './organization';
 export * from './animals';
+export * from './uploads';
 export * from './people';
 export * from './donors';
 export * from './campaigns';

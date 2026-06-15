@@ -13,9 +13,21 @@ const nextConfig: NextConfig = {
     '@acolhe-animal/messaging',
   ],
   experimental: {
-    // Keep heavy server-only deps out of the bundle.
-    serverActions: { bodySizeLimit: '8mb' },
+    serverActions: {
+      bodySizeLimit: '8mb',
+      // Accept Server Actions when the app is reached through a dev tunnel (the
+      // public host differs from localhost), so uploads work over `pnpm tunnel`
+      // with no per-run config. Quick tunnels are `*.trycloudflare.com`.
+      allowedOrigins: ['localhost:3000', '*.trycloudflare.com'],
+    },
   },
+  // Allow dev-asset/HMR requests from the same tunnel hosts.
+  allowedDevOrigins: ['*.trycloudflare.com'],
+  // Keep native/binary-backed media deps out of the server bundle: webpack can't
+  // resolve fluent-ffmpeg's dynamic requires nor the static binary paths, which
+  // breaks transcoding/poster extraction. Externalizing loads them from
+  // node_modules at runtime. (sharp is externalized by Next automatically.)
+  serverExternalPackages: ['fluent-ffmpeg', 'ffmpeg-static', 'ffprobe-static'],
   images: {
     // Mock storage serves uploaded images from a local route in dev.
     remotePatterns: [{ protocol: 'https', hostname: '**' }],

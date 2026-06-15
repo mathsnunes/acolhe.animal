@@ -5,13 +5,22 @@ import { revalidatePath } from 'next/cache';
 import {
   archiveAnimal,
   autosaveAnimal,
+  commitUpload,
   createAnimalDraft,
+  deleteAnimalPhoto,
+  deleteAnimalVideo,
+  listAnimalPhotos,
+  listAnimalVideos,
   publishAnimal,
+  requestUploads,
+  setAnimalCoverPhoto,
   unarchiveAnimal,
   type AnimalDraftInput,
   type CreateAnimalInput,
+  type RequestUploadsInput,
+  type UploadTicketResult,
 } from '@acolhe-animal/domain';
-import type { Animal } from '@acolhe-animal/db';
+import type { Animal, AnimalPhoto, AnimalVideo } from '@acolhe-animal/db';
 import type { ActionResult } from '@acolhe-animal/shared';
 
 import { action } from '@/lib/action';
@@ -67,4 +76,53 @@ export const unarchiveAnimalAction = async (id: string): Promise<ActionResult> =
     revalidatePath(`/animais/${id}`);
   }
   return result;
+};
+
+/* ── Uploads (photos & videos) ──────────────────────────────────────────────
+ * The browser uploads bytes straight to storage with the presigned URL these
+ * actions mint; each file is then committed (image processed inline, video
+ * queued). See `docs/uploads.md`. */
+
+/** Validate a batch + mint presigned upload URLs (one ledger row per file). */
+export const requestUploadsAction = async (
+  input: RequestUploadsInput,
+): Promise<ActionResult<UploadTicketResult[]>> => {
+  const ctx = await requireCtx();
+  return action(() => requestUploads(ctx, input));
+};
+
+/** Finalize one uploaded file → an `animal_photo` (ready) or `animal_video` (queued). */
+export const commitUploadAction = async (
+  uploadId: string,
+): Promise<ActionResult<AnimalPhoto | AnimalVideo>> => {
+  const ctx = await requireCtx();
+  return action(() => commitUpload(ctx, uploadId));
+};
+
+export const listAnimalPhotosAction = async (animalId: string): Promise<ActionResult<AnimalPhoto[]>> => {
+  const ctx = await requireCtx();
+  return action(() => listAnimalPhotos(ctx, animalId));
+};
+
+export const listAnimalVideosAction = async (animalId: string): Promise<ActionResult<AnimalVideo[]>> => {
+  const ctx = await requireCtx();
+  return action(() => listAnimalVideos(ctx, animalId));
+};
+
+export const deleteAnimalPhotoAction = async (photoId: string): Promise<ActionResult> => {
+  const ctx = await requireCtx();
+  return action(() => deleteAnimalPhoto(ctx, photoId));
+};
+
+/** Make a photo the animal's cover (exactly one per animal). */
+export const setAnimalCoverAction = async (photoId: string): Promise<ActionResult> => {
+  const ctx = await requireCtx();
+  const result = await action(() => setAnimalCoverPhoto(ctx, photoId));
+  if (result.ok) revalidatePath('/animais');
+  return result;
+};
+
+export const deleteAnimalVideoAction = async (videoId: string): Promise<ActionResult> => {
+  const ctx = await requireCtx();
+  return action(() => deleteAnimalVideo(ctx, videoId));
 };

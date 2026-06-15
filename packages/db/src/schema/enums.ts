@@ -152,6 +152,10 @@ export const payoutStatus = pgEnum('payout_status', [
   'returned',
 ]);
 
+// ── Uploads ──────────────────────────────────────────────────────────────────
+/** Lifecycle of a file in the upload ledger (see `docs/uploads.md`). */
+export const uploadStatus = pgEnum('upload_status', ['pending', 'committed', 'failed']);
+
 // ── Cross-cutting ────────────────────────────────────────────────────────────
 export const brRegion = pgEnum('br_region', [
   'north',

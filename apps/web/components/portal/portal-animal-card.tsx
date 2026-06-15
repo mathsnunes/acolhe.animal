@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 
 import type { Animal } from '@acolhe-animal/db';
 
+import { cn } from '@/lib/utils';
 import { AnimalPhoto } from './animal-photo';
 import { animalMeta } from './labels';
 
@@ -10,30 +11,37 @@ import { animalMeta } from './labels';
  * One animal on the public portal grid: photo, name, a short story snippet, the
  * species/sex/size meta line, and a terra "Quero adotar" affordance. The whole
  * card is a link to the public detail page.
+ *
+ * `preview` renders the same visual without the link — used by the admin wizard
+ * to show exactly how the card will look on the portal (single source of truth).
  */
 export const PortalAnimalCard = ({
   slug,
   animal,
   photoUrl,
+  preview = false,
 }: {
   slug: string;
-  animal: Animal;
+  animal: Pick<Animal, 'id' | 'name' | 'species' | 'sex' | 'size' | 'shortStory'>;
   photoUrl?: string | null;
+  preview?: boolean;
 }) => {
   const t = useTranslations('portal');
   const meta = animalMeta(t, animal);
 
-  return (
-    <Link
-      href={`/${slug}/animais/${animal.id}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-line-soft bg-paper shadow-card transition hover:-translate-y-0.5 hover:shadow-elevated"
-    >
+  const className = cn(
+    'group flex flex-col overflow-hidden rounded-xl border border-line-soft bg-paper shadow-card',
+    !preview && 'transition hover:-translate-y-0.5 hover:shadow-elevated',
+  );
+
+  const content = (
+    <>
       <div className="aspect-[4/5] overflow-hidden bg-bg-2">
         <AnimalPhoto
           src={photoUrl}
           name={animal.name}
           rounded="rounded-none"
-          className="transition duration-500 group-hover:scale-[1.03]"
+          className={preview ? undefined : 'transition duration-500 group-hover:scale-[1.03]'}
         />
       </div>
 
@@ -42,9 +50,7 @@ export const PortalAnimalCard = ({
         <h3 className="display text-2xl text-ink">{animal.name}</h3>
 
         {animal.shortStory && (
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">
-            {animal.shortStory}
-          </p>
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">{animal.shortStory}</p>
         )}
 
         <span className="eyebrow mt-4 inline-flex items-center gap-2 pt-1">
@@ -61,6 +67,20 @@ export const PortalAnimalCard = ({
           </svg>
         </span>
       </div>
+    </>
+  );
+
+  if (preview) {
+    return (
+      <div className={className} aria-hidden>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/${slug}/animais/${animal.id}`} className={className}>
+      {content}
     </Link>
   );
 };

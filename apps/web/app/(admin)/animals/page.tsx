@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Plus } from 'lucide-react';
 
-import { countWaitingApplicationsByAnimal, listAnimals } from '@acolhe-animal/domain';
+import { countWaitingApplicationsByAnimal, getAnimalCovers, listAnimals } from '@acolhe-animal/domain';
 import type { Animal } from '@acolhe-animal/db';
 
 import { PageHeaderHero } from '@/components/page-header';
@@ -53,6 +53,11 @@ export default async function AnimaisPage({
 
   const scopedAll = age ? allRows.filter((a) => ageGroupOf(a) === age) : allRows;
   const animals = status ? scopedAll.filter((a) => a.status === status) : scopedAll;
+
+  // Cover photo per visible animal (public id → thumbnail URL) for the grid/table.
+  const coverPhotos = await getAnimalCovers(ctx, animals.map((a) => a.pk));
+  const covers: Record<string, string> = {};
+  for (const [id, photo] of Object.entries(coverPhotos)) covers[id] = photo.thumbUrl;
 
   const counts = {
     all: scopedAll.length,
@@ -105,11 +110,16 @@ export default async function AnimaisPage({
           actionLabel={hasFilters ? undefined : t('list.emptyActionLabel')}
         />
       ) : isList ? (
-        <AnimalsTable animals={animals} waiting={waiting} />
+        <AnimalsTable animals={animals} waiting={waiting} covers={covers} />
       ) : (
         <div className="mt-7 grid grid-cols-1 gap-3 px-6 sm:grid-cols-2 sm:gap-[18px] sm:px-10 lg:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
           {animals.map((animal) => (
-            <AnimalCard key={animal.id} animal={animal} waiting={waiting[animal.id] ?? 0} />
+            <AnimalCard
+              key={animal.id}
+              animal={animal}
+              waiting={waiting[animal.id] ?? 0}
+              coverUrl={covers[animal.id]}
+            />
           ))}
         </div>
       )}

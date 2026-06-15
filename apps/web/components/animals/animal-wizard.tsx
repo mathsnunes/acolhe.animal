@@ -9,14 +9,13 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Image as ImageIcon,
   Plus,
   Trash2,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { Animal } from '@acolhe-animal/db';
+import type { Animal, AnimalPhoto } from '@acolhe-animal/db';
 import type { AnimalDraftInput, CreateAnimalInput } from '@acolhe-animal/domain';
 
 import { cn } from '@/lib/utils';
@@ -46,7 +45,11 @@ import {
   createAnimalDraftAction,
   autosaveAnimalAction,
   publishAnimalAction,
+  listAnimalPhotosAction,
 } from '@/app/(admin)/animals/actions';
+import { AnimalMediaUploader } from '@/components/uploads/animal-media-uploader';
+import { PortalAnimalCard } from '@/components/portal/portal-animal-card';
+import { PortalAnimalHero } from '@/components/portal/portal-animal-hero';
 
 /**
  * Six-step animal wizard with real server-side drafts.
@@ -206,21 +209,6 @@ const STEP_OF_FIELD: Record<string, number> = {
   neutered: 3,
 };
 
-const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
-const formatIntakeShort = (iso: string): string => {
-  const [y, m] = iso.split('-');
-  const month = MONTHS_SHORT[Number(m) - 1];
-  return month && y ? `${month} · ${y.slice(2)}` : iso;
-};
-
-/** Gendered species noun for the public-facing previews (Cadela / Cachorro / Gata / Gato). */
-const speciesNoun = (t: Translator, species: FormValues['species'], sex: FormValues['sex']): string => {
-  if (species === 'dog') return t(sex === 'female' ? 'wizard.speciesNoun.dogFemale' : 'wizard.speciesNoun.dogMale');
-  if (species === 'cat') return t(sex === 'female' ? 'wizard.speciesNoun.catFemale' : 'wizard.speciesNoun.catMale');
-  return '—';
-};
-
 /** "~8 meses" (birth date) or "~2 anos no resgate" (estimate at intake). */
 const ageText = (t: Translator, v: FormValues): string => {
   const text = (months: number, rescue: boolean): string => {
@@ -254,23 +242,6 @@ const incompleteFields = (v: FormValues): { step: number; labelKey: string }[] =
   if (!v.neutered) items.push({ step: 3, labelKey: 'wizard.neuteredHeading' });
   return items;
 };
-
-/** Card-preview tags: permanent conditions (terra) + sociability wins (green), max 3. */
-const cardTags = (t: Translator, v: FormValues): { text: string; kind: 'terra' | 'green' }[] => {
-  const tags: { text: string; kind: 'terra' | 'green' }[] = [];
-  v.specialConditions.slice(0, 2).forEach((c) => tags.push({ text: c, kind: 'terra' }));
-  if (tags.length < 3 && v.goodWithChildren === 'yes') tags.push({ text: t('wizard.goodTagChildren'), kind: 'green' });
-  if (tags.length < 3 && v.goodWithDogs === 'yes') tags.push({ text: t('wizard.goodTagDogs'), kind: 'green' });
-  if (tags.length < 3 && v.goodWithCats === 'yes') tags.push({ text: t('wizard.goodTagCats'), kind: 'green' });
-  return tags.slice(0, 3);
-};
-
-const QuickStat = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <p className="eyebrow eyebrow-mute">— {label}</p>
-    <p className="mt-1 text-ink">{value}</p>
-  </div>
-);
 
 export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
   const t = useTranslations('animals');
@@ -326,13 +297,32 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
     return () => clearTimeout(timer);
   }, [values, persist]);
 
+  // Reset scroll to the top of the page when the step changes — AFTER the new
+  // step renders. A synchronous scroll (inside the click handler) gets cancelled
+  // by the layout shift of swapping a tall step in, which is why navigating on
+  // mobile left you stuck mid-form.
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
+  // Media uploads need a persisted animal to attach to; ensure the draft exists
+  // (creating it if identity is filled) and hand back its id.
+  const ensureOwnerId = useCallback(
+    async (): Promise<string | null> => idRef.current ?? (await persist(valuesRef.current)),
+    [persist],
+  );
+
   // ── Navigation ──────────────────────────────────────────────────────────
   // Free navigation (stepper + arrows + picker) — drafts let you roam; only
   // "Continuar" and "Publicar" enforce the per-step requirements.
   const jumpToStep = (target: number) => {
     setErrors({});
     setStep(Math.min(TOTAL_STEPS, Math.max(1, target)));
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const nextStep = () => {
@@ -346,8 +336,13 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
 
   const onSaveAndExit = () => {
     startPublish(async () => {
-      await persist(valuesRef.current);
-      router.push('/animais');
+      const savedId = (await persist(valuesRef.current)) ?? idRef.current;
+      // Editing an existing animal returns to its page; a brand-new draft goes to the listing.
+      if (!startedAsDraft && savedId) {
+        router.push(`/animais/${savedId}`);
+      } else {
+        router.push('/animais');
+      }
       router.refresh();
     });
   };
@@ -418,8 +413,10 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
         {step === 2 && <StepEntry t={t} v={values} set={set} />}
         {step === 3 && <StepHealth t={t} v={values} set={set} errors={errors} />}
         {step === 4 && <StepBehavior t={t} v={values} set={set} />}
-        {step === 5 && <StepStory t={t} v={values} set={set} />}
-        {step === 6 && <StepReview t={t} v={values} onEdit={setStep} />}
+        {step === 5 && (
+          <StepStory t={t} v={values} set={set} animalId={idRef.current} resolveOwnerId={ensureOwnerId} />
+        )}
+        {step === 6 && <StepReview t={t} v={values} onEdit={setStep} animalId={idRef.current} />}
 
         <div className="mt-8 flex flex-col gap-4 border-t border-line-soft pt-5 sm:flex-row sm:items-center sm:justify-between">
           <span
@@ -452,7 +449,7 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
             ) : (
               <>
                 <Button type="button" variant="outline" onClick={onSaveAndExit} pending={isPublishing}>
-                  {t('wizard.saveDraft')}
+                  {startedAsDraft ? t('wizard.saveDraft') : t('wizard.saveAndExit')}
                 </Button>
                 <Button type="button" onClick={onPublish} pending={isPublishing}>
                   <Check className="size-4" />
@@ -483,6 +480,17 @@ const Stepper = ({
   onJump: (s: number) => void;
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Lock background scroll while the bottom-sheet step picker is open so the page
+  // behind doesn't scroll under it (mobile scroll-bleed).
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [pickerOpen]);
 
   return (
     <>
@@ -564,7 +572,14 @@ const Stepper = ({
       </div>
 
       {pickerOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end sm:hidden" role="dialog" aria-modal="true">
+        // Keep the mobile bottom nav (z-50) visible and tappable: the sheet sits
+        // just BELOW it (z-40, still above content + header) and the panel is
+        // lifted above the nav, so the last step (Revisão) clears it.
+        <div
+          className="fixed inset-0 z-40 flex flex-col justify-end pb-[var(--spacing-bottom-nav)] sm:hidden"
+          role="dialog"
+          aria-modal="true"
+        >
           <button
             type="button"
             aria-label={t('wizard.close')}
@@ -984,7 +999,13 @@ const StepBehavior = ({ t, v, set }: StepProps) => (
   </div>
 );
 
-const StepStory = ({ t, v, set }: StepProps) => (
+const StepStory = ({
+  t,
+  v,
+  set,
+  animalId,
+  resolveOwnerId,
+}: StepProps & { animalId: string | null; resolveOwnerId: () => Promise<string | null> }) => (
   <div className="space-y-8">
     <div>
       <SectionHeading title={t('wizard.storyHeading')} sub={t('wizard.storySub')} />
@@ -1017,32 +1038,52 @@ const StepStory = ({ t, v, set }: StepProps) => (
 
     <div className="border-t border-line-soft pt-6">
       <SectionHeading title={t('wizard.photosHeading')} sub={t('wizard.photosSub')} optional />
-      {/* Visual placeholder — photo/video upload lands with the storage backend. */}
-      <div className="mt-4 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-line bg-bg-2/40 px-6 py-10 text-center transition-colors hover:border-terra/60">
-        <ImageIcon className="size-9 text-ink-mute/60" strokeWidth={1.3} />
-        <p className="text-sm font-medium text-ink">{t('wizard.photosDropTitle')}</p>
-        <p className="text-xs text-ink-mute">{t('wizard.photosDropHint')}</p>
-      </div>
-      <button
-        type="button"
-        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-terra transition hover:text-terra/80"
-      >
-        <Plus className="size-4" />
-        {t('wizard.addMedia')}
-      </button>
+      <AnimalMediaUploader animalId={animalId} resolveOwnerId={resolveOwnerId} />
     </div>
   </div>
 );
 
-const StepReview = ({ t, v, onEdit }: { t: Translator; v: FormValues; onEdit: (s: number) => void }) => {
+const StepReview = ({
+  t,
+  v,
+  onEdit,
+  animalId,
+}: {
+  t: Translator;
+  v: FormValues;
+  onEdit: (s: number) => void;
+  animalId: string | null;
+}) => {
+  // Pull the chosen cover so the previews match what'll be published.
+  const [cover, setCover] = useState<AnimalPhoto | null>(null);
+  useEffect(() => {
+    if (!animalId) return;
+    let active = true;
+    void listAnimalPhotosAction(animalId).then((res) => {
+      if (active && res.ok) setCover(res.data.find((p) => p.isPrimary) ?? res.data[0] ?? null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [animalId]);
+
   const dash = t('detail.empty');
   const missing = incompleteFields(v);
-  const noun = speciesNoun(t, v.species, v.sex);
   const age = ageText(t, v);
   const size = v.size ? sizeLabel(t, v.size) : '';
-  const tags = cardTags(t, v);
   const namedVaccines = v.vaccinations.filter((x) => x.name.trim());
-  const metaLine = [noun, age, size].filter(Boolean).join(' · ') || dash;
+
+  // Render the previews with the real portal components so they match exactly.
+  // Coerce the form's possibly-empty values to the saved enum shape they expect.
+  const previewAnimal = {
+    id: animalId ?? 'preview',
+    name: v.name || t('wizard.noName'),
+    species: v.species === 'cat' ? 'cat' : 'dog',
+    sex: v.sex === 'male' ? 'male' : 'female',
+    size: v.size === 'small' || v.size === 'medium' || v.size === 'large' ? v.size : null,
+    shortStory: v.shortStory,
+    quirks: v.quirks,
+  } as const;
   const sociabilityLine = [
     `${t('form.goodWithChildren')}: ${sociabilityLabel(t, v.goodWithChildren)}`,
     `${t('form.goodWithDogs')}: ${sociabilityLabel(t, v.goodWithDogs)}`,
@@ -1087,34 +1128,8 @@ const StepReview = ({ t, v, onEdit }: { t: Translator; v: FormValues; onEdit: (s
         <p className="mt-1 hint">{t('wizard.previewCardHint')}</p>
         <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
           <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.portalPublic')}</p>
-          <div className="mx-auto max-w-[280px] overflow-hidden rounded-lg border border-line bg-paper">
-            <div className="flex aspect-[4/3] flex-col items-center justify-center gap-1.5 bg-bg-2 text-ink-mute">
-              <ImageIcon className="size-9" strokeWidth={1.2} />
-              <span className="text-[10.5px] font-medium tracking-wide">{t('wizard.noPhotoYet')}</span>
-            </div>
-            <div className="flex flex-col px-4 pb-4 pt-3.5">
-              <h4 className="font-display text-[21px] leading-[1.1] text-ink">{v.name || t('wizard.noName')}</h4>
-              <p className="mt-1.5 text-[11.5px] text-ink-mute">{metaLine}</p>
-              {tags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {tags.map((tag) => (
-                    <span
-                      key={tag.text}
-                      className={cn(
-                        'rounded-full px-2 py-[3px] text-[10px] font-medium',
-                        tag.kind === 'green' ? 'bg-green/10 text-green' : 'bg-terra-bg text-terra',
-                      )}
-                    >
-                      {tag.text}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="mt-3 flex items-center justify-between pt-3 text-[11px] text-ink-mute">
-                <span>{v.intakeDate ? formatIntakeShort(v.intakeDate) : t('wizard.today')}</span>
-                <span aria-hidden>→</span>
-              </div>
-            </div>
+          <div className="mx-auto max-w-[280px]">
+            <PortalAnimalCard preview slug="" animal={previewAnimal} photoUrl={cover?.mediumUrl} />
           </div>
         </div>
       </div>
@@ -1125,48 +1140,7 @@ const StepReview = ({ t, v, onEdit }: { t: Translator; v: FormValues; onEdit: (s
         <p className="mt-1 hint">{t('wizard.previewDetailHint')}</p>
         <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
           <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.animalPage')}</p>
-          <div className="overflow-hidden rounded-xl border border-line bg-paper">
-            <div className="flex aspect-[16/9] flex-col items-center justify-center gap-2 bg-bg-2 text-ink-mute">
-              <ImageIcon className="size-12" strokeWidth={1} />
-              <span className="text-xs">{t('wizard.noPhoto')}</span>
-            </div>
-            <div className="p-6">
-              <span className="inline-flex items-center gap-2 rounded-full bg-bg-2 px-3 py-1 text-xs font-medium text-ink-soft">
-                <span className="size-1.5 rounded-full bg-green-soft" aria-hidden />
-                {t('wizard.availableForAdoption')}
-              </span>
-              <h2 className="display mt-3 text-4xl text-ink">{v.name || t('wizard.noName')}</h2>
-              {v.shortStory.trim() && (
-                <p className="mt-2 font-display text-base italic leading-snug text-terra">
-                  {v.shortStory.split('\n')[0]}
-                </p>
-              )}
-              <div className="mt-4 flex flex-wrap gap-x-10 gap-y-3 border-t border-line-soft pt-4">
-                <QuickStat label={t('detail.factSpecies')} value={noun} />
-                {age && <QuickStat label={t('detail.factAge')} value={age} />}
-                {size && (
-                  <QuickStat
-                    label={t('detail.factSize')}
-                    value={v.weightKg ? `${size} · ${v.weightKg}kg` : size}
-                  />
-                )}
-              </div>
-              {(v.specialConditions.length > 0 || namedVaccines.length > 0) && (
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {v.specialConditions.map((c) => (
-                    <span key={c} className="rounded-full bg-terra-bg px-2 py-[3px] text-[10px] font-medium text-terra">
-                      {c}
-                    </span>
-                  ))}
-                  {namedVaccines.length > 0 && (
-                    <span className="rounded-full bg-green/10 px-2 py-[3px] text-[10px] font-medium text-green">
-                      {t('wizard.vaccineCount', { count: namedVaccines.length })}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          <PortalAnimalHero preview slug="" animal={previewAnimal} photoUrl={cover?.mediumUrl} />
         </div>
       </div>
 

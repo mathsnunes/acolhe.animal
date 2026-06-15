@@ -10,6 +10,7 @@ export * from './timeline/timeline';
 export * from './audit/audit';
 export * from './organizations';
 export * from './animals';
+export * from './uploads';
 export * from './people';
 export * from './applications';
 export * from './adoptions';

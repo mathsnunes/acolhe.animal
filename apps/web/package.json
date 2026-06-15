@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "media:worker": "tsx --env-file=../../.env scripts/media-worker.ts"
   },
   "dependencies": {
     "@acolhe-animal/db": "workspace:*",
@@ -32,6 +33,9 @@
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "drizzle-orm": "catalog:",
+    "ffmpeg-static": "catalog:",
+    "ffprobe-static": "catalog:",
+    "fluent-ffmpeg": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "^3.26.0",
@@ -54,6 +58,7 @@
     "eslint-config-next": "catalog:",
     "eslint-plugin-prefer-arrow-functions": "^3.6.2",
     "tailwindcss": "catalog:",
+    "tsx": "catalog:",
     "tw-animate-css": "catalog:",
     "typescript": "catalog:"
   }

@@ -32,7 +32,7 @@ export default async function AdocaoDetalhePage({
       animalSpecies: animal.species,
     })
     .from(adoption)
-    .innerJoin(animal, eq(adoption.animalId, animal.id))
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
     .where(and(eq(adoption.id, id), eq(adoption.organizationId, ctx.organizationId)))
     .limit(1);
 

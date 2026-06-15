@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { BrandMark } from '@/components/brand';
-import { Button } from '@/components/ui/button';
-import { AnimalPhoto } from '@/components/portal/animal-photo';
-import { animalMeta } from '@/components/portal/labels';
+import { PortalAnimalHero } from '@/components/portal/portal-animal-hero';
 import { getPortalAnimal, getPublicOrganization } from '../../data';
 
 type PageProps = { params: Promise<{ slug: string; animalId: string }> };
@@ -46,7 +44,6 @@ export default async function AnimalDetailPage({ params }: PageProps) {
   }
 
   const { animal, photoUrl } = found;
-  const meta = animalMeta(t, animal);
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -74,38 +71,7 @@ export default async function AnimalDetailPage({ params }: PageProps) {
       </nav>
 
       <main className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-        <article className="overflow-hidden rounded-2xl border border-line-soft bg-paper shadow-card md:grid md:grid-cols-[0.85fr_1.15fr]">
-          <div className="aspect-[4/5] overflow-hidden bg-bg-2 md:aspect-auto">
-            <AnimalPhoto src={photoUrl} name={animal.name} rounded="rounded-none" />
-          </div>
-
-          <div className="flex flex-col justify-center p-8 sm:p-10">
-            <p className="eyebrow eyebrow-mute mb-3">{t('detail.available')}</p>
-            <h1 className="display text-5xl text-ink sm:text-6xl">{animal.name}</h1>
-            <p className="mt-4 flex flex-wrap gap-2 text-sm text-ink-soft">
-              {meta.map((part, i) => (
-                <span key={part} className="inline-flex items-center gap-2">
-                  {i > 0 && <span className="text-line">·</span>}
-                  {part}
-                </span>
-              ))}
-            </p>
-
-            {animal.shortStory?.trim() && (
-              <p className="mt-6 border-t border-line-soft pt-6 font-display text-lg italic leading-relaxed text-ink-soft">
-                {animal.shortStory}
-              </p>
-            )}
-
-            {animal.quirks?.trim() && (
-              <p className="mt-4 text-sm leading-relaxed text-ink-soft">{animal.quirks}</p>
-            )}
-
-            <Button asChild size="lg" className="mt-8 w-full sm:w-auto">
-              <Link href={`/${slug}/adotar/${animal.id}`}>{t('detail.adoptCta', { animalName: animal.name })}</Link>
-            </Button>
-          </div>
-        </article>
+        <PortalAnimalHero slug={slug} animal={animal} photoUrl={photoUrl} />
       </main>
 
       <footer className="border-t border-line-soft bg-paper">

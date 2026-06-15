@@ -8,6 +8,13 @@
       "when": 1781436237458,
       "tag": "0000_low_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781461333518,
+      "tag": "0001_nebulous_nomad",
+      "breakpoints": true
     }
   ]
 }

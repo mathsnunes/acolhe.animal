@@ -14,6 +14,23 @@ type Sociability = NonNullable<Animal['goodWithChildren']>;
 
 export const speciesLabel = (t: Translator, value: Animal['species']): string => t(`labels.species.${value}`);
 
+/** Gendered noun for the hero (Cadela / Cachorro / Gata / Gato), from species + sex. */
+export const speciesNounLabel = (
+  t: Translator,
+  species: Animal['species'],
+  sex: Animal['sex'],
+): string => {
+  const key =
+    species === 'dog'
+      ? sex === 'female'
+        ? 'dogFemale'
+        : 'dogMale'
+      : sex === 'female'
+        ? 'catFemale'
+        : 'catMale';
+  return t(`wizard.speciesNoun.${key}`);
+};
+
 export const sexLabel = (t: Translator, value: Animal['sex']): string => t(`labels.sex.${value}`);
 
 export const sizeLabel = (t: Translator, value: NonNullable<Animal['size']>): string => t(`labels.size.${value}`);
