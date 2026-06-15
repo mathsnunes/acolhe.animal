@@ -48,6 +48,11 @@
 - **Date fields** use `<Input type="date">` (the `ui/input` component) — the native browser picker chrome (calendar indicator, datetime-edit text) is themed in `globals.css` under `@layer base` so it matches the tokens. We keep the native picker (no custom DatePicker yet); never use a bare, unthemed `<input type="date">`. The same `@layer base` rules cover `datetime-local` / `time`.
 - One responsibility per component. A page is a composition of small components.
 
+### Reusable UI patterns
+- **Card surface** — the standard paper card (hairline border, soft shadow, `rounded-xl`) is the **`section-card` utility** (`globals.css` › `@layer components`), not an inline `rounded-xl border border-line-soft bg-paper shadow-card` repeated everywhere. It sets only the surface; add padding (and any `bg-*` override, e.g. `bg-bg-2`) at the call site.
+- **Initials avatar** — use **`InitialsAvatar`** (`components/ui/initials-avatar.tsx`: `name`, `size` `xs|sm|md`, `tone` `terra|green`) instead of inlining `initials()` + a styled span. (Some older listing/nav code still inlines it — migrate when you touch it.)
+- **Edit on demand** — a read view with an inline "editar"/"trocar" affordance that swaps to an editor uses **`InlineEdit`** + **`EditTrigger`** (`components/ui/inline-edit.tsx`). `InlineEdit` is a headless render-prop (`{ editing, edit, done }`) so the caller places both views and the trigger; the editor calls `done()` on success. Prefer this over an always-on form control when the field is usually just read (internal notes, assignee, etc.).
+
 ## Shared validation
 Reusable schemas in `@acolhe-animal/shared` (`phoneSchema`, `cpfSchema`, `cnpjSchema`, `slugSchema`, `moneySchema`…). The same definition validates the form and the Server Action.
 
