@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { type TouchEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, PawPrint, Play, Video } from 'lucide-react';
 
@@ -88,6 +88,8 @@ export const AnimalGallery = ({
 
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
 
   const go = useCallback(
     (delta: number) => setActive((i) => (i + delta + items.length) % items.length),
@@ -118,12 +120,40 @@ export const AnimalGallery = ({
 
   const openable = current.kind === 'photo' || current.playable;
 
+  // Horizontal swipe to move between media on touch devices. A swipe also
+  // suppresses the next click so the main stage doesn't open the lightbox.
+  const onTouchStart = (e: TouchEvent<HTMLElement>) => {
+    const touch = e.touches[0];
+    touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+    swiped.current = false;
+  };
+  const onTouchEnd = (e: TouchEvent<HTMLElement>) => {
+    const start = touchStart.current;
+    const touch = e.changedTouches[0];
+    touchStart.current = null;
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      swiped.current = true;
+      go(dx < 0 ? 1 : -1);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2.5 self-start">
       {/* Main stage */}
       <button
         type="button"
-        onClick={() => openable && setOpen(true)}
+        onClick={() => {
+          if (swiped.current) {
+            swiped.current = false;
+            return;
+          }
+          if (openable) setOpen(true);
+        }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         aria-label={t('detail.galleryOpen')}
         className={cn(
           'group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-line bg-bg-2',
@@ -211,7 +241,11 @@ export const AnimalGallery = ({
         <DialogContent className="max-w-[min(94vw,1120px)] border-0 bg-transparent p-0 shadow-none">
           <DialogTitle className="sr-only">{t('detail.galleryViewTitle', { name })}</DialogTitle>
 
-          <div className="relative flex items-center justify-center">
+          <div
+            className="relative flex items-center justify-center"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
             {current.kind === 'photo' ? (
               // eslint-disable-next-line @next/next/no-img-element -- user media on R2/local
               <img
@@ -226,6 +260,8 @@ export const AnimalGallery = ({
                 poster={current.poster ?? undefined}
                 controls
                 autoPlay
+                playsInline
+                preload="metadata"
                 className="max-h-[82vh] w-auto max-w-full rounded-xl bg-ink"
               />
             ) : null}
