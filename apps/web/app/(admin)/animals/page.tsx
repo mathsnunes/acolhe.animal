@@ -2,27 +2,25 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Plus } from 'lucide-react';
 
-import { countWaitingApplicationsByAnimal, getAnimalCovers, listAnimals } from '@acolhe-animal/domain';
-import type { Animal } from '@acolhe-animal/db';
+import { countAnimalsByStatus } from '@acolhe-animal/domain';
 
 import { PageHeaderHero } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/empty-state';
-import { AnimalCard } from '@/components/animals/animal-card';
 import { AnimalsFilters } from '@/components/animals/animals-filters';
-import { AnimalsTable } from '@/components/animals/animals-table';
-import { ageGroupOf, type AgeGroup } from '@/components/animals/labels';
-import { ANIMAL_STATUSES, type AnimalStatus } from '@/components/animals/status-pill';
+import { AnimalsListing } from '@/components/animals/animals-listing';
 import { decodeAnimalsParams } from '@/lib/animals-search-params';
+import {
+  asAge,
+  asSize,
+  asSpecies,
+  ANIMALS_PAGE_SIZE,
+  type AnimalsFilterInput,
+} from '@/lib/animals-query';
 import { requireCtx } from '@/lib/auth-context';
+import { loadAnimalsPage } from './load-animals';
 
 export const dynamic = 'force-dynamic';
-
-const asStatus = (v?: string): AnimalStatus | undefined => ANIMAL_STATUSES.find((s) => s === v);
-const asSpecies = (v?: string): Animal['species'] | undefined => v === 'dog' || v === 'cat' ? v : undefined;
-const asSize = (v?: string): NonNullable<Animal['size']> | undefined => v === 'small' || v === 'medium' || v === 'large' ? v : undefined;
-const asAge = (v?: string): AgeGroup | undefined => v === 'baby' || v === 'adult' || v === 'senior' ? v : undefined;
-const asSort = (v?: string): 'name' | undefined => v === 'name' ? v : undefined;
 
 export default async function AnimaisPage({
   searchParams,
@@ -35,40 +33,54 @@ export default async function AnimaisPage({
   // The URL is pt-BR (?situacao=&especie=…); decode to canonical values.
   const decoded = decodeAnimalsParams(params);
 
-  const status = asStatus(decoded.status);
-  const species = asSpecies(decoded.species);
-  const size = asSize(decoded.size);
-  const age = asAge(decoded.age);
-  const sort = asSort(decoded.sort);
-  const search = decoded.search?.trim() || undefined;
+  const filters: AnimalsFilterInput = {
+    status: decoded.status,
+    species: decoded.species,
+    size: decoded.size,
+    search: decoded.search,
+    age: decoded.age,
+    sort: decoded.sort,
+  };
   const isList = decoded.view === 'list';
 
-  // One query for everything-but-status (status is just an in-app slice); the tab
-  // counts need all statuses, and age is derived (no DB column) so it's filtered
-  // in-app too.
-  const [allRows, waiting] = await Promise.all([
-    listAnimals(ctx, { species, size, search, orderBy: sort, includeDrafts: true }),
-    countWaitingApplicationsByAnimal(ctx),
+  // First page of the (cursor-less, offset-paged) listing + the per-status tab
+  // counts. Counts honor everything but status — the tabs need every bucket, and
+  // `all` folds in drafts (which surface in the list with a badge, no own tab).
+  const [firstPage, byStatus] = await Promise.all([
+    loadAnimalsPage(ctx, filters, 0, ANIMALS_PAGE_SIZE),
+    countAnimalsByStatus(ctx, {
+      species: asSpecies(decoded.species),
+      size: asSize(decoded.size),
+      search: decoded.search?.trim() || undefined,
+      age: asAge(decoded.age),
+      includeDrafts: true,
+    }),
   ]);
 
-  const scopedAll = age ? allRows.filter((a) => ageGroupOf(a) === age) : allRows;
-  const animals = status ? scopedAll.filter((a) => a.status === status) : scopedAll;
-
-  // Cover photo per visible animal (public id → thumbnail URL) for the grid/table.
-  const coverPhotos = await getAnimalCovers(ctx, animals.map((a) => a.pk));
-  const covers: Record<string, string> = {};
-  for (const [id, photo] of Object.entries(coverPhotos)) covers[id] = photo.thumbUrl;
-
   const counts = {
-    all: scopedAll.length,
-    available: scopedAll.filter((a) => a.status === 'available').length,
-    'under-review': scopedAll.filter((a) => a.status === 'under-review').length,
-    reserved: scopedAll.filter((a) => a.status === 'reserved').length,
-    adopted: scopedAll.filter((a) => a.status === 'adopted').length,
-    unavailable: scopedAll.filter((a) => a.status === 'unavailable').length,
+    all: Object.values(byStatus).reduce((sum, n) => sum + n, 0),
+    available: byStatus.available,
+    'under-review': byStatus['under-review'],
+    reserved: byStatus.reserved,
+    adopted: byStatus.adopted,
+    unavailable: byStatus.unavailable,
   };
 
-  const hasFilters = Boolean(status || species || size || age || search);
+  const hasFilters = Boolean(
+    decoded.status || decoded.species || decoded.size || decoded.age || decoded.search?.trim(),
+  );
+
+  // Resetting the infinite-scroll state on any filter/view change is as simple as
+  // remounting: a new key tears down the old accumulated pages.
+  const listingKey = [
+    decoded.status,
+    decoded.species,
+    decoded.size,
+    decoded.age,
+    decoded.search,
+    decoded.sort,
+    decoded.view,
+  ].join('|');
 
   return (
     <div className="pb-16">
@@ -101,7 +113,7 @@ export default async function AnimaisPage({
         }}
       />
 
-      {animals.length === 0 ? (
+      {firstPage.items.length === 0 ? (
         <EmptyState
           eyebrow={t('list.emptyEyebrow')}
           title={hasFilters ? t('list.emptyFilteredTitle') : t('list.emptyTitle')}
@@ -109,19 +121,14 @@ export default async function AnimaisPage({
           actionHref={hasFilters ? undefined : '/animais/novo'}
           actionLabel={hasFilters ? undefined : t('list.emptyActionLabel')}
         />
-      ) : isList ? (
-        <AnimalsTable animals={animals} waiting={waiting} covers={covers} />
       ) : (
-        <div className="mt-7 grid grid-cols-1 gap-3 px-6 sm:grid-cols-2 sm:gap-[18px] sm:px-10 lg:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-          {animals.map((animal) => (
-            <AnimalCard
-              key={animal.id}
-              animal={animal}
-              waiting={waiting[animal.id] ?? 0}
-              coverUrl={covers[animal.id]}
-            />
-          ))}
-        </div>
+        <AnimalsListing
+          key={listingKey}
+          initial={firstPage}
+          view={isList ? 'list' : 'cards'}
+          filters={filters}
+          pageSize={ANIMALS_PAGE_SIZE}
+        />
       )}
     </div>
   );

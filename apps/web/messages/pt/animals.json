@@ -17,7 +17,9 @@
     "colIntake": "Na ONG desde",
     "waiting": "{count, plural, one {# esperando} other {# esperando}}",
     "noCandidates": "—",
-    "open": "Ver ficha de {name}"
+    "open": "Ver ficha de {name}",
+    "loadMore": "Carregar mais",
+    "loadingMore": "Carregando mais animais…"
   },
   "filters": {
     "tabAll": "Todos",

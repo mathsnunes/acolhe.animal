@@ -25,6 +25,8 @@ import type { ActionResult } from '@acolhe-animal/shared';
 
 import { action } from '@/lib/action';
 import { requireCtx } from '@/lib/auth-context';
+import type { AnimalsFilterInput, AnimalsPage } from '@/lib/animals-query';
+import { loadAnimalsPage } from './load-animals';
 
 /**
  * Server Actions for the Animais area. Each wraps the domain call in `action()`
@@ -32,6 +34,21 @@ import { requireCtx } from '@/lib/auth-context';
  * throwing, then revalidates the listing. The domain re-validates every input
  * against its Zod schema, so these stay thin.
  */
+
+/**
+ * Next page of the animals listing for the infinite scroll. A read, so it skips
+ * the `action()` wrapper and returns the page directly (the client appends it);
+ * tenancy is enforced by `requireCtx` + the domain's org scoping, never the
+ * client-supplied filters.
+ */
+export const loadAnimalsPageAction = async (input: {
+  filters: AnimalsFilterInput;
+  offset: number;
+  limit: number;
+}): Promise<AnimalsPage> => {
+  const ctx = await requireCtx();
+  return loadAnimalsPage(ctx, input.filters, input.offset, input.limit);
+};
 
 /** Start a draft animal from the wizard's first step. Returns the created row (with its id). */
 export const createAnimalDraftAction = async (input: AnimalDraftInput): Promise<ActionResult<Animal>> => {

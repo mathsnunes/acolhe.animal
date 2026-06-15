@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNull, ne, sql, type SQL } from 'drizzle-orm';
 
 import { createId, NotFoundError, ValidationError } from '@acolhe-animal/shared';
 import { animal, type Animal, type NewAnimal } from '@acolhe-animal/db';
@@ -101,33 +101,124 @@ export const unarchiveAnimal = async (ctx: Ctx, id: string): Promise<void> => {
   });
 };
 
+/** Age buckets for the listing filter: filhote (<1y), adulto (1–7y), idoso (7y+). */
+export type AnimalAgeGroup = 'baby' | 'adult' | 'senior';
+
+/**
+ * Effective age in months as a SQL expression, mirroring the web layer's
+ * `ageInMonths`: derived from `estimatedBirthDate` when present, otherwise from
+ * `ageMonthsAtIntake` advanced by the time elapsed since `ageReferenceDate`.
+ * NULL when neither is known — those animals never match an age filter.
+ */
+const ageMonthsSql = sql<number>`
+  case
+    when ${animal.estimatedBirthDate} is not null then
+      extract(year from age(now(), ${animal.estimatedBirthDate}::timestamptz))::int * 12
+      + extract(month from age(now(), ${animal.estimatedBirthDate}::timestamptz))::int
+    when ${animal.ageMonthsAtIntake} is not null then
+      ${animal.ageMonthsAtIntake}
+      + greatest(0, floor(
+          extract(epoch from (now() - coalesce(${animal.ageReferenceDate}::timestamptz, now())))
+          / (60 * 60 * 24 * 30.44)
+        ))::int
+    else null
+  end
+`;
+
+/** Thresholds kept in sync with `ageGroupOf` in the web layer (12 / 84 months). */
+const ageGroupCondition = (group: AnimalAgeGroup): SQL => {
+  if (group === 'baby') return sql`${ageMonthsSql} < 12`;
+  if (group === 'senior') return sql`${ageMonthsSql} >= 84`;
+  return sql`${ageMonthsSql} >= 12 and ${ageMonthsSql} < 84`;
+};
+
 export interface ListAnimalsFilters {
   status?: Animal['status'][];
   search?: string;
   species?: Animal['species'];
   size?: Animal['size'];
+  /** Derived age bucket, pushed down to SQL via {@link ageGroupCondition}. */
+  age?: AnimalAgeGroup;
+  /** Portal visibility flag (omit to ignore). */
+  visibleOnPortal?: boolean;
+  /** Accepts-adoption-applications flag (omit to ignore). */
+  listedForAdoption?: boolean;
   includeArchived?: boolean;
   /** Drafts (status `draft`) are hidden unless this is set. */
   includeDrafts?: boolean;
   /** `recent` (newest first, default) or `name` (A→Z). */
   orderBy?: 'recent' | 'name';
+  /** Page size for keyset/offset pagination (omit for the full set). */
+  limit?: number;
+  /** Row offset for pagination (omit to start at 0). */
+  offset?: number;
 }
 
-export const listAnimals = async (ctx: Ctx, filters: ListAnimalsFilters = {}): Promise<Animal[]> => {
-  const conditions = [eq(animal.organizationId, ctx.organizationId)];
+/** The WHERE conditions shared by {@link listAnimals} and {@link countAnimalsByStatus}. */
+const animalConditions = (ctx: Ctx, filters: ListAnimalsFilters): SQL[] => {
+  const conditions: SQL[] = [eq(animal.organizationId, ctx.organizationId)];
   if (!filters.includeArchived) conditions.push(isNull(animal.archivedAt));
   if (!filters.includeDrafts) conditions.push(ne(animal.status, 'draft'));
   if (filters.status?.length) conditions.push(inArray(animal.status, filters.status));
   if (filters.species) conditions.push(eq(animal.species, filters.species));
   if (filters.size) conditions.push(eq(animal.size, filters.size));
   if (filters.search) conditions.push(ilike(animal.name, `%${filters.search}%`));
+  if (filters.age) conditions.push(ageGroupCondition(filters.age));
+  if (filters.visibleOnPortal !== undefined) {
+    conditions.push(eq(animal.visibleOnPortal, filters.visibleOnPortal));
+  }
+  if (filters.listedForAdoption !== undefined) {
+    conditions.push(eq(animal.listedForAdoption, filters.listedForAdoption));
+  }
+  return conditions;
+};
 
-  const order = filters.orderBy === 'name' ? asc(animal.name) : desc(animal.createdAt);
-  return ctx.db
+export const listAnimals = async (ctx: Ctx, filters: ListAnimalsFilters = {}): Promise<Animal[]> => {
+  // `pk` is the stable tiebreaker so offset paging can't skip/duplicate rows
+  // when the primary sort key (createdAt or name) ties.
+  const order =
+    filters.orderBy === 'name'
+      ? [asc(animal.name), desc(animal.pk)]
+      : [desc(animal.createdAt), desc(animal.pk)];
+
+  const query = ctx.db
     .select()
     .from(animal)
-    .where(and(...conditions))
-    .orderBy(order);
+    .where(and(...animalConditions(ctx, filters)))
+    .orderBy(...order)
+    .$dynamic();
+
+  if (filters.limit != null) query.limit(filters.limit);
+  if (filters.offset != null) query.offset(filters.offset);
+  return query;
+};
+
+/**
+ * Count animals per status for the listing's status tabs. Honors every filter
+ * except `status` itself (the tabs need every bucket), so callers pass the
+ * species/size/search/age scope and read back a count for each status —
+ * including `draft`, which the "all" total folds in.
+ */
+export const countAnimalsByStatus = async (
+  ctx: Ctx,
+  filters: Omit<ListAnimalsFilters, 'status' | 'orderBy' | 'limit' | 'offset'> = {},
+): Promise<Record<Animal['status'], number>> => {
+  const rows = await ctx.db
+    .select({ status: animal.status, count: sql<number>`count(*)::int` })
+    .from(animal)
+    .where(and(...animalConditions(ctx, { ...filters, status: undefined })))
+    .groupBy(animal.status);
+
+  const counts: Record<Animal['status'], number> = {
+    draft: 0,
+    available: 0,
+    'under-review': 0,
+    reserved: 0,
+    adopted: 0,
+    unavailable: 0,
+  };
+  for (const row of rows) counts[row.status] = Number(row.count);
+  return counts;
 };
 
 export const getAnimal = async (ctx: Ctx, id: string): Promise<Animal> => {

@@ -11,6 +11,8 @@ import { NotFoundError, type ActionResult } from '@acolhe-animal/shared';
 
 import { action } from '@/lib/action';
 import { publicCtx } from '@/lib/auth-context';
+import { PORTAL_PAGE_SIZE, type PortalAnimalsPage } from '@/lib/portal-query';
+import { getPortalAnimals, getPublicOrganization } from './data';
 
 /**
  * Public adoption-form Server Actions. Every call re-resolves the organization
@@ -24,6 +26,20 @@ const publicCtxForSlug = async (slug: string) => {
     throw new NotFoundError('Organização não encontrada.');
   }
   return publicCtx(org.pk);
+};
+
+/**
+ * Public "load more" for the portal animals grid (infinite scroll). Resolves the
+ * org from the slug, so an anonymous visitor can only page through what that org
+ * published; an unknown slug yields an empty, terminal page.
+ */
+export const loadPortalAnimalsPageAction = async (input: {
+  slug: string;
+  offset: number;
+}): Promise<PortalAnimalsPage> => {
+  const org = await getPublicOrganization(input.slug);
+  if (!org) return { items: [], nextOffset: input.offset, hasMore: false };
+  return getPortalAnimals(org.pk, { limit: PORTAL_PAGE_SIZE, offset: input.offset });
 };
 
 export type StartInput = {

@@ -4,8 +4,9 @@ import { notFound } from 'next/navigation';
 
 import { BrandMark } from '@/components/brand';
 import { AnimalPhoto } from '@/components/portal/animal-photo';
-import { PortalAnimalCard } from '@/components/portal/portal-animal-card';
-import { getPortalAnimals, getPrimaryPhotos, getPublicOrganization } from './data';
+import { PortalAnimalsGrid } from '@/components/portal/portal-animals-grid';
+import { PORTAL_PAGE_SIZE } from '@/lib/portal-query';
+import { getPortalAnimals, getPublicOrganization } from './data';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -42,8 +43,9 @@ export default async function PortalPage({ params }: PageProps) {
   const sections = org.portalConfig?.sections;
   const showAnimals = sections?.animals !== false; // animals on by default for MVP
 
-  const animals = showAnimals ? await getPortalAnimals(org.pk) : [];
-  const photos = await getPrimaryPhotos(animals.map((a) => a.pk));
+  const animalsPage = showAnimals
+    ? await getPortalAnimals(org.pk, { limit: PORTAL_PAGE_SIZE, offset: 0 })
+    : { items: [], nextOffset: 0, hasMore: false };
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -86,7 +88,7 @@ export default async function PortalPage({ params }: PageProps) {
               </h2>
             </div>
 
-            {animals.length === 0 ? (
+            {animalsPage.items.length === 0 ? (
               <div className="rounded-xl border border-line-soft bg-paper px-6 py-16 text-center">
                 <p className="display text-2xl text-ink">
                   {t('available.emptyTitle')}
@@ -96,16 +98,7 @@ export default async function PortalPage({ params }: PageProps) {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {animals.map((animal) => (
-                  <PortalAnimalCard
-                    key={animal.id}
-                    slug={slug}
-                    animal={animal}
-                    photoUrl={photos[animal.id] ?? null}
-                  />
-                ))}
-              </div>
+              <PortalAnimalsGrid slug={slug} initial={animalsPage} />
             )}
           </section>
         )}

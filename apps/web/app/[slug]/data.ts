@@ -6,6 +6,7 @@ import { animal, animalPhoto, db, type Animal, type Organization } from '@acolhe
 import { getOrganizationBySlug, listAnimals } from '@acolhe-animal/domain';
 
 import { publicCtx } from '@/lib/auth-context';
+import type { PortalAnimalsPage } from '@/lib/portal-query';
 
 /**
  * Shared server-side loaders for the public portal. The org id is always
@@ -20,13 +21,26 @@ export const getPublicOrganization = async (slug: string): Promise<Organization 
 };
 
 /**
- * Available animals that the org chose to show publicly. We filter
- * `visibleOnPortal && listedForAdoption` in app code per the brief.
+ * A page of available animals the org chose to show publicly. The portal flags
+ * (`visibleOnPortal && listedForAdoption`) and pagination are pushed down to the
+ * query so infinite scroll fetches only what it renders.
  */
-export const getPortalAnimals = async (organizationPk: number): Promise<Animal[]> => {
+export const getPortalAnimals = async (
+  organizationPk: number,
+  page: { limit: number; offset: number },
+): Promise<PortalAnimalsPage> => {
   const ctx = publicCtx(organizationPk);
-  const animals = await listAnimals(ctx, { status: ['available'] });
-  return animals.filter((a) => a.visibleOnPortal && a.listedForAdoption);
+  const rows = await listAnimals(ctx, {
+    status: ['available'],
+    visibleOnPortal: true,
+    listedForAdoption: true,
+    limit: page.limit,
+    offset: page.offset,
+  });
+  const photos = await getPrimaryPhotos(rows.map((a) => a.pk));
+  const items = rows.map((a) => ({ animal: a, photoUrl: photos[a.id] ?? null }));
+
+  return { items, nextOffset: page.offset + rows.length, hasMore: rows.length === page.limit };
 };
 
 /**

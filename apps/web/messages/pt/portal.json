@@ -18,7 +18,9 @@
     "titlePrefix": "Disponíveis para ",
     "titleEm": "adoção",
     "emptyTitle": "Nenhum animal por aqui no momento.",
-    "emptyDescription": "Todos os animais da {orgName} já encontraram um lar — ou ainda estão sendo preparados. Volte em breve."
+    "emptyDescription": "Todos os animais da {orgName} já encontraram um lar — ou ainda estão sendo preparados. Volte em breve.",
+    "loadMore": "Ver mais animais",
+    "loadingMore": "Carregando mais animais…"
   },
   "footer": {
     "madeWith": "feito com"
