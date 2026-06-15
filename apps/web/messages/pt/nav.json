@@ -1,0 +1,25 @@
+{
+  "home": "Início",
+  "animals": "Animais",
+  "candidates": "Candidatos",
+  "donations": "Doações",
+  "cashflow": "Caixa",
+  "campaigns": "Campanhas",
+  "stories": "Histórias",
+  "neededItems": "Itens em falta",
+  "supporters": "Apoiadores",
+  "settings": "Configurações",
+  "more": "Mais",
+  "roleAdmin": "admin",
+  "roleVolunteer": "voluntário(a)",
+  "you": "Você",
+  "topbar": {
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar animais, candidatos, doadores…",
+    "searchComingSoon": "A busca global chega em breve.",
+    "notifications": "Notificações",
+    "noNotifications": "Sem novidades por aqui.",
+    "newApplications": "{count, plural, one {# nova candidatura esperando} other {# novas candidaturas esperando}}",
+    "newAnimal": "Novo animal"
+  }
+}

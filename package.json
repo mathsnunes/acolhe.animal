@@ -1,0 +1,37 @@
+{
+  "name": "acolhe-animal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Acolhe.animal — infraestrutura de gestão de adoções e portal de doações para ONGs e protetores.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "tunnel": "node scripts/tunnel.mjs",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
+    "db:generate": "pnpm --filter @acolhe-animal/db generate",
+    "db:migrate": "pnpm --filter @acolhe-animal/db migrate",
+    "db:push": "pnpm --filter @acolhe-animal/db push",
+    "db:studio": "pnpm --filter @acolhe-animal/db studio",
+    "db:seed": "pnpm --filter @acolhe-animal/db seed",
+    "db:up": "docker compose -f packages/db/docker-compose.yml up -d",
+    "db:down": "docker compose -f packages/db/docker-compose.yml down",
+    "lint:style": "eslint \"packages/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "eslint-plugin-prefer-arrow-functions": "^3.6.2",
+    "prettier": "catalog:",
+    "turbo": "^2.3.0",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.18.0"
+  }
+}

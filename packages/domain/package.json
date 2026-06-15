@@ -1,0 +1,24 @@
+{
+  "name": "@acolhe-animal/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acolhe-animal/db": "workspace:*",
+    "@acolhe-animal/integrations": "workspace:*",
+    "@acolhe-animal/messaging": "workspace:*",
+    "@acolhe-animal/shared": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

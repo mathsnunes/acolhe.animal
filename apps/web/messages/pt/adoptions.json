@@ -1,0 +1,73 @@
+{
+  "page": {
+    "title": "Adoções",
+    "description": "Cada linha aqui é uma história que deu certo — um animal que encontrou o seu lar.",
+    "metricLabel": "Lares encontrados"
+  },
+  "empty": {
+    "eyebrow": "Em breve",
+    "title": "Nenhuma adoção ainda",
+    "description": "Quando você aprovar uma candidatura e formalizar a adoção — ou registrar uma adoção presencial — ela aparece aqui.",
+    "actionLabel": "Ver candidaturas"
+  },
+  "species": {
+    "dog": "Cão",
+    "cat": "Gato"
+  },
+  "list": {
+    "adoptedBy": "adotado por {adopterName}",
+    "sourceDigital": "Digital",
+    "sourceOffline": "Presencial",
+    "cancelled": "Cancelada",
+    "term": "Termo"
+  },
+  "detail": {
+    "breadcrumb": "Adoções",
+    "sourceDigital": "Adoção digital",
+    "sourceOffline": "Adoção presencial",
+    "cancelled": "Cancelada",
+    "foundHome": "{animalName} encontrou um lar",
+    "adoptedOn": "adotado em {date}",
+    "adopterEyebrow": "— Adotante",
+    "nameLabel": "Nome",
+    "cpfLabel": "CPF",
+    "phoneLabel": "Telefone",
+    "addressLabel": "Endereço",
+    "extraClausesEyebrow": "— Cláusulas extras",
+    "cancellationReasonEyebrow": "— Motivo do cancelamento",
+    "termEyebrow": "— Termo de adoção",
+    "openTerm": "Abrir termo assinado",
+    "historyEyebrow": "— Histórico"
+  },
+  "offlineForm": {
+    "trigger": "Registrar adoção",
+    "title": "Registrar adoção presencial",
+    "description": "Para adoções que aconteceram em feiras ou eventos. O animal será marcado como adotado.",
+    "animalLabel": "Animal adotado",
+    "animalPlaceholderEmpty": "Nenhum animal disponível",
+    "animalPlaceholder": "Escolha o animal",
+    "nameLabel": "Nome do adotante",
+    "phoneLabel": "Telefone",
+    "phonePlaceholder": "(48) 99999-0000",
+    "cpfLabel": "CPF",
+    "cpfPlaceholder": "000.000.000-00",
+    "emailLabel": "E-mail (opcional)",
+    "streetLabel": "Rua",
+    "numberLabel": "Número",
+    "complementLabel": "Complemento (opcional)",
+    "cityLabel": "Cidade",
+    "stateLabel": "UF",
+    "postalCodeLabel": "CEP",
+    "postalCodePlaceholder": "00000-000",
+    "termLabel": "Link do termo assinado (PDF)",
+    "termPlaceholder": "https://…",
+    "dateLabel": "Data da adoção",
+    "cancel": "Cancelar",
+    "submit": "Registrar adoção",
+    "submitting": "Registrando…"
+  },
+  "toasts": {
+    "chooseAnimal": "Escolha o animal adotado.",
+    "registered": "Adoção registrada. 🎉"
+  }
+}

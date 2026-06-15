@@ -1,0 +1,33 @@
+{
+  "name": "@acolhe-animal/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "push": "drizzle-kit push",
+    "studio": "drizzle-kit studio",
+    "seed": "tsx src/seed/index.ts"
+  },
+  "dependencies": {
+    "@acolhe-animal/shared": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "bcryptjs": "catalog:",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "steps": {
+    "identification": "Quem é você",
+    "aboutYou": "Sobre você",
+    "housing": "Onde você mora",
+    "pets": "Animais na sua vida",
+    "routine": "Sua rotina",
+    "review": "Revisão e envio"
+  },
+  "header": {
+    "applicationFor": "Sua candidatura para"
+  },
+  "autosave": {
+    "saving": "Salvando…",
+    "saved": "Salvo"
+  },
+  "progress": {
+    "step": "Etapa <strong>{step} de {total}</strong>",
+    "stepEyebrow": "Etapa {step} de {total}"
+  },
+  "nav": {
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "working": "Um instante…",
+    "continue": "Continuar",
+    "submitting": "Enviando…",
+    "submit": "Enviar candidatura"
+  },
+  "privacy": "Seus dados ficam guardados com cuidado e só são usados para conversar sobre a adoção.",
+  "validation": {
+    "name": "Conta como você quer ser chamado(a).",
+    "phoneRequired": "Precisamos de um telefone com WhatsApp.",
+    "phoneInvalid": "Esse telefone não parece válido.",
+    "housing": "Conta como é o lugar onde você mora.",
+    "ownership": "Conta se o lugar é seu ou alugado.",
+    "agreement": "A gente precisa saber se todos concordam.",
+    "hoursAway": "Escolha quanto tempo você fica fora.",
+    "sleep": "Conta onde a {animalName} vai dormir.",
+    "vet": "Conta como você cobre o cuidado veterinário.",
+    "motivation": "Conta um pouco por que a {animalName}."
+  },
+  "errors": {
+    "lostState": "Algo se perdeu pelo caminho. Recarregue a página e tente de novo."
+  },
+  "identification": {
+    "title": "Vamos começar pelo",
+    "em": "básico.",
+    "lede": "Só o essencial para a gente te reconhecer e poder conversar sobre a {animalName}. Email e endereço ficam para a próxima etapa.",
+    "sectionTitle": "Seus dados",
+    "nameLabel": "Primeiro nome",
+    "namePlaceholder": "Como você prefere ser chamado(a)",
+    "phoneLabel": "Telefone (com WhatsApp)",
+    "phoneHint": "É por aqui que a gente conversa. Se você já se candidatou antes, reconhecemos seu número e retomamos seus dados."
+  },
+  "aboutYou": {
+    "title": "Conta um pouco",
+    "em": "mais sobre você.",
+    "lede": "Já temos seu nome e telefone. Email e endereço são opcionais — você pode deixar para detalhar pelo WhatsApp depois.",
+    "sectionTitle": "Contato",
+    "emailLabel": "Email",
+    "emailHint": "Opcional. Útil para recibo de doações ou se o WhatsApp falhar.",
+    "emailPlaceholder": "seu@email.com",
+    "cityLabel": "Cidade",
+    "cityHint": "Onde você mora hoje.",
+    "cityPlaceholder": "Ex: Criciúma, SC",
+    "addressLabel": "Endereço (rua, número, bairro)",
+    "addressHint": "Opcional aqui — pode preencher só a cidade agora e detalhar pelo WhatsApp depois.",
+    "addressPlaceholder": "Ex: Rua Henrique Lage, 123 — Centro"
+  },
+  "housing": {
+    "title": "Onde a {animalName} vai",
+    "em": "morar?",
+    "lede": "Não precisa ser nada chique. A gente só quer entender o lugar para saber se combina com o jeito dela.",
+    "sectionTitle": "Tipo de moradia",
+    "housingLabel": "Como é o lugar onde você mora?",
+    "ownershipLabel": "Você é dono(a) ou aluga o lugar?",
+    "ownershipExplanationTitle": "Por que perguntamos",
+    "ownershipExplanationBody": "Se o lugar é alugado, vale conferir se o contrato permite animais. Voltar para a ONG por causa disso é uma das causas mais comuns de devolução — melhor alinhar agora.",
+    "householdSectionTitle": "Composição da casa",
+    "householdLabel": "Quem mais mora com você?",
+    "agreementLabel": "Todo mundo da casa concorda com a adoção?"
+  },
+  "pets": {
+    "title": "Animais na sua",
+    "em": "vida.",
+    "lede": "A gente quer entender sua história com bichos — tanto os de agora quanto os que já passaram. Conta com sinceridade, não tem resposta certa nem errada.",
+    "todaySectionTitle": "Animais hoje",
+    "hasPetsLabel": "Você tem animais hoje?",
+    "currentPetsLabel": "Conta sobre eles",
+    "speciesDog": "cão",
+    "speciesCat": "gato",
+    "currentPetsHint": "Espécie, idade, se são castrados, como convivem. Ajuda a saber se combinam com um {species} novo na casa.",
+    "currentPetsPlaceholder": "Ex: Tenho a Mel, vira-lata de 4 anos, castrada e vacinada em dia.",
+    "historySectionTitle": "Histórico",
+    "hadPetsLabel": "Você já teve outros animais antes?",
+    "petHistoryLabel": "Conta o que aconteceu com eles",
+    "petHistoryHint": "Viveram até o fim, foram adotados por outras pessoas, se perderam — qualquer história. A gente lê com cuidado.",
+    "petHistoryPlaceholder": "Ex: Minha cachorra Bidu morreu em 2023, de causas naturais, com 14 anos…"
+  },
+  "routine": {
+    "title": "Como a {animalName} vai",
+    "em": "se encaixar na sua rotina?",
+    "lede": "Cães e gatos precisam de companhia, atenção e cuidado contínuo. A gente quer entender como isso cabe no seu dia a dia.",
+    "sectionTitle": "Sua rotina",
+    "hoursAwayLabel": "Quantas horas por dia você fica fora de casa?",
+    "travelLabel": "E quando você viaja, o que faz com os animais?",
+    "travelPlaceholder": "Ex: Costumo deixar com minha irmã, ou levo comigo quando dá.",
+    "careSectionTitle": "Cuidados com a {animalName}",
+    "sleepLabel": "Onde a {animalName} vai dormir?",
+    "vetLabel": "Você tem como cobrir cuidado veterinário?",
+    "vetExplanationTitle": "Sem julgamento",
+    "vetExplanationBody": "Cuidado veterinário é caro e nem todo mundo pode bancar tudo sempre. Responder com sinceridade ajuda a gente a alinhar expectativas."
+  },
+  "review": {
+    "title": "Última coisa, e a gente",
+    "em": "termina.",
+    "lede": "Conta um pouco mais sobre o que te trouxe até aqui. Depois você revisa tudo e envia a candidatura para a {animalName}.",
+    "aboutSectionTitle": "Sobre você e a {animalName}",
+    "motivationLabel": "Por que a {animalName}?",
+    "motivationHint": "Não precisa ser texto bonito. A gente quer entender de onde vem o interesse — ajuda a saber se faz match com o jeito dela.",
+    "motivationPlaceholder": "O que te chamou atenção na história dela, no jeito, no porte…",
+    "questionsLabel": "Tem alguma dúvida para a equipe?",
+    "questionsHint": "Opcional. A gente também conversa pelo WhatsApp depois.",
+    "questionsPlaceholder": "Sobre a adoção, sobre o processo, sobre qualquer coisa…",
+    "reviewSectionTitle": "Revise antes de enviar",
+    "edit": "editar",
+    "empty": "—",
+    "yes": "Sim",
+    "no": "Não",
+    "block1Title": "Quem é você",
+    "rowName": "Nome",
+    "rowPhone": "Telefone",
+    "block2Title": "Sobre você",
+    "rowEmail": "Email",
+    "rowCity": "Cidade",
+    "rowAddress": "Endereço",
+    "block3Title": "Onde você mora",
+    "rowHousing": "Moradia",
+    "rowOwnership": "Propriedade",
+    "rowHousehold": "Com quem mora",
+    "rowAgreement": "Acordo",
+    "block4Title": "Animais na sua vida",
+    "rowPetsToday": "Animais hoje",
+    "rowHistory": "Histórico",
+    "block5Title": "Sua rotina",
+    "rowHoursAway": "Horas fora",
+    "rowTravel": "Viagens",
+    "rowSleep": "Cama da {animalName}",
+    "rowVet": "Veterinário",
+    "answersCount": "{count} respostas"
+  },
+  "phone": {
+    "placeholder": "(48) 9 9999-9999"
+  },
+  "options": {
+    "housing": {
+      "houseYard": "Casa com quintal",
+      "houseYardSub": "Espaço externo cercado",
+      "houseNoYard": "Casa sem quintal",
+      "houseNoYardSub": "Sem espaço externo",
+      "apartment": "Apartamento",
+      "apartmentSub": "Com ou sem varanda",
+      "rural": "Sítio ou chácara",
+      "ruralSub": "Área rural"
+    },
+    "ownership": {
+      "own": "Própria",
+      "rent": "Alugada",
+      "family": "Cedida / família",
+      "other": "Outra"
+    },
+    "household": {
+      "partner": "Parceiro(a)",
+      "kidsSmall": "Filhos pequenos (até 6 anos)",
+      "kids": "Crianças (7 a 14 anos)",
+      "teens": "Adolescentes",
+      "elderly": "Pessoas idosas",
+      "alone": "Moro sozinho(a)"
+    },
+    "agreement": {
+      "yes": "Sim, todo mundo topa",
+      "talking": "Ainda estou conversando"
+    },
+    "hasPets": {
+      "yes": "Sim, tenho animais hoje",
+      "no": "Não tenho nenhum agora"
+    },
+    "hadPets": {
+      "yes": "Sim, já tive",
+      "no": "Nunca tive"
+    },
+    "hoursAway": {
+      "lt4": "Até 4 horas",
+      "lt4Sub": "Meio-período ou home office",
+      "h4to8": "4 a 8 horas",
+      "h4to8Sub": "Jornada típica de trabalho",
+      "h8to12": "8 a 12 horas",
+      "h8to12Sub": "Jornada longa",
+      "gt12": "Mais de 12 horas",
+      "gt12Sub": "Dois turnos / plantões"
+    },
+    "sleep": {
+      "myBed": "Na minha cama",
+      "bedRoom": "Caminha no quarto",
+      "bedLiving": "Caminha na sala",
+      "outdoor": "Área externa / quintal"
+    },
+    "vet": {
+      "easy": "Sim, sem problemas",
+      "planned": "Sim, com planejamento",
+      "tight": "Vai ser apertado",
+      "insurance": "Tenho plano de saúde pet"
+    }
+  }
+}

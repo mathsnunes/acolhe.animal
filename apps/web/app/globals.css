@@ -1,0 +1,209 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Acolhe.animal design tokens (Tailwind v4, CSS-first).
+   Source of truth: 01-docs-referencia/design-system.md.
+   Brand tokens (bg-terra, text-ink, border-line…) + the semantic aliases the
+   shadcn components use (bg-background, bg-primary, border-border…), all mapped
+   to the warm, earthy palette.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Brand palette */
+  --color-bg: #f4f1ea;
+  --color-bg-2: #ece7dc;
+  --color-paper: #faf8f3;
+  --color-ink: #1e2a22;
+  --color-ink-soft: #4a5a4f;
+  --color-ink-mute: #8a968d;
+  --color-line: #d9d2c2;
+  --color-line-soft: #e8e2d3;
+  --color-terra: #b85c3c;
+  --color-terra-bg: #fbeddd;
+  --color-green: #2d4a39;
+  --color-green-soft: #3f6b53;
+  --color-gold: #c8a04a;
+  --color-rose: #c46b6b;
+  --color-pix: #00bdae;
+
+  /* Semantic aliases (shadcn/ui) */
+  --color-background: #f4f1ea;
+  --color-foreground: #1e2a22;
+  --color-card: #faf8f3;
+  --color-card-foreground: #1e2a22;
+  --color-popover: #faf8f3;
+  --color-popover-foreground: #1e2a22;
+  --color-primary: #b85c3c;
+  --color-primary-foreground: #faf8f3;
+  --color-secondary: #2d4a39;
+  --color-secondary-foreground: #faf8f3;
+  --color-muted: #ece7dc;
+  --color-muted-foreground: #8a968d;
+  --color-accent: #fbeddd;
+  --color-accent-foreground: #b85c3c;
+  --color-destructive: #c46b6b;
+  --color-destructive-foreground: #faf8f3;
+  --color-border: #d9d2c2;
+  --color-input: #d9d2c2;
+  --color-ring: #b85c3c;
+
+  /* Typography (next/font injects the --font-* variables) */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* Radius — pills use rounded-full */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* Shadows — soft, directional, derived from --ink (not neutral gray) */
+  --shadow-card: 0 14px 30px -16px rgb(30 42 34 / 0.25);
+  --shadow-elevated: 0 25px 50px -20px rgb(30 42 34 / 0.35);
+  --shadow-modal: 0 30px 80px -20px rgb(0 0 0 / 0.5);
+
+  /* Fixed layout dimensions */
+  --spacing-sidebar: 240px;
+  --spacing-topbar: 64px;
+  --spacing-topbar-mobile: 56px;
+  --spacing-bottom-nav: 78px;
+
+  /* Animations */
+  --animate-pulse-dot: pulse-dot 1.8s ease-in-out infinite;
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.4);
+      opacity: 0.5;
+    }
+  }
+}
+
+:root {
+  --radius: 10px;
+}
+
+/* Acolhe.animal uses a hairline 0.5px border by default. */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-line);
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Keyboard focus only (not on click) — warm terra ring. */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role='button']:focus-visible {
+    outline: 2px solid var(--color-terra);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Native date/time inputs: tame the browser chrome so `<Input type="date">`
+     matches the design system (muted, clickable calendar icon; on-brand text).
+     We keep the native picker on purpose — there's no custom DatePicker yet. */
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='time'] {
+    color: var(--color-ink);
+  }
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+  }
+  input[type='date']:hover::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']:hover::-webkit-calendar-picker-indicator,
+  input[type='time']:hover::-webkit-calendar-picker-indicator {
+    opacity: 0.8;
+  }
+}
+
+/* ── Brand + editorial utilities (design-system.md / 04-componentes) ───────── */
+@layer components {
+  .brand-mark {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    line-height: 1;
+  }
+  .brand-mark .brand-dot {
+    color: var(--color-terra);
+    font-weight: 400;
+    display: inline-block;
+    transform: translateY(-1px);
+    margin: 0 -1px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-terra);
+  }
+  .eyebrow-mute {
+    color: var(--color-ink-mute);
+  }
+
+  /* Secondary descriptive text under a label/section heading (form hints, subs).
+     One canonical size + color so hints never drift (design-system: 13px, muted). */
+  .hint {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-ink-mute);
+  }
+
+  .divider {
+    height: 0.5px;
+    background: var(--color-line);
+  }
+  .divider-soft {
+    height: 0.5px;
+    background: var(--color-line-soft);
+  }
+
+  /* Standard card surface (paper, hairline border, soft shadow). Padding is left
+     to the call site so the same surface fits dense side cards and roomy sections. */
+  .section-card {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-line-soft);
+    background: var(--color-paper);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Editorial display headings */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+  .display em {
+    font-style: italic;
+    color: var(--color-terra);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-dot {
+    animation: none;
+  }
+}
