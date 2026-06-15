@@ -199,7 +199,7 @@ const commitVideo = async (
   // Poster + metadata are extracted synchronously so the UI shows a thumbnail
   // immediately; the heavy transcode is left to the background worker. A failure
   // here means the bytes aren't a usable video, so we reject the upload.
-  let poster;
+  let poster: Awaited<ReturnType<typeof extractVideoPoster>>;
   try {
     poster = await extractVideoPoster(original);
   } catch (err) {

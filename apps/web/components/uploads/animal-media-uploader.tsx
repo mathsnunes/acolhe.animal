@@ -15,6 +15,7 @@ import {
   setAnimalCoverAction,
 } from '@/app/(admin)/animals/actions';
 import { cn } from '@/lib/utils';
+import type { Translator } from '@/lib/i18n';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useUploader, type UploadItem } from './use-uploader';
@@ -355,7 +356,7 @@ const PendingTile = ({
   onDismiss,
 }: {
   item: UploadItem;
-  t: ReturnType<typeof useTranslations>;
+  t: Translator;
   onDismiss: () => void;
 }) => (
   <div className="relative flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-line bg-bg-2 p-3 text-center">
