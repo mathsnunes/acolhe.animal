@@ -6,7 +6,7 @@ import type { Animal } from '@acolhe-animal/db';
 import { formatRelative } from '@acolhe-animal/shared';
 
 import { cn } from '@/lib/utils';
-import { formatMetaLine } from './labels';
+import { animalListTags, formatMetaLine } from './labels';
 import { statusLabel, statusMeta } from './status-pill';
 
 /**
@@ -26,7 +26,7 @@ export const AnimalCard = ({
 }) => {
   const t = useTranslations('animals');
   const meta = statusMeta[animal.status];
-  const tags = animal.specialConditions.slice(0, 3);
+  const tags = animalListTags(t, animal);
   // Resuming a draft re-opens the wizard; published animals open their detail.
   const href = animal.status === 'draft' ? `/animais/${animal.id}/editar` : `/animais/${animal.id}`;
 
@@ -75,10 +75,13 @@ export const AnimalCard = ({
           <div className="mt-3 flex flex-wrap gap-1.5">
             {tags.map((tag) => (
               <span
-                key={tag}
-                className="rounded-full bg-terra-bg px-2 py-[3px] text-[10px] font-medium tracking-wide text-terra"
+                key={tag.text}
+                className={cn(
+                  'rounded-full px-2 py-[3px] text-[10px] font-medium tracking-wide',
+                  tag.tone === 'green' ? 'bg-green/10 text-green' : 'bg-terra-bg text-terra',
+                )}
               >
-                {tag}
+                {tag.text}
               </span>
             ))}
           </div>

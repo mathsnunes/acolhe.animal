@@ -14,7 +14,7 @@
     "colSpecies": "Espécie · Idade · Porte",
     "colStatus": "Status",
     "colCandidates": "Candidatos",
-    "colIntake": "Na casa desde",
+    "colIntake": "Na ONG desde",
     "waiting": "{count, plural, one {# esperando} other {# esperando}}",
     "noCandidates": "—",
     "open": "Ver ficha de {name}"
@@ -76,7 +76,7 @@
     "factAge": "Idade",
     "factNeutered": "Castração",
     "factEnergy": "Energia",
-    "factIntake": "Na casa desde",
+    "factIntake": "Na ONG desde",
     "empty": "—",
     "candidatesWaiting": "{count, plural, one {# candidato esperando avaliação} other {# candidatos esperando avaliação}}",
     "viewCandidates": "Ver candidatos",

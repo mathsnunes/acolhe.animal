@@ -106,3 +106,22 @@ export const formatMetaLine = (t: Translator, animal: Animal): string => [
   ]
     .filter(Boolean)
     .join(' · ');
+
+/**
+ * Tags shown under an animal's name in the listings (card + list): permanent
+ * conditions (e.g. FIV+), the "baby" age, and sociability wins ("Bom com cães"),
+ * capped so rows/cards stay tidy. Shared so both listing views match.
+ */
+export const animalListTags = (
+  t: Translator,
+  animal: Animal,
+  max = 3,
+): { text: string; tone: 'terra' | 'green' }[] => {
+  const tags: { text: string; tone: 'terra' | 'green' }[] = [];
+  for (const condition of animal.specialConditions) tags.push({ text: condition, tone: 'terra' });
+  if (ageGroupOf(animal) === 'baby') tags.push({ text: t('filters.ageBaby'), tone: 'terra' });
+  if (animal.goodWithChildren === 'yes') tags.push({ text: t('wizard.goodTagChildren'), tone: 'green' });
+  if (animal.goodWithDogs === 'yes') tags.push({ text: t('wizard.goodTagDogs'), tone: 'green' });
+  if (animal.goodWithCats === 'yes') tags.push({ text: t('wizard.goodTagCats'), tone: 'green' });
+  return tags.slice(0, max);
+};

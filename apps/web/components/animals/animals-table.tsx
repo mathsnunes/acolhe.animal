@@ -7,7 +7,7 @@ import { formatDateBR } from '@acolhe-animal/shared';
 
 import { cn } from '@/lib/utils';
 import { statusLabel, statusMeta } from './status-pill';
-import { formatAge, sizeLabel, speciesLabel } from './labels';
+import { animalListTags, formatAge, sizeLabel, speciesLabel } from './labels';
 
 const COLS = 'lg:grid-cols-[56px_1.4fr_1fr_104px_132px_104px_24px]';
 
@@ -51,6 +51,7 @@ export const AnimalsTable = async ({
           .filter(Boolean)
           .join(' · ');
         const waitingCount = waiting[a.id] ?? 0;
+        const tags = animalListTags(t, a);
         return (
           <Link
             key={a.id}
@@ -72,6 +73,21 @@ export const AnimalsTable = async ({
 
             <div className="min-w-0">
               <div className="truncate font-display text-[18px] leading-tight text-ink">{a.name}</div>
+              {tags.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag.text}
+                      className={cn(
+                        'rounded-full px-2 py-[2px] text-[10px] font-medium',
+                        tag.tone === 'green' ? 'bg-green/10 text-green' : 'bg-terra-bg text-terra',
+                      )}
+                    >
+                      {tag.text}
+                    </span>
+                  ))}
+                </div>
+              )}
               {/* mobile-only status + meta (the dedicated columns are hidden < lg) */}
               <div className="mt-1 flex items-center gap-1.5 text-[11.5px] text-ink-mute lg:hidden">
                 <span className={cn('size-[7px] shrink-0 rounded-full', statusMeta[a.status].dot)} />
