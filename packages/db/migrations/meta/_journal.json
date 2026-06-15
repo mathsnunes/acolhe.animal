@@ -15,6 +15,13 @@
       "when": 1781461333518,
       "tag": "0001_nebulous_nomad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781542903337,
+      "tag": "0002_eager_redwing",
+      "breakpoints": true
     }
   ]
 }

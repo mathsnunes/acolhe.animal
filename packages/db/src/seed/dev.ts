@@ -194,9 +194,23 @@ const application = (animalId: number, personId: number, status: 'new' | 'in-pro
     personId,
     formVersion: 'dog-v1',
     status,
+    // Mirrors the public form: stable camelCase keys + the form's option codes
+    // (the admin UI translates them via the `form` i18n labels). Free-text answers
+    // stay as prose.
     applicationData: {
-      housing: 'casa com quintal',
-      otherPets: 'não',
+      email: 'contato@example.com',
+      city: 'Criciúma, SC',
+      address: 'Rua Henrique Lage, 123 — Centro',
+      housing: 'house-yard',
+      ownership: 'own',
+      household: ['partner'],
+      agreement: 'yes',
+      hasPets: 'no',
+      hadPets: 'yes',
+      petHistory: 'Tive uma cachorra, a Mel, por 14 anos — faleceu de causas naturais.',
+      hoursAway: 'lt4',
+      sleep: 'bed-room',
+      vet: 'easy',
       motivation: 'Quero dar um lar cheio de amor.',
     },
     submittedAt: new Date(),

@@ -136,6 +136,21 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
 
     await tx.db.update(animal).set({ status: 'adopted' }).where(eq(animal.pk, app.animalId));
 
+    // The candidacy is now terminal: a formalized adoption closes it as `adopted`,
+    // so the funnel can't re-formalize it and it lands in "Encerradas".
+    await tx.db
+      .update(application)
+      .set({ status: 'adopted', statusChangedAt: new Date() })
+      .where(eq(application.pk, app.pk));
+
+    // The adoption record carries `adoption.completed`; the candidacy's own
+    // history gets the matching transition (kept out of the org feed).
+    await emitTimelineEvent(tx, {
+      eventType: 'application.adopted',
+      entityType: 'application',
+      entityId: app.id,
+      payload: { animalName: animalRow.name },
+    });
     await emitTimelineEvent(tx, {
       eventType: 'adoption.completed',
       entityType: 'adoption',
@@ -219,6 +234,28 @@ export const cancelAdoption = async (ctx: Ctx, adoptionId: string, reason: strin
       .set({ cancelledAt: new Date(), cancellationReason: reason })
       .where(eq(adoption.id, adoptionId));
     await tx.db.update(animal).set({ status: 'available' }).where(eq(animal.pk, row.animalId));
+    // A digital adoption traces back to a candidacy — close it as `cancelled`
+    // (encerrada, reopenable) and log the transition on its history. Offline
+    // adoptions have no application.
+    if (row.applicationId != null) {
+      const [appRow] = await tx.db
+        .select({ id: application.id })
+        .from(application)
+        .where(eq(application.pk, row.applicationId))
+        .limit(1);
+      await tx.db
+        .update(application)
+        .set({ status: 'cancelled', statusChangedAt: new Date() })
+        .where(eq(application.pk, row.applicationId));
+      if (appRow) {
+        await emitTimelineEvent(tx, {
+          eventType: 'application.cancelled',
+          entityType: 'application',
+          entityId: appRow.id,
+          payload: { reason },
+        });
+      }
+    }
     await emitTimelineEvent(tx, {
       eventType: 'adoption.cancelled',
       entityType: 'adoption',

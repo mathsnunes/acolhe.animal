@@ -5,15 +5,32 @@ import { revalidatePath } from 'next/cache';
 import {
   assignApplication,
   setApplicationStatus,
+  updateApplicationNotes,
   finalizeDigitalAdoption,
   getApplication,
-  type Ctx,
 } from '@acolhe-animal/domain';
 
 import { action } from '@/lib/action';
 import { requireCtx } from '@/lib/auth-context';
+import type { CandidatesFilterInput, CandidatesPage } from '@/lib/candidates-query';
+import { loadCandidatesPage } from './load-candidates';
 
 type TriageStatus = 'in-progress' | 'approved' | 'rejected' | 'withdrew';
+
+/**
+ * Next page of the candidates listing for the infinite scroll. A read, so it
+ * skips the `action()` wrapper and returns the page directly (the client appends
+ * it); tenancy is enforced by `requireCtx` + the domain's org scoping, never the
+ * client-supplied filters.
+ */
+export const loadCandidatesPageAction = async (input: {
+  filters: CandidatesFilterInput;
+  offset: number;
+  limit: number;
+}): Promise<CandidatesPage> => {
+  const ctx = await requireCtx();
+  return loadCandidatesPage(ctx, input.filters, input.offset, input.limit);
+};
 
 /** Move a candidacy through the funnel, optionally saving internal notes. */
 export const setStatusAction = async (
@@ -29,12 +46,19 @@ export const setStatusAction = async (
     return row;
   });
 
-/** Save (or update) the internal notes without changing status. */
+/**
+ * Save (or update) the internal notes. Editing a brand-`new` candidacy nudges it
+ * to `in-progress` (someone is now looking at it); at every other status the notes
+ * are updated without touching the funnel stage — including terminal ones.
+ */
 export const saveNotesAction = async (id: string, internalNotes: string) =>
   action(async () => {
     const ctx = await requireCtx();
-    // Re-assert the current status so notes can be edited at any stage.
-    const row = await setApplicationStatusKeepingStage(ctx, id, internalNotes);
+    const app = await getApplication(ctx, id);
+    const row =
+      app.status === 'new'
+        ? await setApplicationStatus(ctx, id, 'in-progress', { internalNotes })
+        : await updateApplicationNotes(ctx, id, internalNotes);
     revalidatePath(`/candidatos/${id}`);
     return row;
   });
@@ -72,22 +96,3 @@ export const finalizeAdoptionAction = async (input: {
     revalidatePath('/adocoes');
     return adoption;
   });
-
-/**
- * Notes are persisted through {@link setApplicationStatus}, which only accepts
- * the four "triage" statuses. To edit notes without advancing the funnel we read
- * the current status and re-apply it when it's one of those; otherwise (a `new`
- * candidacy) we move it to `in-progress`, since editing notes means someone is
- * already looking at it.
- */
-const setApplicationStatusKeepingStage = async (ctx: Ctx, id: string, internalNotes: string) => {
-  const app = await getApplication(ctx, id);
-  const stage: TriageStatus =
-    app.status === 'in-progress' ||
-    app.status === 'approved' ||
-    app.status === 'rejected' ||
-    app.status === 'withdrew'
-      ? app.status
-      : 'in-progress';
-  return setApplicationStatus(ctx, id, stage, { internalNotes });
-};

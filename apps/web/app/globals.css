@@ -180,6 +180,15 @@
     background: var(--color-line-soft);
   }
 
+  /* Standard card surface (paper, hairline border, soft shadow). Padding is left
+     to the call site so the same surface fits dense side cards and roomy sections. */
+  .section-card {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-line-soft);
+    background: var(--color-paper);
+    box-shadow: var(--shadow-card);
+  }
+
   /* Editorial display headings */
   .display {
     font-family: var(--font-display);

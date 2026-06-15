@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, notInArray } from 'drizzle-orm';
 
 import { createId } from '@acolhe-animal/shared';
 import { timelineEvent, type JsonRecord, type TimelineEvent } from '@acolhe-animal/db';
@@ -16,8 +16,12 @@ export type TimelineEventType =
   | 'animal.unarchived'
   | 'application.submitted'
   | 'application.assigned'
+  | 'application.review_started'
   | 'application.approved'
   | 'application.rejected'
+  | 'application.withdrew'
+  | 'application.adopted'
+  | 'application.cancelled'
   | 'adoption.completed'
   | 'adoption.cancelled'
   | 'campaign.created'
@@ -25,6 +29,20 @@ export type TimelineEventType =
   | 'donation.received'
   | 'payout.completed'
   | 'payout.failed';
+
+/**
+ * Fine-grained candidacy transitions that belong on the application's own history
+ * but would only add noise to the org-wide activity feed (Início). The feed keeps
+ * showing milestones — `submitted`/`approved`/`rejected` on the application, and
+ * `adoption.completed`/`adoption.cancelled` on the adoption — so the adopted/
+ * cancelled milestones still surface there without duplication.
+ */
+const FEED_EXCLUDED_EVENT_TYPES: TimelineEventType[] = [
+  'application.review_started',
+  'application.withdrew',
+  'application.adopted',
+  'application.cancelled',
+];
 
 export type TimelineEntityType =
   | 'animal'
@@ -61,11 +79,16 @@ export const emitTimelineEvent = async (ctx: Ctx, input: {
   });
 };
 
-/** The org's recent activity feed (Início). */
+/** The org's recent activity feed (Início) — milestones only (see {@link FEED_EXCLUDED_EVENT_TYPES}). */
 export const listOrgTimeline = async (ctx: Ctx, limit = 30): Promise<TimelineEvent[]> => ctx.db
     .select()
     .from(timelineEvent)
-    .where(eq(timelineEvent.organizationId, ctx.organizationId))
+    .where(
+      and(
+        eq(timelineEvent.organizationId, ctx.organizationId),
+        notInArray(timelineEvent.eventType, FEED_EXCLUDED_EVENT_TYPES),
+      ),
+    )
     .orderBy(desc(timelineEvent.occurredAt))
     .limit(limit);
 

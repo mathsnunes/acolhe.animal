@@ -8,7 +8,55 @@
     "eyebrow": "Ainda quietinho",
     "title": "Nenhuma candidatura por enquanto",
     "description": "Quando alguém preencher o formulário de adoção de um animal, a candidatura aparece aqui para você acompanhar.",
-    "actionLabel": "Ver animais"
+    "actionLabel": "Ver animais",
+    "filteredTitle": "Nada com esses filtros",
+    "filteredDescription": "Nenhuma candidatura corresponde à busca ou aos filtros escolhidos. Ajuste ou limpe os filtros para ver mais."
+  },
+  "list": {
+    "loadMore": "Carregar mais",
+    "loadingMore": "Carregando…"
+  },
+  "tabs": {
+    "all": "Todas",
+    "new": "Novas",
+    "inProgress": "Em avaliação",
+    "approved": "Aprovadas",
+    "closed": "Encerradas"
+  },
+  "filters": {
+    "tabsAriaLabel": "Filtrar candidaturas por status",
+    "searchPlaceholder": "Buscar candidato, animal…",
+    "searchAriaLabel": "Buscar candidaturas",
+    "animalPrefix": "Animal",
+    "animalFilterLabel": "Filtrar por animal",
+    "allAnimals": "todos",
+    "responsiblePrefix": "Responsável",
+    "responsibleFilterLabel": "Filtrar por responsável",
+    "allResponsibles": "todos",
+    "unassigned": "sem responsável",
+    "viewLabel": "Alternar visão",
+    "viewKanban": "Quadro",
+    "viewTable": "Tabela"
+  },
+  "table": {
+    "candidate": "Candidato",
+    "animal": "Animal",
+    "alerts": "Alertas",
+    "submitted": "Submetida",
+    "status": "Status",
+    "responsible": "Responsável",
+    "open": "Abrir candidatura de {name}"
+  },
+  "alerts": {
+    "paradaXd": "parada {days}d",
+    "candidataA": "candidata a {animal}",
+    "jaAdotou": "já adotou",
+    "devolveuAntes": "devolveu antes"
+  },
+  "size": {
+    "small": "porte pequeno",
+    "medium": "porte médio",
+    "large": "porte grande"
   },
   "species": {
     "dog": "Cão",
@@ -19,14 +67,16 @@
     "new": "Novo",
     "inProgress": "Em análise",
     "approved": "Aprovado",
+    "adopted": "Adotada",
     "rejected": "Recusado",
-    "withdrew": "Desistiu"
+    "withdrew": "Desistiu",
+    "cancelled": "Devolvida"
   },
   "columns": {
-    "new": "Novo",
-    "inProgress": "Em análise",
-    "approved": "Aprovado",
-    "closed": "Recusado / Desistiu"
+    "new": "Novas",
+    "inProgress": "Em avaliação",
+    "approved": "Aprovadas",
+    "closed": "Encerradas"
   },
   "kanban": {
     "empty": "Ninguém por aqui."
@@ -35,13 +85,15 @@
     "wantsToAdopt": "Quer adotar",
     "new": "Novo",
     "submitted": "submetida {when}",
+    "approvedAt": "aprovada {when}",
+    "unassigned": "sem responsável",
     "formalize": "formalizar adoção"
   },
   "detail": {
     "breadcrumb": "Candidaturas",
     "updated": "atualizado {when}",
     "wantsToAdopt": "Quer adotar",
-    "bannerStatus": "{status} · há {when}",
+    "bannerStatus": "{status} · {when}",
     "bannerForAnimal": "candidatura para {animalName}",
     "answersEyebrow": "— O que ela respondeu",
     "answersTitle": "As respostas",
@@ -57,7 +109,40 @@
     "notesEyebrow": "— Notas internas",
     "historyEyebrow": "— Histórico",
     "historyTitle": "Como chegamos aqui",
-    "backToAll": "← Voltar para todas as candidaturas"
+    "backToAll": "← Voltar para todas as candidaturas",
+    "backEyebrow": "Candidatos",
+    "contato": "Contato",
+    "ondeMora": "Onde mora",
+    "stateAgo": "Há {when} neste estado",
+    "naOngDesde": "Na ONG desde {date}",
+    "animalCandidates": "{count, plural, =0 {sem candidatas} =1 {1 candidata} other {# candidatas}}",
+    "alertsEyebrow": "— Alertas e sinais",
+    "alertsEmpty": "Nada a sinalizar por aqui.",
+    "alerts": {
+      "firstCandidacy": {
+        "title": "Primeira candidatura na ONG",
+        "meta": "Pessoa nova no sistema"
+      },
+      "adoptedBefore": {
+        "title": "Já adotou antes",
+        "meta": "Tutor(a) recorrente"
+      },
+      "returnedBefore": {
+        "title": "Devolveu um animal antes",
+        "meta": "Adoção anterior cancelada"
+      }
+    },
+    "sections": {
+      "whoEyebrow": "— Quem é",
+      "whyEyebrow": "— A motivação",
+      "whyTitle": "Por que se candidatou",
+      "homeEyebrow": "— Casa e rotina",
+      "homeTitle": "A vida que aguarda",
+      "experienceEyebrow": "— Experiência",
+      "experienceTitle": "Já cuidou antes",
+      "otherEyebrow": "— Outras respostas",
+      "otherTitle": "Mais do formulário"
+    }
   },
   "facts": {
     "empty": "Esta candidatura ainda não tem respostas registradas.",
@@ -68,14 +153,22 @@
     "empty": "Ainda sem histórico por aqui.",
     "applicationSubmitted": "Candidatura recebida",
     "applicationAssigned": "Responsável definido",
+    "reviewStarted": "Análise iniciada",
+    "returnedToReview": "Voltou para avaliação",
+    "reopened": "Candidatura reaberta",
     "applicationApproved": "Candidatura aprovada",
     "applicationRejected": "Candidatura recusada",
+    "withdrew": "A pessoa desistiu",
+    "applicationAdopted": "Adoção formalizada 🎉",
     "adoptionCompleted": "Adoção formalizada 🎉",
-    "adoptionCancelled": "Adoção cancelada",
-    "adoptionCancelledWithReason": "Adoção cancelada — {reason}"
+    "adoptionCancelled": "Adoção desfeita — o animal foi devolvido",
+    "adoptionCancelledWithReason": "Adoção desfeita — {reason}"
   },
   "assign": {
-    "placeholder": "Ninguém ainda"
+    "placeholder": "Ninguém ainda",
+    "you": "(você)",
+    "change": "trocar",
+    "set": "definir"
   },
   "statusControl": {
     "startReview": "Começar análise",
@@ -84,6 +177,7 @@
     "markWithdrew": "Marcar desistência",
     "backToReview": "Voltar para análise",
     "reopen": "Reabrir",
+    "more": "Mais ações",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
     "saving": "Salvando…",
@@ -104,7 +198,10 @@
   "notes": {
     "placeholder": "Como foi a conversa? O que te deixou tranquilo ou com um pé atrás?",
     "save": "Salvar anotações",
-    "saving": "Salvando…"
+    "saving": "Salvando…",
+    "edit": "editar",
+    "add": "Adicionar nota",
+    "empty": "Sem anotações ainda."
   },
   "finalize": {
     "trigger": "Formalizar adoção",

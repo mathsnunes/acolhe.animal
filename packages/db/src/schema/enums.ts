@@ -78,8 +78,10 @@ export const applicationStatus = pgEnum('application_status', [
   'new',
   'in-progress',
   'approved',
+  'adopted',
   'rejected',
   'withdrew',
+  'cancelled',
 ]);
 export const adoptionSource = pgEnum('adoption_source', ['digital', 'offline']);
 

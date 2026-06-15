@@ -1,7 +1,17 @@
-import { and, desc, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, ilike, inArray, isNull, ne, notInArray, or, sql } from 'drizzle-orm';
 
 import { createId, NotFoundError } from '@acolhe-animal/shared';
-import { animal, application, type Application, type JsonRecord } from '@acolhe-animal/db';
+import {
+  adoption,
+  animal,
+  application,
+  city,
+  person,
+  user,
+  type Animal,
+  type Application,
+  type JsonRecord,
+} from '@acolhe-animal/db';
 import { getMessaging } from '@acolhe-animal/integrations';
 import {
   applicationReceivedWhatsApp,
@@ -191,9 +201,31 @@ export const setApplicationStatus = async (ctx: Ctx, applicationId: string, stat
       }
     }
 
-    if (status === 'approved' || status === 'rejected') {
+    // Record the transition on the candidacy's own history. `review_started`
+    // carries the previous status so the timeline can phrase it (análise iniciada
+    // vs. voltou para avaliação vs. reaberta).
+    if (status === 'in-progress') {
       await emitTimelineEvent(tx, {
-        eventType: status === 'approved' ? 'application.approved' : 'application.rejected',
+        eventType: 'application.review_started',
+        entityType: 'application',
+        entityId: applicationId,
+        payload: { from: app.status },
+      });
+    } else if (status === 'approved') {
+      await emitTimelineEvent(tx, {
+        eventType: 'application.approved',
+        entityType: 'application',
+        entityId: applicationId,
+      });
+    } else if (status === 'rejected') {
+      await emitTimelineEvent(tx, {
+        eventType: 'application.rejected',
+        entityType: 'application',
+        entityId: applicationId,
+      });
+    } else if (status === 'withdrew') {
+      await emitTimelineEvent(tx, {
+        eventType: 'application.withdrew',
         entityType: 'application',
         entityId: applicationId,
       });
@@ -217,6 +249,24 @@ export const setApplicationStatus = async (ctx: Ctx, applicationId: string, stat
     }
     return row;
   });
+};
+
+/**
+ * Edit the internal triage notes without touching the funnel stage. Safe at any
+ * status, including terminal ones (`adopted`, `cancelled`) — unlike routing notes
+ * through {@link setApplicationStatus}, which only accepts the four triage states.
+ */
+export const updateApplicationNotes = async (ctx: Ctx, applicationId: string, internalNotes: string): Promise<Application> => {
+  assertCanManageAnimals(ctx);
+  await getApplication(ctx, applicationId); // assert exists + tenant scope
+  const [row] = await ctx.db
+    .update(application)
+    .set({ internalNotes })
+    .where(
+      and(eq(application.id, applicationId), eq(application.organizationId, ctx.organizationId)),
+    )
+    .returning();
+  return row!;
 };
 
 export interface ApplicationWithRelations extends Application {
@@ -271,6 +321,279 @@ export const getApplication = async (ctx: Ctx, id: string): Promise<Application>
     .limit(1);
   if (!row) throw new NotFoundError('Candidatura não encontrada.');
   return row;
+};
+
+/* ── Admin listing (paginated, filtered) ─────────────────────────────────────
+ * The listing page mirrors the animals pattern: a flat, offset-paged query the
+ * table/mobile cards consume with infinite scroll, plus a full-set variant the
+ * desktop kanban renders. Everything is org-scoped; client-supplied ids are only
+ * ever used as filters, never to bypass the tenant boundary. */
+
+/** Funnel bucket a status falls into (the kanban columns / status tabs). */
+export type ApplicationStatusGroup = 'new' | 'in-progress' | 'approved' | 'closed';
+
+const GROUP_STATUSES: Record<ApplicationStatusGroup, Application['status'][]> = {
+  new: ['new'],
+  'in-progress': ['in-progress'],
+  approved: ['approved'],
+  closed: ['adopted', 'rejected', 'withdrew', 'cancelled'],
+};
+const ALL_LISTED_STATUSES: Application['status'][] = [
+  'new',
+  'in-progress',
+  'approved',
+  'adopted',
+  'rejected',
+  'withdrew',
+  'cancelled',
+];
+
+const CLOSED_STATUSES: Application['status'][] = ['adopted', 'rejected', 'withdrew', 'cancelled'];
+
+const statusToGroup = (status: Application['status']): ApplicationStatusGroup =>
+  CLOSED_STATUSES.includes(status) ? 'closed' : (status as ApplicationStatusGroup);
+
+export interface ListApplicationsFilters {
+  /** A single funnel bucket; omit for "all" (every non-draft status). */
+  statusGroup?: ApplicationStatusGroup;
+  /** Free text matched against the candidate's and the animal's name. */
+  search?: string;
+  /** Restrict to candidacies for this animal (public id). */
+  animalId?: string;
+  /** Restrict to candidacies assigned to this member (user id). */
+  assignedToUserId?: string;
+  /** Restrict to candidacies with no responsible member. */
+  unassigned?: boolean;
+}
+
+/** One row of the admin listing: the candidacy enriched with the names the UI shows. */
+export interface CandidateListRow extends Application {
+  person: { id: string; name: string; phone: string; cityName: string | null };
+  animal: { id: string; name: string; species: 'dog' | 'cat'; size: Animal['size'] };
+  assignee: { id: string; name: string } | null;
+}
+
+/** Shared WHERE for the listing + counts: org scope, listed statuses, and filters. */
+const applicationFilterConditions = (
+  ctx: Ctx,
+  filters: ListApplicationsFilters,
+  statuses: Application['status'][],
+) => {
+  const conditions = [
+    eq(application.organizationId, ctx.organizationId),
+    inArray(application.status, statuses),
+  ];
+  const search = filters.search?.trim();
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(or(ilike(person.name, pattern), ilike(animal.name, pattern))!);
+  }
+  if (filters.animalId) conditions.push(eq(animal.id, filters.animalId));
+  if (filters.unassigned) conditions.push(isNull(application.assignedToUserId));
+  else if (filters.assignedToUserId)
+    conditions.push(eq(application.assignedToUserId, filters.assignedToUserId));
+  return and(...conditions);
+};
+
+/**
+ * One offset-paged slice of the admin listing. Joins person + animal (+ the
+ * optional assignee and the candidate's city) so a row carries everything the
+ * cards/table render without an N+1. Ordered by most-recent activity, with the
+ * surrogate pk as a stable tiebreaker so paging never skips or repeats a row.
+ */
+export const listApplicationsPage = async (
+  ctx: Ctx,
+  filters: ListApplicationsFilters,
+  page: { offset: number; limit: number },
+): Promise<CandidateListRow[]> => {
+  const statuses = filters.statusGroup ? GROUP_STATUSES[filters.statusGroup] : ALL_LISTED_STATUSES;
+  const rows = await ctx.db
+    .select({
+      ...getTableColumns(application),
+      personPublicId: person.id,
+      personName: person.name,
+      personPhone: person.phone,
+      cityName: city.name,
+      animalPublicId: animal.id,
+      animalName: animal.name,
+      animalSpecies: animal.species,
+      animalSize: animal.size,
+      assigneeName: user.name,
+    })
+    .from(application)
+    .innerJoin(person, eq(application.personId, person.pk))
+    .innerJoin(animal, eq(application.animalId, animal.pk))
+    .leftJoin(city, eq(person.cityId, city.id))
+    .leftJoin(user, eq(application.assignedToUserId, user.id))
+    .where(applicationFilterConditions(ctx, filters, statuses))
+    .orderBy(desc(application.statusChangedAt), desc(application.pk))
+    .limit(page.limit)
+    .offset(page.offset);
+
+  return rows.map(
+    ({
+      personPublicId,
+      personName,
+      personPhone,
+      cityName,
+      animalPublicId,
+      animalName,
+      animalSpecies,
+      animalSize,
+      assigneeName,
+      ...app
+    }) => ({
+      ...(app as Application),
+      person: { id: personPublicId, name: personName, phone: personPhone, cityName },
+      animal: {
+        id: animalPublicId,
+        name: animalName,
+        species: animalSpecies,
+        size: animalSize,
+      },
+      assignee: app.assignedToUserId ? { id: app.assignedToUserId, name: assigneeName ?? '' } : null,
+    }),
+  );
+};
+
+/**
+ * Count candidacies per funnel bucket for the status tabs. Honors every filter
+ * except `statusGroup` (the tabs need each bucket regardless of which is active),
+ * mirroring `countAnimalsByStatus`.
+ */
+export const countApplicationsByStatus = async (
+  ctx: Ctx,
+  filters: Omit<ListApplicationsFilters, 'statusGroup'>,
+): Promise<Record<ApplicationStatusGroup, number>> => {
+  const rows = await ctx.db
+    .select({ status: application.status, count: sql<number>`count(*)::int` })
+    .from(application)
+    .innerJoin(person, eq(application.personId, person.pk))
+    .innerJoin(animal, eq(application.animalId, animal.pk))
+    .where(applicationFilterConditions(ctx, filters, ALL_LISTED_STATUSES))
+    .groupBy(application.status);
+
+  const counts: Record<ApplicationStatusGroup, number> = {
+    new: 0,
+    'in-progress': 0,
+    approved: 0,
+    closed: 0,
+  };
+  for (const row of rows) counts[statusToGroup(row.status)] += Number(row.count);
+  return counts;
+};
+
+/** Distinct animals that have at least one listed (non-draft) candidacy — the Animal filter options. */
+export const listApplicationAnimals = async (
+  ctx: Ctx,
+): Promise<{ id: string; name: string }[]> => {
+  const rows = await ctx.db
+    .selectDistinct({ id: animal.id, name: animal.name })
+    .from(application)
+    .innerJoin(animal, eq(application.animalId, animal.pk))
+    .where(
+      and(
+        eq(application.organizationId, ctx.organizationId),
+        notInArray(application.status, ['draft']),
+      ),
+    )
+    .orderBy(animal.name);
+  return rows;
+};
+
+/**
+ * Other active candidacies (status new/in-progress/approved) per person, keyed by
+ * the person's surrogate pk. Powers the "também candidata a {animal}" alert; the
+ * caller drops the current row's own animal.
+ */
+export const getMultipleCandidacies = async (
+  ctx: Ctx,
+  personPks: number[],
+): Promise<Record<number, { animalId: string; animalName: string }[]>> => {
+  if (personPks.length === 0) return {};
+  const rows = await ctx.db
+    .select({ personPk: application.personId, animalId: animal.id, animalName: animal.name })
+    .from(application)
+    .innerJoin(animal, eq(application.animalId, animal.pk))
+    .where(
+      and(
+        eq(application.organizationId, ctx.organizationId),
+        inArray(application.personId, personPks),
+        inArray(application.status, ['new', 'in-progress', 'approved']),
+      ),
+    );
+  const byPerson: Record<number, { animalId: string; animalName: string }[]> = {};
+  for (const row of rows) {
+    (byPerson[row.personPk] ??= []).push({ animalId: row.animalId, animalName: row.animalName });
+  }
+  return byPerson;
+};
+
+/** One past adoption of a person, with the candidacy it came from (null = offline). */
+export interface PersonAdoption {
+  /** The `application.pk` this adoption was formalized from, or null for offline adoptions. */
+  applicationPk: number | null;
+  /** Whether it was later cancelled (the animal was returned). */
+  cancelled: boolean;
+}
+
+/**
+ * Every adoption per person, keyed by surrogate pk. The caller derives the
+ * history alert chips ("já adotou" / "devolveu antes") and is responsible for
+ * excluding the candidacy's own adoption — otherwise an adopted candidacy would
+ * flag itself as a prior adoption.
+ */
+export const getPersonAdoptions = async (
+  ctx: Ctx,
+  personPks: number[],
+): Promise<Record<number, PersonAdoption[]>> => {
+  if (personPks.length === 0) return {};
+  const rows = await ctx.db
+    .select({
+      personPk: adoption.personId,
+      applicationPk: adoption.applicationId,
+      cancelledAt: adoption.cancelledAt,
+    })
+    .from(adoption)
+    .where(
+      and(eq(adoption.organizationId, ctx.organizationId), inArray(adoption.personId, personPks)),
+    );
+  const byPerson: Record<number, PersonAdoption[]> = {};
+  for (const row of rows) {
+    (byPerson[row.personPk] ??= []).push({
+      applicationPk: row.applicationPk,
+      cancelled: row.cancelledAt != null,
+    });
+  }
+  return byPerson;
+};
+
+/**
+ * Signals for the candidate-detail alerts card: whether this is the person's first
+ * contact with the org, and whether they've adopted / returned before — the
+ * adoption checks exclude this candidacy's own adoption (see {@link getPersonAdoptions}).
+ */
+export const getPersonSignals = async (
+  ctx: Ctx,
+  personPk: number,
+  applicationPk: number,
+): Promise<{ isFirstCandidacy: boolean; adoptedBefore: boolean; returnedBefore: boolean }> => {
+  const [counts, adoptionsByPerson] = await Promise.all([
+    ctx.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(application)
+      .where(
+        and(eq(application.organizationId, ctx.organizationId), eq(application.personId, personPk)),
+      ),
+    getPersonAdoptions(ctx, [personPk]),
+  ]);
+  const all = adoptionsByPerson[personPk] ?? [];
+  const prior = all.filter((a) => a.applicationPk !== applicationPk);
+  return {
+    isFirstCandidacy: Number(counts[0]?.count ?? 0) <= 1 && all.length === 0,
+    adoptedBefore: prior.some((a) => !a.cancelled),
+    returnedBefore: prior.some((a) => a.cancelled),
+  };
 };
 
 export { ACTIVE_STATUSES };

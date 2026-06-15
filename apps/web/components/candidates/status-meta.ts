@@ -34,11 +34,19 @@ export const STATUS_META: Record<ApplicationStatus, StatusMeta> = {
     chip: 'bg-green/10 text-green',
     dot: 'bg-green',
   },
+  adopted: {
+    chip: 'bg-green/10 text-green-soft',
+    dot: 'bg-green-soft',
+  },
   rejected: {
     chip: 'bg-bg-2 text-ink-mute',
     dot: 'bg-ink-mute',
   },
   withdrew: {
+    chip: 'bg-bg-2 text-ink-mute',
+    dot: 'bg-ink-mute',
+  },
+  cancelled: {
     chip: 'bg-bg-2 text-ink-mute',
     dot: 'bg-ink-mute',
   },
@@ -69,7 +77,7 @@ export const KANBAN_COLUMNS: {
   { key: 'approved', statuses: ['approved'] },
   {
     key: 'closed',
-    statuses: ['rejected', 'withdrew'],
+    statuses: ['adopted', 'rejected', 'withdrew', 'cancelled'],
     collapsed: true,
   },
 ];

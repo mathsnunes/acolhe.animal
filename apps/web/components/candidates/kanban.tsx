@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import type { ApplicationWithRelations } from '@acolhe-animal/domain';
+import type { CandidateListItem } from '@/lib/candidates-query';
 
 import { cn } from '@/lib/utils';
 import { CandidateCard } from './candidate-card';
@@ -24,27 +24,27 @@ const COLUMN_DOT: Record<KanbanColumnKey, string> = {
  * usable width. The closed column (recusados/desistiram) starts collapsed so the
  * focus stays on the live funnel.
  */
-export const Kanban = ({ applications }: { applications: ApplicationWithRelations[] }) => {
+export const Kanban = ({ items }: { items: CandidateListItem[] }) => {
   const t = useTranslations('candidates');
   return (
     <div
       className={cn(
-        'flex snap-x gap-3.5 overflow-x-auto px-6 pb-16 sm:px-10',
+        'flex snap-x gap-3.5 overflow-x-auto pb-4',
         'lg:grid lg:grid-cols-4 lg:overflow-visible',
       )}
     >
       {KANBAN_COLUMNS.map((column) => {
-        const items = applications.filter((a) => column.statuses.includes(a.status));
+        const columnItems = items.filter((it) => column.statuses.includes(it.application.status));
         return (
           <KanbanColumn
             key={column.key}
             label={t(`columns.${columnLabelKey(column.key)}`)}
             dot={COLUMN_DOT[column.key]}
-            count={items.length}
+            count={columnItems.length}
             collapsible={column.collapsed}
           >
-            {items.map((application) => (
-              <CandidateCard key={application.id} application={application} />
+            {columnItems.map((it) => (
+              <CandidateCard key={it.application.id} item={it} />
             ))}
           </KanbanColumn>
         );
