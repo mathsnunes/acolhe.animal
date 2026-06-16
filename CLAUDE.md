@@ -89,7 +89,7 @@ Note: domain-layer error messages and WhatsApp/email templates are still authore
 
 ## Authentication
 
-better-auth (phone + password + OTP), config in `apps/web/lib/auth.ts`. **Dev shortcut**: when there's no session in `development`, `lib/auth-context.ts` auto-logs-in the seeded admin (Angeli Felice) so the panel is demoable without completing login. This **never** applies in production. Real login at `/login`.
+better-auth (phone + password + OTP, plus email-OTP for recovery), config in `apps/web/lib/auth.ts`. A real login is **always** required — including in dev (there is no auto-login shortcut). `lib/auth-context.ts` is the only place that reads the session and builds the `Ctx`; the active org is selected by the `acolhe_active_org` cookie (validated against the user's memberships). Auth surface: `/entrar` (login), `/criar-conta` (signup + new org), `/recuperar-senha` (recovery), `/convite/[token]` (invite). Member management at `/membros` (admin only).
 
 ## Run locally
 
@@ -101,7 +101,7 @@ pnpm db:seed        # cities + Angeli Felice org + sample animals
 pnpm dev            # http://localhost:3000
 ```
 
-Dev login: phone **+55 48 99999-0000**, password **acolhe123** (or just open `/home` in dev).
+Dev login: phone **+55 48 99999-0000**, password **acolhe123** (required — log in at `/entrar`).
 
 ## Where things live
 

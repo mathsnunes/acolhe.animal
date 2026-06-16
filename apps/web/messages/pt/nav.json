@@ -8,8 +8,15 @@
   "stories": "Histórias",
   "neededItems": "Itens em falta",
   "supporters": "Apoiadores",
+  "members": "Membros",
   "settings": "Configurações",
   "more": "Mais",
+  "logout": "Sair",
+  "sections": {
+    "general": "Geral",
+    "content": "Conteúdo",
+    "org": "Organização"
+  },
   "roleAdmin": "admin",
   "roleVolunteer": "voluntário(a)",
   "you": "Você",

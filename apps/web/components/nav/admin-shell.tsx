@@ -1,21 +1,36 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, ExternalLink, MoreHorizontal, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Check, ChevronsUpDown, ExternalLink, LogOut, MoreHorizontal, Settings, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState, type ReactNode } from 'react';
+import { useState, useTransition, type ReactNode } from 'react';
 
 import { initials } from '@acolhe-animal/shared';
 
 import { BrandMark } from '@/components/brand';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { signOut } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
+import { setActiveOrgAction } from '@/app/(admin)/actions';
 import { Topbar } from './topbar';
-import { BOTTOM_NAV, NAV_GROUPS, type NavCounts, type NavItem } from './nav-config';
+import { BOTTOM_NAV, NAV_GROUP_LABELS, NAV_GROUPS, type NavCounts, type NavItem } from './nav-config';
 
 export interface ShellOrg {
   name: string;
   slug: string;
+  cityLabel?: string;
+}
+export interface ShellOrgOption {
+  id: string;
+  name: string;
   cityLabel?: string;
 }
 export interface ShellUser {
@@ -25,6 +40,9 @@ export interface ShellUser {
 
 interface AdminShellProps {
   org: ShellOrg;
+  /** All orgs the user belongs to + the active one — drives the switcher. */
+  orgs: ShellOrgOption[];
+  activeOrgId: string | null;
   user: ShellUser;
   counts: NavCounts;
   children: ReactNode;
@@ -34,15 +52,110 @@ const isActive = (pathname: string, href: string): boolean => pathname === href 
 
 const visibleItems = (items: NavItem[], role: ShellUser['role']): NavItem[] => items.filter((i) => !i.adminOnly || role === 'admin');
 
-/** Circular initials avatar (org uses Fraunces, user uses sans). */
+/** Circular initials avatar with a soft brand tint (org = terra, user = green). */
 const InitialsAvatar = ({ name, variant }: { name: string; variant: 'org' | 'user' }) => <span
       className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-medium uppercase text-paper',
-        variant === 'org' ? 'bg-terra font-display' : 'bg-green',
+        'flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-medium uppercase',
+        variant === 'org' ? 'bg-terra-bg font-display text-terra' : 'bg-green/10 text-green',
       )}
     >
       {initials(name)}
     </span>;
+
+/** Org context indicator. A dropdown switcher when the user belongs to >1 org. */
+const OrgSwitcher = ({ org, orgs, activeOrgId }: { org: ShellOrg; orgs: ShellOrgOption[]; activeOrgId: string | null }) => {
+  const [pending, startTransition] = useTransition();
+
+  const card = (interactive: boolean) => (
+    <div
+      className={cn(
+        'flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left transition-colors',
+        interactive && 'hover:bg-bg-2',
+      )}
+    >
+      <InitialsAvatar name={org.name} variant="org" />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] font-medium text-ink">{org.name}</div>
+        {org.cityLabel && <div className="truncate text-[11px] text-ink-mute">{org.cityLabel}</div>}
+      </div>
+      {orgs.length > 1 && <ChevronsUpDown className="size-3.5 shrink-0 text-ink-mute" />}
+    </div>
+  );
+
+  if (orgs.length <= 1) return <div className="px-2 mb-1 mt-3">{card(false)}</div>;
+
+  return (
+    <div className="px-2 mb-1 mt-3">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button type="button" disabled={pending} className="w-full">
+            {card(true)}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] min-w-56">
+          {orgs.map((o) => (
+            <DropdownMenuItem
+              key={o.id}
+              onClick={() => startTransition(() => setActiveOrgAction(o.id))}
+              className="gap-2.5"
+            >
+              <InitialsAvatar name={o.name} variant="org" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-medium text-ink">{o.name}</div>
+                {o.cityLabel && <div className="truncate text-[10px] text-ink-mute">{o.cityLabel}</div>}
+              </div>
+              {o.id === activeOrgId && <Check className="size-3.5 shrink-0 text-terra" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
+/** User menu at the sidebar foot: identity + settings + logout. */
+const UserMenu = ({ user }: { user: ShellUser }) => {
+  const t = useTranslations('nav');
+  const router = useRouter();
+
+  const logout = async () => {
+    await signOut();
+    router.push('/entrar');
+  };
+
+  return (
+    <div className="px-2 mt-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left transition-colors hover:bg-bg-2">
+            <InitialsAvatar name={user.name} variant="user" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-medium text-ink">{user.name}</div>
+              <div className="text-[11px] text-ink-mute">
+                {user.role === 'admin' ? t('roleAdmin') : t('roleVolunteer')}
+              </div>
+            </div>
+            <MoreHorizontal className="size-4 text-ink-mute" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top" className="w-[--radix-dropdown-menu-trigger-width] min-w-52">
+          <DropdownMenuLabel className="truncate">{user.name}</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href="/config">
+              <Settings className="size-4" />
+              {t('settings')}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={logout} className="text-rose focus:text-rose">
+            <LogOut className="size-4" />
+            {t('logout')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
 
 const NavLink = ({ item, counts, pathname }: { item: NavItem; counts: NavCounts; pathname: string }) => {
   const t = useTranslations('nav');
@@ -56,30 +169,29 @@ const NavLink = ({ item, counts, pathname }: { item: NavItem; counts: NavCounts;
       href={item.href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative flex items-center gap-3 py-2.5 pl-[22px] pr-5 text-[13px] transition-colors',
-        active ? 'bg-terra-bg font-medium text-ink' : 'text-ink-soft hover:bg-bg-2',
+        'mx-2 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] transition-colors',
+        active ? 'bg-terra-bg font-medium text-terra' : 'text-ink-soft hover:bg-bg-2',
       )}
     >
-      {active && <span className="absolute inset-y-0 left-0 w-[3px] bg-terra" />}
-      <Icon className="size-4 shrink-0" strokeWidth={1.5} />
+      <Icon className="size-4 shrink-0" strokeWidth={active ? 2 : 1.5} />
       <span className="flex-1">{t(item.labelKey)}</span>
       {pulse && <span className="size-2 rounded-full bg-terra animate-pulse-dot" aria-hidden />}
-      {count != null && count > 0 && (
-        <span className="rounded-full bg-green px-[7px] py-0.5 text-[10px] font-medium leading-none text-paper">
-          {count}
-        </span>
-      )}
+      {count != null && count > 0 && <span className="text-[11px] text-ink-mute">{count}</span>}
     </Link>
   );
 };
 
 const SidebarContent = ({
   org,
+  orgs,
+  activeOrgId,
   user,
   counts,
   pathname,
 }: {
   org: ShellOrg;
+  orgs: ShellOrgOption[];
+  activeOrgId: string | null;
   user: ShellUser;
   counts: NavCounts;
   pathname: string;
@@ -88,30 +200,22 @@ const SidebarContent = ({
   const tc = useTranslations('common');
   return (
     <>
-      <div className="px-5 pb-4">
+      <div className="px-5 pb-1 pt-1">
         <BrandMark />
       </div>
-      <div className="divider-soft mx-4" />
 
-      {/* Org switcher (context indicator — single org, no chevron action) */}
-      <div className="px-4 my-3">
-        <div className="flex w-full items-center gap-2.5 rounded-[10px] border border-line bg-bg-2 px-2.5 py-2">
-          <InitialsAvatar name={org.name} variant="org" />
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-ink">{org.name}</div>
-            {org.cityLabel && <div className="truncate text-[10px] text-ink-mute">{org.cityLabel}</div>}
-          </div>
-        </div>
-      </div>
-      <div className="divider-soft mx-4" />
+      <OrgSwitcher org={org} orgs={orgs} activeOrgId={activeOrgId} />
 
       <nav className="flex-1 overflow-y-auto py-1">
         {NAV_GROUPS.map((group, gi) => {
           const items = visibleItems(group, user.role);
           if (!items.length) return null;
+          const sectionKey = NAV_GROUP_LABELS[gi];
           return (
-            <div key={gi}>
-              {gi > 0 && <div className="divider-soft mx-4 my-2" />}
+            <div key={gi} className="mt-3 first:mt-1">
+              {sectionKey && (
+                <div className="px-[18px] pb-1 text-[11px] tracking-[0.03em] text-ink-mute/85">{t(`sections.${sectionKey}`)}</div>
+              )}
               {items.map((item) => (
                 <NavLink key={item.href} item={item} counts={counts} pathname={pathname} />
               ))}
@@ -123,7 +227,7 @@ const SidebarContent = ({
           href={`/${org.slug}`}
           target="_blank"
           rel="noopener"
-          className="mt-1 flex items-center gap-3 py-2.5 pl-[22px] pr-5 text-[13px] text-terra transition-colors hover:bg-bg-2"
+          className="mx-2 mt-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] text-terra transition-colors hover:bg-bg-2"
         >
           <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
           <span className="flex-1">{tc('nav.viewPublicPage')}</span>
@@ -131,33 +235,28 @@ const SidebarContent = ({
       </nav>
 
       <div className="divider-soft mx-4" />
-      <div className="px-4 mt-3">
-        <button className="flex w-full items-center gap-2.5 rounded-[10px] border border-line bg-bg-2 px-2.5 py-2 text-left">
-          <InitialsAvatar name={user.name} variant="user" />
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-ink">{user.name}</div>
-            <div className="text-[10px] text-ink-mute">
-              {user.role === 'admin' ? t('roleAdmin') : t('roleVolunteer')}
-            </div>
-          </div>
-          <ChevronDown className="size-3.5 text-ink-mute" />
-        </button>
-      </div>
+      <UserMenu user={user} />
     </>
   );
 };
 
-export const AdminShell = ({ org, user, counts, children }: AdminShellProps) => {
+export const AdminShell = ({ org, orgs, activeOrgId, user, counts, children }: AdminShellProps) => {
   const pathname = usePathname();
+  const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
   const t = useTranslations('nav');
   const tc = useTranslations('common');
+
+  const logout = async () => {
+    await signOut();
+    router.push('/entrar');
+  };
 
   return (
     <div className="flex min-h-dvh">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-sidebar shrink-0 flex-col border-r border-line bg-paper py-5 lg:flex">
-        <SidebarContent org={org} user={user} counts={counts} pathname={pathname} />
+        <SidebarContent org={org} orgs={orgs} activeOrgId={activeOrgId} user={user} counts={counts} pathname={pathname} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -241,6 +340,14 @@ export const AdminShell = ({ org, user, counts, children }: AdminShellProps) => 
                   </Link>
                 );
               })}
+            <div className="divider-soft mx-5 my-2" />
+            <button
+              onClick={logout}
+              className="flex w-full items-center gap-3 px-5 py-3 text-sm text-rose hover:bg-bg-2"
+            >
+              <LogOut className="size-[18px]" strokeWidth={1.5} />
+              {t('logout')}
+            </button>
           </div>
         </div>
       )}

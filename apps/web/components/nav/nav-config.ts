@@ -6,6 +6,7 @@ import {
   Package,
   PawPrint,
   Settings,
+  UserCog,
   Users,
   UsersRound,
   Wallet,
@@ -53,8 +54,14 @@ export const NAV_GROUPS: NavItem[][] = [
     { href: '/itens-em-falta', labelKey: 'neededItems', icon: Package },
     { href: '/apoiadores', labelKey: 'supporters', icon: UsersRound, adminOnly: true },
   ],
-  [{ href: '/config', labelKey: 'settings', icon: Settings }],
+  [
+    { href: '/membros', labelKey: 'members', icon: UserCog, adminOnly: true },
+    { href: '/config', labelKey: 'settings', icon: Settings },
+  ],
 ];
+
+/** Editorial section label per NAV_GROUPS entry (keys into `nav.sections.*`). */
+export const NAV_GROUP_LABELS = ['general', 'content', 'org'] as const;
 
 /** The 5 fixed bottom-nav slots on mobile (the rest live in "Mais"). */
 export const BOTTOM_NAV: NavItem[] = [

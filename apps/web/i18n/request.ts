@@ -4,6 +4,7 @@ import common from '@/messages/pt/common.json';
 import nav from '@/messages/pt/nav.json';
 import home from '@/messages/pt/home.json';
 import auth from '@/messages/pt/auth.json';
+import members from '@/messages/pt/members.json';
 import settings from '@/messages/pt/settings.json';
 import emptyStates from '@/messages/pt/emptyStates.json';
 import landing from '@/messages/pt/landing.json';
@@ -27,6 +28,7 @@ export default getRequestConfig(async () => ({
     nav,
     home,
     auth,
+    members,
     settings,
     emptyStates,
     landing,
