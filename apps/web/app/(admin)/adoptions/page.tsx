@@ -25,6 +25,7 @@ interface AdoptionRow {
   termPdfUrl: string;
   adoptedAt: Date;
   cancelledAt: Date | null;
+  animalId: string;
   animalName: string;
 }
 
@@ -37,6 +38,7 @@ const listAdoptions = async (organizationId: number): Promise<AdoptionRow[]> => 
       termPdfUrl: adoption.termPdfUrl,
       adoptedAt: adoption.adoptedAt,
       cancelledAt: adoption.cancelledAt,
+      animalId: animal.id,
       animalName: animal.name,
     })
     .from(adoption)
@@ -114,7 +116,7 @@ const AdoptionListItem = ({
   const cancelled = row.cancelledAt !== null;
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
-      <Link href={`/adocoes/${row.id}`} className="min-w-0 flex-1 group">
+      <Link href={`/animais/${row.animalId}`} className="min-w-0 flex-1 group">
         <p className={cn('font-medium text-ink group-hover:text-terra', cancelled && 'line-through text-ink-mute')}>
           {row.animalName}
         </p>
@@ -143,7 +145,6 @@ const AdoptionListItem = ({
         target="_blank"
         rel="noreferrer"
         className="inline-flex items-center gap-1.5 text-sm text-terra hover:underline"
-        onClick={(e) => e.stopPropagation()}
       >
         <FileText className="size-4" /> {labels.term}
       </a>

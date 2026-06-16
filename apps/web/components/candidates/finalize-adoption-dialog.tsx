@@ -30,12 +30,16 @@ import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
  */
 export const FinalizeAdoptionDialog = ({
   applicationId,
+  animalId,
   adopterName,
   animalName,
+  triggerClassName = 'w-full',
 }: {
   applicationId: string;
+  animalId: string;
   adopterName: string;
   animalName: string;
+  triggerClassName?: string;
 }) => {
   const router = useRouter();
   const t = useTranslations('candidates');
@@ -74,7 +78,7 @@ export const FinalizeAdoptionDialog = ({
       if (res.ok) {
         toast.success(t('toasts.adoptionFinalized', { animalName }));
         setOpen(false);
-        router.push(`/adocoes/${res.data.id}`);
+        router.push(`/animais/${animalId}`);
       } else {
         toast.error(res.error.message);
       }
@@ -84,7 +88,7 @@ export const FinalizeAdoptionDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="lg" className="w-full">
+        <Button variant="secondary" size="lg" className={triggerClassName}>
           <HeartHandshake className="size-4" /> {t('finalize.trigger')}
         </Button>
       </DialogTrigger>

@@ -12,6 +12,7 @@ import {
   listAnimalPhotos,
   listAnimalVideos,
   publishAnimal,
+  rejectWaitingApplicationsForAnimal,
   requestUploads,
   setAnimalCoverPhoto,
   unarchiveAnimal,
@@ -91,6 +92,20 @@ export const unarchiveAnimalAction = async (id: string): Promise<ActionResult> =
   if (result.ok) {
     revalidatePath('/animais');
     revalidatePath(`/animais/${id}`);
+  }
+  return result;
+};
+
+/**
+ * Reject the candidacies still open for an already-adopted animal ("recusar
+ * restantes"). Returns the number rejected so the UI can confirm.
+ */
+export const rejectOtherCandidatesAction = async (animalId: string): Promise<ActionResult<number>> => {
+  const ctx = await requireCtx();
+  const result = await action(() => rejectWaitingApplicationsForAnimal(ctx, animalId));
+  if (result.ok) {
+    revalidatePath(`/animais/${animalId}`);
+    revalidatePath('/candidatos');
   }
   return result;
 };

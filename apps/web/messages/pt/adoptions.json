@@ -22,22 +22,26 @@
     "term": "Termo"
   },
   "detail": {
-    "breadcrumb": "Adoções",
     "sourceDigital": "Adoção digital",
     "sourceOffline": "Adoção presencial",
-    "cancelled": "Cancelada",
-    "foundHome": "{animalName} encontrou um lar",
-    "adoptedOn": "adotado em {date}",
-    "adopterEyebrow": "— Adotante",
+    "originCandidacy": "Candidatura de {adopterName}",
+    "originView": "ver candidato",
     "nameLabel": "Nome",
     "cpfLabel": "CPF",
     "phoneLabel": "Telefone",
     "addressLabel": "Endereço",
-    "extraClausesEyebrow": "— Cláusulas extras",
-    "cancellationReasonEyebrow": "— Motivo do cancelamento",
-    "termEyebrow": "— Termo de adoção",
-    "openTerm": "Abrir termo assinado",
-    "historyEyebrow": "— Histórico"
+    "adoptedAtLabel": "Data da adoção",
+    "openTerm": "Abrir termo assinado"
+  },
+  "return": {
+    "trigger": "Registrar devolução",
+    "title": "Registrar devolução de {animalName}",
+    "description": "O animal volta a ficar disponível e a candidatura é reaberta. A devolução fica registrada no histórico.",
+    "reasonLabel": "Motivo da devolução",
+    "reasonPlaceholder": "Conte o que aconteceu…",
+    "cancel": "Voltar",
+    "submit": "Registrar devolução",
+    "toast": "Devolução de {animalName} registrada."
   },
   "offlineForm": {
     "trigger": "Registrar adoção",

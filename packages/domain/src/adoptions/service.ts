@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { createId, NotFoundError, ConflictError } from '@acolhe-animal/shared';
@@ -110,8 +110,27 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
   const { url, hash } = await storeTerm(adoptionId, termText);
 
   return withTransaction(ctx, async (tx) => {
-    // Persist the adopter's CPF on the Person (collected at signature time).
-    await tx.db.update(person).set({ cpf: data.adopterDocument }).where(eq(person.id, personRow.id));
+    // Backfill the adopter's CPF on the Person (collected at signature time) — but
+    // only when it's free in this org. CPF is unique per organization, and the same
+    // human may already hold it under another person record (e.g. a prior candidacy,
+    // or an adoption that was later returned). The adoption itself always records
+    // `adopterDocument`, so skipping the backfill here loses nothing and avoids a
+    // `person_org_cpf_unique` violation.
+    if (personRow.cpf !== data.adopterDocument) {
+      const [cpfOwner] = await tx.db
+        .select({ pk: person.pk })
+        .from(person)
+        .where(
+          and(eq(person.organizationId, ctx.organizationId), eq(person.cpf, data.adopterDocument)),
+        )
+        .limit(1);
+      if (!cpfOwner) {
+        await tx.db
+          .update(person)
+          .set({ cpf: data.adopterDocument })
+          .where(eq(person.id, personRow.id));
+      }
+    }
 
     const [row] = await tx.db
       .insert(adoption)
@@ -216,6 +235,32 @@ export const registerOfflineAdoption = async (ctx: Ctx, input: unknown): Promise
     });
     return row!;
   });
+};
+
+/**
+ * The active (non-cancelled) adoption of an animal, if any — the full record
+ * plus the public id of the originating candidacy (null for offline adoptions).
+ * The animal detail page renders the whole adoption (adopter, term, origin)
+ * inline now that there's no dedicated adoption page.
+ */
+export const getAdoptionByAnimal = async (
+  ctx: Ctx,
+  animalId: string,
+): Promise<{ adoption: Adoption; originApplicationId: string | null } | null> => {
+  const [row] = await ctx.db
+    .select({ adoption, originApplicationId: application.id })
+    .from(adoption)
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
+    .leftJoin(application, eq(adoption.applicationId, application.pk))
+    .where(
+      and(
+        eq(animal.id, animalId),
+        eq(adoption.organizationId, ctx.organizationId),
+        isNull(adoption.cancelledAt),
+      ),
+    )
+    .limit(1);
+  return row ? { adoption: row.adoption, originApplicationId: row.originApplicationId } : null;
 };
 
 /** Cancel an adoption (return/giveback). Frees the animal again. */

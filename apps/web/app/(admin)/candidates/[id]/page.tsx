@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
@@ -68,6 +68,7 @@ export default async function CandidatoDetalhePage({
   const surname = nameParts.slice(1).join(' ');
   const statusLabel = t(`status.${statusLabelKey(application.status)}`);
   const isApproved = application.status === 'approved';
+  const isAdopted = application.status === 'adopted';
   const currentUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
 
   // "Quem é" composite rows, from the form answers (falling back to the person record).
@@ -212,7 +213,27 @@ export default async function CandidatoDetalhePage({
           {isApproved && (
             <div className="section-card p-[18px]">
               <p className="eyebrow mb-3">{t('detail.nextStepEyebrow')}</p>
-              <FinalizeAdoptionDialog applicationId={application.id} adopterName={person.name} animalName={animal.name} />
+              <FinalizeAdoptionDialog
+                applicationId={application.id}
+                animalId={animal.id}
+                adopterName={person.name}
+                animalName={animal.name}
+              />
+            </div>
+          )}
+
+          {isAdopted && (
+            <div className="section-card p-[18px]">
+              <p className="eyebrow mb-3">{t('detail.adoptionDoneEyebrow')}</p>
+              <Link
+                href={`/animais/${animal.id}`}
+                className="flex items-center justify-between gap-2 text-[13.5px] font-medium text-ink transition hover:text-terra"
+              >
+                {t('detail.adoptionDoneText')}
+                <span className="inline-flex items-center gap-1 text-terra">
+                  {t('detail.viewAdoption')} <ArrowRight className="size-4" />
+                </span>
+              </Link>
             </div>
           )}
         </aside>

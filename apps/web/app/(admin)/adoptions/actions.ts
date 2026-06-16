@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { registerOfflineAdoption } from '@acolhe-animal/domain';
+import { registerOfflineAdoption, cancelAdoption } from '@acolhe-animal/domain';
 
 import { action } from '@/lib/action';
 import { requireCtx } from '@/lib/auth-context';
@@ -34,4 +34,16 @@ export const registerOfflineAction = async (input: {
     revalidatePath('/adocoes');
     revalidatePath('/animais');
     return adoption;
+  });
+
+/** Register a return/giveback: cancels the adoption and frees the animal again. */
+export const cancelAdoptionAction = async (input: { adoptionId: string; reason: string }) =>
+  action(async () => {
+    const ctx = await requireCtx();
+    await cancelAdoption(ctx, input.adoptionId, input.reason);
+    revalidatePath('/adocoes');
+    revalidatePath(`/adocoes/${input.adoptionId}`);
+    revalidatePath('/animais');
+    revalidatePath('/candidatos');
+    return { ok: true };
   });

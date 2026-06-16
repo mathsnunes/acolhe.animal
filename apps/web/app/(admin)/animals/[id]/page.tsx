@@ -2,16 +2,18 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { AlertTriangle, ArrowRight, Pencil } from 'lucide-react';
+import { AlertTriangle, ArrowRight, FileText, Pencil } from 'lucide-react';
 
 import {
   countWaitingApplicationsByAnimal,
+  getAdoptionByAnimal,
   getAnimal,
+  getApprovedApplicationForAnimal,
   listAnimalPhotos,
   listAnimalVideos,
   listEntityTimeline,
 } from '@acolhe-animal/domain';
-import { formatDateBR, formatRelative, isDomainError } from '@acolhe-animal/shared';
+import { formatCpf, formatDateBR, formatPhoneBR, formatRelative, isDomainError } from '@acolhe-animal/shared';
 import type { Animal, TimelineEvent } from '@acolhe-animal/db';
 
 import { DetailBreadcrumb } from '@/components/page-header';
@@ -29,7 +31,12 @@ import {
   speciesNounLabel,
 } from '@/components/animals/labels';
 import type { Translator } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 import { requireCtx } from '@/lib/auth-context';
+import { whatsappHref } from '@/components/candidates/whatsapp';
+import { FinalizeAdoptionDialog } from '@/components/candidates/finalize-adoption-dialog';
+import { ReturnAdoptionDialog } from '@/components/adoptions/return-adoption-dialog';
+import { OpenCandidaciesNote } from '@/components/animals/open-candidacies-note';
 import { archiveAnimalAction, unarchiveAnimalAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -71,6 +78,7 @@ export default async function AnimalDetailPage({
 }) {
   const ctx = await requireCtx();
   const t = await getTranslations('animals');
+  const tA = await getTranslations('adoptions');
   const { id } = await params;
 
   let animal: Animal;
@@ -81,15 +89,19 @@ export default async function AnimalDetailPage({
     throw err;
   }
 
-  const [timeline, photos, videos, waitingCounts] = await Promise.all([
+  const [timeline, photos, videos, waitingCounts, adoption, approvedApp] = await Promise.all([
     listEntityTimeline(ctx, 'animal', id),
     listAnimalPhotos(ctx, id),
     listAnimalVideos(ctx, id),
     countWaitingApplicationsByAnimal(ctx),
+    animal.status === 'adopted' ? getAdoptionByAnimal(ctx, id) : Promise.resolve(null),
+    animal.status === 'reserved' ? getApprovedApplicationForAnimal(ctx, id) : Promise.resolve(null),
   ]);
 
   const archived = animal.archivedAt != null;
   const candidates = waitingCounts[id] ?? 0;
+  const adoptionRecord = adoption?.adoption ?? null;
+  const isAdopted = animal.status === 'adopted';
 
   // One narrative field today: short phrases live as the hero tagline, written-out
   // multi-paragraph stories render as the "história" section below. (Splitting into
@@ -179,24 +191,132 @@ export default async function AnimalDetailPage({
         </div>
       </div>
 
-      {/* Candidates summary — only when there are waiting applications. */}
-      {candidates > 0 && (
-        <div className="mt-9 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-line bg-paper px-6 py-5">
-          <div className="flex items-center gap-4">
-            <span className="font-display text-[40px] font-light leading-none text-terra">
-              {candidates}
-            </span>
-            <p className="text-[13.5px] text-ink">
-              {t('detail.candidatesWaiting', { count: candidates })}
+      {/* Reserved — an approved candidacy is holding this animal: offer the
+          "formalizar adoção" shortcut right here, no detour to the candidate. */}
+      {approvedApp && (
+        <section className="mt-9 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-terra/30 bg-terra-bg/40 px-6 py-5">
+          <div className="min-w-0">
+            <p className="eyebrow text-terra">{t('detail.approvedEyebrow')}</p>
+            <p className="mt-1 text-[14px] text-ink">
+              {t('detail.approvedReadyToFinalize', { adopterName: approvedApp.adopterName })}
             </p>
           </div>
-          <Button asChild>
-            <Link href={`/candidatos?animal=${id}`}>
-              {t('detail.viewCandidates')} <ArrowRight />
-            </Link>
-          </Button>
-        </div>
+          <FinalizeAdoptionDialog
+            applicationId={approvedApp.applicationId}
+            animalId={id}
+            adopterName={approvedApp.adopterName}
+            animalName={animal.name}
+            triggerClassName="shrink-0"
+          />
+        </section>
       )}
+
+      {/* Adoption — the full record now lives on the animal once it's adopted:
+          adopter, term, origin and the return action, all in one place. */}
+      {adoptionRecord && (
+        <section className="mt-9 rounded-2xl border border-line bg-paper px-6 py-5">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <p className="eyebrow">{t('detail.adoptionEyebrow')}</p>
+            <span
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-medium',
+                adoptionRecord.source === 'digital'
+                  ? 'bg-terra-bg text-terra'
+                  : 'bg-bg-2 text-ink-soft',
+              )}
+            >
+              {adoptionRecord.source === 'digital'
+                ? tA('detail.sourceDigital')
+                : tA('detail.sourceOffline')}
+            </span>
+          </div>
+
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+            <Fact label={tA('detail.nameLabel')} value={adoptionRecord.adopterName} />
+            <Fact label={tA('detail.cpfLabel')} value={formatCpf(adoptionRecord.adopterDocument)} />
+            <Fact
+              label={tA('detail.phoneLabel')}
+              value={
+                <a
+                  href={whatsappHref(adoptionRecord.adopterPhone)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-terra hover:underline"
+                >
+                  {formatPhoneBR(adoptionRecord.adopterPhone)}
+                </a>
+              }
+            />
+            <Fact label={tA('detail.adoptedAtLabel')} value={formatDateBR(adoptionRecord.adoptedAt)} />
+            <div className="sm:col-span-2">
+              <Fact
+                label={tA('detail.addressLabel')}
+                value={[
+                  `${adoptionRecord.adopterAddress.street}, ${adoptionRecord.adopterAddress.number}`,
+                  adoptionRecord.adopterAddress.complement,
+                  `${adoptionRecord.adopterAddress.city}/${adoptionRecord.adopterAddress.state}`,
+                  adoptionRecord.adopterAddress.postalCode,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              />
+            </div>
+          </dl>
+
+          {adoption?.originApplicationId && (
+            <div className="mt-4 border-t border-line-soft pt-3">
+              <Link
+                href={`/candidatos/${adoption.originApplicationId}`}
+                className="group inline-flex flex-wrap items-center gap-1.5 text-[13px] text-ink"
+              >
+                {tA('detail.originCandidacy', { adopterName: adoptionRecord.adopterName })}
+                <span className="text-terra group-hover:underline">
+                  · {tA('detail.originView')} ›
+                </span>
+              </Link>
+            </div>
+          )}
+
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+            <a
+              href={adoptionRecord.termPdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-5 py-2.5 text-sm font-medium text-ink shadow-card transition hover:border-terra/40 hover:-translate-y-0.5"
+            >
+              <FileText className="size-4" /> {tA('detail.openTerm')}
+            </a>
+            <ReturnAdoptionDialog adoptionId={adoptionRecord.id} animalName={animal.name} />
+          </div>
+        </section>
+      )}
+
+      {/* Candidates — prominent while the animal is in process; once adopted the
+          still-open candidacies drop to a quiet note (kept for record / returns). */}
+      {candidates > 0 &&
+        (isAdopted ? (
+          <OpenCandidaciesNote
+            animalId={id}
+            count={candidates}
+            viewHref={`/candidatos?animal=${id}`}
+          />
+        ) : (
+          <div className="mt-9 flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-line bg-paper px-6 py-5">
+            <div className="flex items-center gap-4">
+              <span className="font-display text-[40px] font-light leading-none text-terra">
+                {candidates}
+              </span>
+              <p className="text-[13.5px] text-ink">
+                {t('detail.candidatesWaiting', { count: candidates })}
+              </p>
+            </div>
+            <Button asChild>
+              <Link href={`/candidatos?animal=${id}`}>
+                {t('detail.viewCandidates')} <ArrowRight />
+              </Link>
+            </Button>
+          </div>
+        ))}
 
       {/* Clinical banner — temporary health state that the adopter must know. */}
       {animal.clinicalCondition && (
@@ -344,6 +464,16 @@ const Card = ({ children }: { children: ReactNode }) => (
 
 const CardTitle = ({ children }: { children: ReactNode }) => (
   <h3 className="mb-3.5 font-display text-[22px] tracking-[-0.02em] text-ink">{children}</h3>
+);
+
+/** Label/value row in the adoption card: uppercase mute label, plain value. */
+const Fact = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div>
+    <dt className="mb-1 text-[10px] font-medium uppercase tracking-[0.07em] text-ink-mute">
+      {label}
+    </dt>
+    <dd className="text-sm leading-relaxed text-ink">{value}</dd>
+  </div>
 );
 
 /** Quick-stat cell in the detail hero strip: uppercase mute label, Fraunces value. */
