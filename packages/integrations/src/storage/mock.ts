@@ -81,5 +81,7 @@ const guessContentType = (key: string): string => {
   if (key.endsWith('.webp')) return 'image/webp';
   if (key.endsWith('.mp4')) return 'video/mp4';
   if (key.endsWith('.mov')) return 'video/quicktime';
+  if (key.endsWith('.pdf')) return 'application/pdf';
+  if (key.endsWith('.html')) return 'text/html; charset=utf-8';
   return 'application/octet-stream';
 };

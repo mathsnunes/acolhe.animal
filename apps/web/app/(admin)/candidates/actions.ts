@@ -77,7 +77,18 @@ export const assignAction = async (id: string, userId: string) =>
 /** Staff-create a candidacy (fair/presential) straight into the funnel. */
 export const createManualCandidacyAction = async (input: {
   animalId: string;
-  person: { name: string; phone: string; email?: string; cpf?: string; cityId?: string };
+  person: {
+    name: string;
+    phone: string;
+    email?: string;
+    cpf?: string;
+    cityId?: string;
+    streetAddress?: string;
+    addressNumber?: string;
+    addressComplement?: string;
+    addressNeighborhood?: string;
+    postalCode?: string;
+  };
 }) =>
   action(async () => {
     const ctx = await requireCtx();

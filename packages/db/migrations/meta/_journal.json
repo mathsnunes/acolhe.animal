@@ -36,6 +36,13 @@
       "when": 1781592732869,
       "tag": "0004_portal_enabled_and_optional_slug",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781609606735,
+      "tag": "0005_person_neighborhood",
+      "breakpoints": true
     }
   ]
 }

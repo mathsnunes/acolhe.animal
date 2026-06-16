@@ -31,7 +31,7 @@
     "phoneLabel": "Telefone",
     "addressLabel": "Endereço",
     "adoptedAtLabel": "Data da adoção",
-    "openTerm": "Abrir termo assinado"
+    "openTerm": "Abrir termo de adoção"
   },
   "return": {
     "trigger": "Registrar devolução",

@@ -32,6 +32,7 @@ export const person = pgTable(
     streetAddress: text(),
     addressNumber: text(),
     addressComplement: text(),
+    addressNeighborhood: text(),
     postalCode: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })

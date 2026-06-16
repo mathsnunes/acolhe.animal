@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
+import { formatCpf, formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
 import {
   countWaitingApplicationsByAnimal,
   getApplication,
@@ -12,7 +12,7 @@ import {
   getPersonSignals,
   listEntityTimeline,
 } from '@acolhe-animal/domain';
-import { db, organizationMember, user, type TimelineEvent } from '@acolhe-animal/db';
+import { city, db, organizationMember, user, type TimelineEvent } from '@acolhe-animal/db';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import { requireCtx } from '@/lib/auth-context';
@@ -70,6 +70,32 @@ export default async function CandidatoDetalhePage({
   const isApproved = application.status === 'approved';
   const isAdopted = application.status === 'adopted';
   const currentUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
+
+  // Pre-fill the finalize form from the candidacy's Person, so the term data
+  // collected when the candidacy was created isn't re-typed.
+  const personCity =
+    isApproved && person.cityId
+      ? (
+          await db
+            .select({ name: city.name, uf: city.stateCode })
+            .from(city)
+            .where(eq(city.id, person.cityId))
+            .limit(1)
+        )[0]
+      : undefined;
+  const finalizeInitial = isApproved
+    ? {
+        document: person.cpf ? formatCpf(person.cpf) : '',
+        street: person.streetAddress ?? '',
+        number: person.addressNumber ?? '',
+        complement: person.addressComplement ?? '',
+        neighborhood: person.addressNeighborhood ?? '',
+        postalCode: person.postalCode ?? '',
+        city: personCity?.name ?? '',
+        state: personCity?.uf ?? '',
+        cityText: personCity ? `${personCity.name}, ${personCity.uf}` : '',
+      }
+    : undefined;
 
   // "Quem é" composite rows, from the form answers (falling back to the person record).
   const answers = (application.applicationData ?? {}) as Record<string, unknown>;
@@ -218,6 +244,7 @@ export default async function CandidatoDetalhePage({
                 animalId={animal.id}
                 adopterName={person.name}
                 animalName={animal.name}
+                initial={finalizeInitial}
               />
             </div>
           )}

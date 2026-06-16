@@ -28,32 +28,47 @@ import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
  * clauses, then formalize a digital adoption. On success we land on the new
  * adoption record.
  */
+export interface FinalizeInitial {
+  document?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  cityText?: string;
+}
+
 export const FinalizeAdoptionDialog = ({
   applicationId,
   animalId,
   adopterName,
   animalName,
   triggerClassName = 'w-full',
+  initial,
 }: {
   applicationId: string;
   animalId: string;
   adopterName: string;
   animalName: string;
   triggerClassName?: string;
+  /** Pre-fill from the candidacy's Person, so the data isn't re-typed. */
+  initial?: FinalizeInitial;
 }) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const [document, setDocument] = useState('');
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [complement, setComplement] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  const [document, setDocument] = useState(initial?.document ?? '');
+  const [street, setStreet] = useState(initial?.street ?? '');
+  const [number, setNumber] = useState(initial?.number ?? '');
+  const [complement, setComplement] = useState(initial?.complement ?? '');
+  const [neighborhood, setNeighborhood] = useState(initial?.neighborhood ?? '');
+  const [city, setCity] = useState(initial?.city ?? '');
+  const [state, setState] = useState(initial?.state ?? '');
+  const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
   const [extraClauses, setExtraClauses] = useState('');
 
   const onSubmit = (e: FormEvent) => {
@@ -160,6 +175,7 @@ export const FinalizeAdoptionDialog = ({
               label={t('finalize.cityLabel')}
               placeholder={t('finalize.cityPlaceholder')}
               emptyLabel={t('finalize.cityEmpty')}
+              initialText={initial?.cityText ?? ''}
               onChange={(c) => {
                 // The autocomplete carries the UF, so there's no separate state field.
                 if (c) {

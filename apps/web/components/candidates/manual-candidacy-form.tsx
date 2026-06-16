@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CityCombobox } from '@/components/auth/city-combobox';
-import { maskCpf, maskPhoneBR } from '@/lib/masks';
+import { maskCep, maskCpf, maskPhoneBR } from '@/lib/masks';
 import { createManualCandidacyAction } from '@/app/(admin)/candidates/actions';
 
 export interface CandidacyAnimal {
@@ -53,6 +53,11 @@ export const ManualCandidacyForm = ({ animals }: { animals: CandidacyAnimal[] })
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
   const [cityId, setCityId] = useState<string | null>(null);
+  const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
+  const [complement, setComplement] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -74,6 +79,11 @@ export const ManualCandidacyForm = ({ animals }: { animals: CandidacyAnimal[] })
           email: email.trim() || undefined,
           cpf: cpf.trim() || undefined,
           cityId: cityId ?? undefined,
+          streetAddress: street.trim() || undefined,
+          addressNumber: number.trim() || undefined,
+          addressComplement: complement.trim() || undefined,
+          addressNeighborhood: neighborhood.trim() || undefined,
+          postalCode: postalCode.trim() || undefined,
         },
       });
       if (res.ok) {
@@ -161,6 +171,37 @@ export const ManualCandidacyForm = ({ animals }: { animals: CandidacyAnimal[] })
             emptyLabel={t('manual.cityEmpty')}
             onChange={(c) => setCityId(c?.id ?? null)}
           />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_7rem]">
+            <div className="space-y-2">
+              <Label htmlFor="mc-street">{t('manual.streetLabel')}</Label>
+              <Input id="mc-street" value={street} onChange={(e) => setStreet(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mc-number">{t('manual.numberLabel')}</Label>
+              <Input id="mc-number" value={number} onChange={(e) => setNumber(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="mc-complement">{t('manual.complementLabel')}</Label>
+              <Input id="mc-complement" value={complement} onChange={(e) => setComplement(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mc-neighborhood">{t('manual.neighborhoodLabel')}</Label>
+              <Input id="mc-neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mc-cep">{t('manual.postalCodeLabel')}</Label>
+              <Input
+                id="mc-cep"
+                inputMode="numeric"
+                value={postalCode}
+                onChange={(e) => setPostalCode(maskCep(e.target.value))}
+              />
+            </div>
+          </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
