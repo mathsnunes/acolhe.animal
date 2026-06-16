@@ -36,5 +36,18 @@ export const maskCnpj = (value: string): string => {
     .replace(/(\d{4})(\d)/, '$1-$2');
 };
 
+/** "88818-460" — CEP, as typed. */
+export const maskCep = (value: string): string => {
+  const d = digits(value).slice(0, 8);
+  return d.length > 5 ? d.replace(/^(\d{5})(\d{0,3}).*/, '$1-$2') : d;
+};
+
+/** Two uppercase letters — BR state (UF). */
+export const maskUf = (value: string): string =>
+  value
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .slice(0, 2);
+
 /** Six numeric digits, nothing else — for OTP inputs. */
 export const maskOtp = (value: string): string => digits(value).slice(0, 6);

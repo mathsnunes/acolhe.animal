@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 import { Field } from './field';
 
-interface CitySuggestion {
+export interface CitySuggestion {
   id: string;
   name: string;
   stateCode: string;
@@ -17,7 +16,9 @@ interface CitySuggestion {
 /**
  * City autocomplete backed by `GET /api/cities`. Debounced (300 ms), keyboard
  * navigable, and selection-required: editing the text after a pick clears the
- * selected id, so the form only ever submits a city the user actually chose.
+ * selection, so the form only ever submits a city the user actually chose. The
+ * copy (placeholder/empty) is passed in so the component stays namespace-agnostic
+ * (reused by signup and the adoption-term form).
  */
 export const CityCombobox = ({
   onChange,
@@ -25,15 +26,20 @@ export const CityCombobox = ({
   hint,
   error,
   placeholder,
+  emptyLabel,
+  id = 'city',
+  initialText = '',
 }: {
-  onChange: (cityId: string | null) => void;
+  onChange: (city: CitySuggestion | null) => void;
   label: React.ReactNode;
   hint?: React.ReactNode;
   error?: string;
   placeholder?: string;
+  emptyLabel: string;
+  id?: string;
+  initialText?: string;
 }) => {
-  const t = useTranslations('auth.org');
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialText);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -69,7 +75,7 @@ export const CityCombobox = ({
     selectedRef.current = true;
     setText(`${city.name}, ${city.stateCode}`);
     setOpen(false);
-    onChange(city.id);
+    onChange(city);
   };
 
   const onInput = (next: string) => {
@@ -95,12 +101,12 @@ export const CityCombobox = ({
   };
 
   return (
-    <Field label={label} htmlFor="city" hint={hint} error={error}>
+    <Field label={label} htmlFor={id} hint={hint} error={error}>
       <div className="relative">
         <Input
-          id="city"
+          id={id}
           autoComplete="off"
-          placeholder={placeholder ?? t('cityPlaceholder')}
+          placeholder={placeholder}
           value={text}
           onChange={(e) => onInput(e.target.value)}
           onKeyDown={onKeyDown}
@@ -110,7 +116,7 @@ export const CityCombobox = ({
         {open ? (
           <ul className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 max-h-60 overflow-y-auto rounded-xl border border-line bg-paper p-1 shadow-card">
             {suggestions.length === 0 ? (
-              <li className="px-3 py-3 text-center text-[13px] text-ink-mute">{t('cityEmpty')}</li>
+              <li className="px-3 py-3 text-center text-[13px] text-ink-mute">{emptyLabel}</li>
             ) : (
               suggestions.map((city, i) => (
                 <li key={city.id}>

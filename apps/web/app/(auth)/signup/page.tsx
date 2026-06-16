@@ -248,7 +248,13 @@ export default function SignupPage() {
               required={profileType === 'ong'}
             />
 
-            <CityCombobox label={tOrg('city')} hint={tOrg('cityHint')} onChange={setCityId} />
+            <CityCombobox
+              label={tOrg('city')}
+              hint={tOrg('cityHint')}
+              placeholder={tOrg('cityPlaceholder')}
+              emptyLabel={tOrg('cityEmpty')}
+              onChange={(c) => setCityId(c?.id ?? null)}
+            />
 
             <p className="rounded-xl bg-terra-bg px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
               {t.rich('org.privacy', { strong: (c) => <strong className="font-medium text-ink">{c}</strong> })}

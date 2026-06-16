@@ -213,6 +213,8 @@
     "numberLabel": "Número",
     "complementLabel": "Complemento (opcional)",
     "cityLabel": "Cidade",
+    "cityPlaceholder": "Ex: Criciúma",
+    "cityEmpty": "Nenhuma cidade encontrada",
     "stateLabel": "UF",
     "postalCodeLabel": "CEP",
     "postalCodePlaceholder": "00000-000",

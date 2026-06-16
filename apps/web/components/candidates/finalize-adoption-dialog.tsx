@@ -19,6 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CityCombobox } from '@/components/auth/city-combobox';
+import { maskCep, maskCpf, maskUf } from '@/lib/masks';
 import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
 
 /**
@@ -102,7 +104,7 @@ export const FinalizeAdoptionDialog = ({
               inputMode="numeric"
               placeholder={t('finalize.cpfPlaceholder')}
               value={document}
-              onChange={(e) => setDocument(e.target.value)}
+              onChange={(e) => setDocument(maskCpf(e.target.value))}
               required
             />
           </div>
@@ -138,17 +140,26 @@ export const FinalizeAdoptionDialog = ({
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_6rem_8rem]">
-            <div className="space-y-2">
-              <Label htmlFor="city">{t('finalize.cityLabel')}</Label>
-              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required />
-            </div>
+            <CityCombobox
+              label={t('finalize.cityLabel')}
+              placeholder={t('finalize.cityPlaceholder')}
+              emptyLabel={t('finalize.cityEmpty')}
+              onChange={(c) => {
+                if (c) {
+                  setCity(c.name);
+                  setState(c.stateCode);
+                } else {
+                  setCity('');
+                }
+              }}
+            />
             <div className="space-y-2">
               <Label htmlFor="state">{t('finalize.stateLabel')}</Label>
               <Input
                 id="state"
                 maxLength={2}
                 value={state}
-                onChange={(e) => setState(e.target.value.toUpperCase())}
+                onChange={(e) => setState(maskUf(e.target.value))}
                 required
               />
             </div>
@@ -159,7 +170,7 @@ export const FinalizeAdoptionDialog = ({
                 inputMode="numeric"
                 placeholder={t('finalize.postalCodePlaceholder')}
                 value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
+                onChange={(e) => setPostalCode(maskCep(e.target.value))}
                 required
               />
             </div>
