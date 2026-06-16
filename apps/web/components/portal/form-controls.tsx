@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
+import { maskPhoneBR } from '@/lib/masks';
 import { cn } from '@/lib/utils';
 
 /** Warm, large-touch form primitives shared by the adoption-form steps. */
@@ -177,7 +178,7 @@ export const PhoneInput = ({
         type="tel"
         inputMode="tel"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(maskPhoneBR(e.target.value))}
         placeholder={t('phone.placeholder')}
         className="flex-1 bg-transparent px-4 py-3 text-base text-ink outline-none placeholder:text-ink-mute"
       />

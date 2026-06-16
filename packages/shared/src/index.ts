@@ -5,6 +5,7 @@
  * validation lives behind the `@acolhe-animal/shared/env` subpath, not here.
  */
 export * from './ids';
+export * from './auth/password-strength';
 export * from './errors';
 export * from './types';
 export * from './schemas';

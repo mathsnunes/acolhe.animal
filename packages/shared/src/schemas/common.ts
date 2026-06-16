@@ -24,6 +24,13 @@ export const phoneSchema = z
     return normalized;
   });
 
+/**
+ * Account password. Minimum 8 characters is the only hard rule — we favor strong
+ * passwords through a non-blocking strength meter (see `passwordStrength`), not
+ * by rejecting average ones. Reused by signup, recovery and invite acceptance.
+ */
+export const passwordSchema = z.string().min(8, 'A senha precisa ter ao menos 8 caracteres.');
+
 /** Optional email — empty string becomes undefined. */
 export const optionalEmailSchema = z
   .string()
@@ -101,6 +108,11 @@ export const RESERVED_SLUGS = new Set([
   'contact',
   'support',
   'invite',
+  'convite',
+  'signup',
+  'criar-conta',
+  'recover',
+  'recuperar-senha',
   // Route segments — keep these unreachable as org slugs. Both the pt-BR public
   // URLs and the underlying English route folders resolve, so reserve both.
   'inicio',
@@ -125,6 +137,8 @@ export const RESERVED_SLUGS = new Set([
   'needed-items',
   'apoiadores',
   'supporters',
+  'membros',
+  'members',
   'config',
   'settings',
   'entrar',

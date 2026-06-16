@@ -59,9 +59,14 @@ const nextConfig: NextConfig = {
         { source: '/historias', destination: '/stories' },
         { source: '/itens-em-falta', destination: '/needed-items' },
         { source: '/apoiadores', destination: '/supporters' },
+        { source: '/membros', destination: '/members' },
         { source: '/config', destination: '/settings' },
         { source: '/inicio', destination: '/home' },
+        // Auth surface
         { source: '/entrar', destination: '/login' },
+        { source: '/criar-conta', destination: '/signup' },
+        { source: '/recuperar-senha', destination: '/recover' },
+        { source: '/convite/:token', destination: '/invite/:token' },
         // Public portal sub-routes (the slug itself stays as-is)
         { source: '/:slug/adotar/:animalId/enviada', destination: '/:slug/adopt/:animalId/submitted' },
         { source: '/:slug/adotar/:animalId', destination: '/:slug/adopt/:animalId' },

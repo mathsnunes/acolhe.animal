@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { maskPhoneBR } from '@/lib/masks';
 import { registerOfflineAction } from '@/app/(admin)/adoptions/actions';
 
 export interface AdoptableAnimal {
@@ -143,7 +144,7 @@ export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] })
                 inputMode="tel"
                 placeholder={t('offlineForm.phonePlaceholder')}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(maskPhoneBR(e.target.value))}
                 required
               />
             </div>
