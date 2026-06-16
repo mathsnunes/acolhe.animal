@@ -12,6 +12,7 @@ import { PhoneField } from '@/components/auth/phone-field';
 import { DocumentField } from '@/components/auth/document-field';
 import { CityCombobox } from '@/components/auth/city-combobox';
 import { maskCep } from '@/lib/masks';
+import { LogoUploader } from './logo-uploader';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { updateOrgAction } from './actions';
 
 export interface OrgSettingsInitial {
   name: string;
+  logoUrl: string | null;
   documentType: 'cnpj' | 'cpf';
   document: string;
   phone: string;
@@ -87,7 +89,8 @@ export const OrgSettingsForm = ({ initial }: { initial: OrgSettingsInitial }) =>
       <CardHeader>
         <CardTitle>{t('orgCard.title')}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <LogoUploader initialUrl={initial.logoUrl} />
         <form onSubmit={onSubmit} className="space-y-4">
           <Field label={t('edit.nameLabel')} htmlFor="set-name" error={errors.name}>
             <Input id="set-name" value={name} onChange={(e) => setName(e.target.value)} required />

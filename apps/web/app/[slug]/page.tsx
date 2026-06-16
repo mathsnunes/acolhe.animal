@@ -3,7 +3,6 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
 import { BrandMark } from '@/components/brand';
-import { AnimalPhoto } from '@/components/portal/animal-photo';
 import { PortalAnimalsGrid } from '@/components/portal/portal-animals-grid';
 import { PORTAL_PAGE_SIZE } from '@/lib/portal-query';
 import { getPortalAnimals, getPublicOrganization } from './data';
@@ -61,9 +60,12 @@ export default async function PortalPage({ params }: PageProps) {
 
         <div className="relative mx-auto max-w-5xl px-6 py-16 sm:py-24">
           {org.logoUrl && (
-            <div className="mb-6 size-16 overflow-hidden rounded-full border border-line bg-bg-2">
-              <AnimalPhoto src={org.logoUrl} name={org.name} rounded="rounded-full" />
-            </div>
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={org.logoUrl}
+              alt={org.name}
+              className="mb-8 h-24 w-auto max-w-[280px] object-contain object-left"
+            />
           )}
 
           <p className="eyebrow mb-4">{t('hero.eyebrow')}</p>

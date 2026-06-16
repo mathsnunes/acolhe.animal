@@ -29,3 +29,19 @@ export const processImage = async (input: Buffer): Promise<ImageDerivatives> => 
   const [thumb, medium] = await Promise.all([toWebp(input, THUMB_WIDTH), toWebp(input, MEDIUM_WIDTH)]);
   return { thumb, medium };
 };
+
+/**
+ * Org logo: a single PNG, resized to fit inside a box (no enlarging), keeping the
+ * aspect ratio and transparency. PNG (not WebP) so it embeds in the adoption-term
+ * PDF too (pdf-lib supports PNG/JPG, not WebP). Throws on undecodable bytes.
+ */
+const LOGO_MAX = 512;
+
+export const processLogo = async (input: Buffer): Promise<ProcessedImage> => {
+  const pipeline = sharp(input, { failOn: 'error' })
+    .rotate()
+    .resize({ width: LOGO_MAX, height: LOGO_MAX, fit: 'inside', withoutEnlargement: true })
+    .png();
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+  return { body: data, contentType: 'image/png', width: info.width, height: info.height };
+};

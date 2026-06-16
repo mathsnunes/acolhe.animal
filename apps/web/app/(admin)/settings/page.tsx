@@ -36,6 +36,7 @@ export default async function ConfigPage() {
 
   const initial: OrgSettingsInitial = {
     name: org.name,
+    logoUrl: org.logoUrl ?? null,
     documentType: org.documentType,
     document: documentDisplay,
     phone: formatPhoneBR(org.phone),

@@ -25,6 +25,20 @@
     "saved": "Dados atualizados.",
     "phoneInvalid": "Telefone inválido."
   },
+  "logo": {
+    "label": "Logo",
+    "title": "Logo da organização",
+    "empty": "Sem logo",
+    "upload": "Enviar logo",
+    "change": "Trocar logo",
+    "remove": "Remover",
+    "hint": "PNG ou JPG, até 5MB · aparece no portal público e no termo de adoção.",
+    "saved": "Logo atualizada.",
+    "removed": "Logo removida.",
+    "typeError": "Formato não suportado. Use PNG, JPG ou WebP.",
+    "sizeError": "A imagem deve ter até 5MB.",
+    "uploadError": "Falha no envio. Tente novamente."
+  },
   "portal": {
     "title": "Portal público",
     "enabledLabel": "Portal habilitado",

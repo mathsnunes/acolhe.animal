@@ -20,6 +20,7 @@ import { getStorage } from '@acolhe-animal/integrations';
 import type { Ctx } from '../context';
 import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
+import { orgLogoKey } from '../uploads/service';
 import { emitTimelineEvent } from '../timeline/timeline';
 import { getPersonByPk, upsertPersonByPhone } from '../people/service';
 import { renderTermPdf, type AdoptionTermData } from './term';
@@ -121,12 +122,23 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
         document: organization.document,
         documentType: organization.documentType,
         phone: organization.phone,
+        logoUrl: organization.logoUrl,
       })
       .from(organization)
       .where(eq(organization.pk, ctx.organizationId))
       .limit(1),
   ]);
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  // Embed the org logo (a resized PNG) in the term header when one is set.
+  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
+  if (org?.logoUrl) {
+    try {
+      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
+    } catch {
+      logo = null; // a missing/unreadable logo shouldn't block the term
+    }
+  }
 
   const adoptionId = createId('adoption');
   const orgDocLabel = org
@@ -139,7 +151,7 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
       name: org?.name ?? 'a organização',
       documentLabel: orgDocLabel,
       phone: org ? formatPhoneBR(org.phone) : null,
-      logo: null, // logo upload is a follow-up; embed once orgs can set one.
+      logo,
     },
     adopter: {
       name: personRow.name,
