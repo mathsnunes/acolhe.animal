@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { formatCpf, formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
+import { formatCep, formatCpf, formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
 import {
   countWaitingApplicationsByAnimal,
   getApplication,
@@ -90,7 +90,7 @@ export default async function CandidatoDetalhePage({
         number: person.addressNumber ?? '',
         complement: person.addressComplement ?? '',
         neighborhood: person.addressNeighborhood ?? '',
-        postalCode: person.postalCode ?? '',
+        postalCode: person.postalCode ? formatCep(person.postalCode) : '',
         city: personCity?.name ?? '',
         state: personCity?.uf ?? '',
         cityText: personCity ? `${personCity.name}, ${personCity.uf}` : '',

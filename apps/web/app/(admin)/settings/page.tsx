@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getTranslations } from 'next-intl/server';
 
 import { city, db } from '@acolhe-animal/db';
-import { formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
+import { formatCep, formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
 import { getOrganizationByPk } from '@acolhe-animal/domain';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +45,7 @@ export default async function ConfigPage() {
     streetAddress: org.streetAddress ?? '',
     addressNumber: org.addressNumber ?? '',
     addressComplement: org.addressComplement ?? '',
-    postalCode: org.postalCode ?? '',
+    postalCode: org.postalCode ? formatCep(org.postalCode) : '',
     aboutText: org.aboutText ?? '',
   };
 

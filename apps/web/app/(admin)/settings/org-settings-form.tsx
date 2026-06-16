@@ -11,6 +11,7 @@ import { Field } from '@/components/auth/field';
 import { PhoneField } from '@/components/auth/phone-field';
 import { DocumentField } from '@/components/auth/document-field';
 import { CityCombobox } from '@/components/auth/city-combobox';
+import { maskCep } from '@/lib/masks';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ export const OrgSettingsForm = ({ initial }: { initial: OrgSettingsInitial }) =>
               <Input id="set-complement" value={complement} onChange={(e) => setComplement(e.target.value)} />
             </Field>
             <Field label={t('edit.postalCodeLabel')} htmlFor="set-cep">
-              <Input id="set-cep" inputMode="numeric" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+              <Input id="set-cep" inputMode="numeric" value={postalCode} onChange={(e) => setPostalCode(maskCep(e.target.value))} />
             </Field>
           </div>
 

@@ -43,7 +43,9 @@ export const CityCombobox = ({
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const selectedRef = useRef(false);
+  // A pre-filled value (editing) counts as "already selected", so the mount effect
+  // doesn't auto-search it and pop an empty dropdown. Typing clears this.
+  const selectedRef = useRef(initialText.trim().length > 0);
 
   useEffect(() => {
     if (selectedRef.current) return; // a pick set the text; don't re-query
