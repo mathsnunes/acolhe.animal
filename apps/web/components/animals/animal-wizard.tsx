@@ -154,16 +154,21 @@ const defaultsFor = (animal?: Animal): FormValues => {
   };
 };
 
-/** Shape the form into the domain input, dropping empties so partial saves stay clean. */
+/**
+ * Shape the form into the domain input. Identity essentials are only sent once
+ * present; the optional text fields and lists are ALWAYS sent (empty string /
+ * empty array when cleared) so a debounced autosave can actually clear them —
+ * otherwise an omitted field reads as "untouched" and the clear is lost.
+ */
 const buildInput = (v: FormValues): AnimalDraftInput => {
   const input: AnimalDraftInput = {};
   if (v.name.trim()) input.name = v.name.trim();
   if (v.species) input.species = v.species;
   if (v.sex) input.sex = v.sex;
   if (v.size) input.size = v.size;
-  if (v.predominantColor.trim()) input.predominantColor = v.predominantColor.trim();
+  input.predominantColor = v.predominantColor.trim();
   if (v.weightKg) input.weightKg = Number(v.weightKg);
-  if (v.microchipCode.trim()) input.microchipCode = v.microchipCode.trim();
+  input.microchipCode = v.microchipCode.trim();
 
   if (v.ageMode === 'birthdate' && v.estimatedBirthDate) {
     input.estimatedBirthDate = new Date(v.estimatedBirthDate);
@@ -174,16 +179,14 @@ const buildInput = (v: FormValues): AnimalDraftInput => {
 
   if (v.intakeDate) input.intakeDate = new Date(v.intakeDate);
   if (v.rescueDate) input.rescueDate = new Date(v.rescueDate);
-  if (v.rescueLocation.trim()) input.rescueLocation = v.rescueLocation.trim();
+  input.rescueLocation = v.rescueLocation.trim();
 
   if (v.neutered) input.neutered = v.neutered;
-  const vaccines = v.vaccinations.filter((x) => x.name.trim());
-  if (vaccines.length) input.vaccinations = vaccines;
-  const dewormings = v.dewormings
+  input.vaccinations = v.vaccinations.filter((x) => x.name.trim());
+  input.dewormings = v.dewormings
     .filter((d) => d.date)
     .map((d) => ({ date: d.date, product: d.product.trim() || undefined }));
-  if (dewormings.length) input.dewormings = dewormings;
-  if (v.specialConditions.length) input.specialConditions = v.specialConditions;
+  input.specialConditions = v.specialConditions;
 
   if (v.hasClinicalCondition && v.clinicalType && v.clinicalDescription.trim()) {
     input.clinicalCondition = {
@@ -199,8 +202,8 @@ const buildInput = (v: FormValues): AnimalDraftInput => {
   input.goodWithDogs = v.goodWithDogs;
   input.goodWithCats = v.goodWithCats;
   input.goodWithStrangers = v.goodWithStrangers;
-  if (v.quirks.trim()) input.quirks = v.quirks.trim();
-  if (v.shortStory.trim()) input.shortStory = v.shortStory.trim();
+  input.quirks = v.quirks.trim();
+  input.shortStory = v.shortStory.trim();
 
   input.visibleOnPortal = v.visibleOnPortal;
   input.listedForAdoption = v.listedForAdoption;
