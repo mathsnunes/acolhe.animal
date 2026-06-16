@@ -43,11 +43,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     id: m.organization.id,
     name: m.organization.name,
     cityLabel: cityLabelFor(m.organization.cityId),
+    logoUrl: m.organization.logoUrl,
   }));
 
   return (
     <AdminShell
-      org={{ name: org.name, slug: org.portalEnabled ? org.slug : null, cityLabel: cityLabelFor(org.cityId) }}
+      org={{ name: org.name, slug: org.portalEnabled ? org.slug : null, cityLabel: cityLabelFor(org.cityId), logoUrl: org.logoUrl }}
       orgs={orgs}
       activeOrgId={activeOrgId}
       user={{ name: currentUser[0]?.name ?? tNav('you'), role }}

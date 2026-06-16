@@ -28,11 +28,13 @@ export interface ShellOrg {
   /** Null when the public portal isn't set up yet — the public-page link is hidden. */
   slug: string | null;
   cityLabel?: string;
+  logoUrl?: string | null;
 }
 export interface ShellOrgOption {
   id: string;
   name: string;
   cityLabel?: string;
+  logoUrl?: string | null;
 }
 export interface ShellUser {
   name: string;
@@ -63,6 +65,22 @@ const InitialsAvatar = ({ name, variant }: { name: string; variant: 'org' | 'use
       {initials(name)}
     </span>;
 
+/**
+ * Org avatar: the uploaded logo shown in full (object-contain, never cropped) in
+ * a soft rounded tile, falling back to the terra initials badge when unset.
+ */
+const OrgAvatar = ({ name, logoUrl }: { name: string; logoUrl?: string | null }) =>
+  logoUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoUrl}
+      alt=""
+      className="size-7 shrink-0 rounded-md border border-line bg-paper object-contain p-0.5"
+    />
+  ) : (
+    <InitialsAvatar name={name} variant="org" />
+  );
+
 /** Org context indicator. A dropdown switcher when the user belongs to >1 org. */
 const OrgSwitcher = ({ org, orgs, activeOrgId }: { org: ShellOrg; orgs: ShellOrgOption[]; activeOrgId: string | null }) => {
   const [pending, startTransition] = useTransition();
@@ -74,7 +92,7 @@ const OrgSwitcher = ({ org, orgs, activeOrgId }: { org: ShellOrg; orgs: ShellOrg
         interactive && 'hover:bg-bg-2',
       )}
     >
-      <InitialsAvatar name={org.name} variant="org" />
+      <OrgAvatar name={org.name} logoUrl={org.logoUrl} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-medium text-ink">{org.name}</div>
         {org.cityLabel && <div className="truncate text-[11px] text-ink-mute">{org.cityLabel}</div>}
@@ -100,7 +118,7 @@ const OrgSwitcher = ({ org, orgs, activeOrgId }: { org: ShellOrg; orgs: ShellOrg
               onClick={() => startTransition(() => setActiveOrgAction(o.id))}
               className="gap-2.5"
             >
-              <InitialsAvatar name={o.name} variant="org" />
+              <OrgAvatar name={o.name} logoUrl={o.logoUrl} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-medium text-ink">{o.name}</div>
                 {o.cityLabel && <div className="truncate text-[10px] text-ink-mute">{o.cityLabel}</div>}
@@ -247,6 +265,7 @@ export const AdminShell = ({ org, orgs, activeOrgId, user, counts, children }: A
   const pathname = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [orgPending, startOrgTransition] = useTransition();
   const t = useTranslations('nav');
   const tc = useTranslations('common');
 
@@ -266,9 +285,21 @@ export const AdminShell = ({ org, orgs, activeOrgId, user, counts, children }: A
         {/* Desktop topbar (global actions) */}
         <Topbar counts={counts} />
 
-        {/* Mobile top bar */}
-        <header className="sticky top-0 z-40 flex h-topbar-mobile items-center justify-between border-b border-line-soft bg-paper px-5 lg:hidden">
-          <BrandMark className="text-base" />
+        {/* Mobile top bar — org context doubles as the switcher entry point */}
+        <header className="sticky top-0 z-40 flex h-topbar-mobile items-center justify-between gap-3 border-b border-line-soft bg-paper px-4 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label={t('sections.org')}
+            className="flex min-w-0 items-center gap-2.5 rounded-[10px] py-1 pr-2 text-left transition-colors active:bg-bg-2"
+          >
+            <OrgAvatar name={org.name} logoUrl={org.logoUrl} />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-ink">{org.name}</div>
+              {org.cityLabel && <div className="truncate text-[11px] text-ink-mute">{org.cityLabel}</div>}
+            </div>
+            {orgs.length > 1 && <ChevronsUpDown className="size-3.5 shrink-0 text-ink-mute" />}
+          </button>
           <InitialsAvatar name={user.name} variant="user" />
         </header>
 
@@ -326,6 +357,42 @@ export const AdminShell = ({ org, orgs, activeOrgId, user, counts, children }: A
                 <X className="size-5 text-ink-mute" />
               </button>
             </div>
+
+            {/* Org context + switcher */}
+            <div className="px-5 pb-1 pt-1">
+              <div className="px-1 pb-1 text-[11px] tracking-[0.03em] text-ink-mute/85">{t('sections.org')}</div>
+              {orgs.length > 1 ? (
+                orgs.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    disabled={orgPending}
+                    onClick={() => startOrgTransition(() => setActiveOrgAction(o.id))}
+                    className={cn(
+                      'flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left transition-colors disabled:opacity-60',
+                      o.id === activeOrgId ? 'bg-terra-bg' : 'hover:bg-bg-2',
+                    )}
+                  >
+                    <OrgAvatar name={o.name} logoUrl={o.logoUrl} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-medium text-ink">{o.name}</div>
+                      {o.cityLabel && <div className="truncate text-[11px] text-ink-mute">{o.cityLabel}</div>}
+                    </div>
+                    {o.id === activeOrgId && <Check className="size-4 shrink-0 text-terra" />}
+                  </button>
+                ))
+              ) : (
+                <div className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2">
+                  <OrgAvatar name={org.name} logoUrl={org.logoUrl} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13px] font-medium text-ink">{org.name}</div>
+                    {org.cityLabel && <div className="truncate text-[11px] text-ink-mute">{org.cityLabel}</div>}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="divider-soft mx-5 my-2" />
+
             {NAV_GROUPS.flat()
               .filter((i) => !BOTTOM_NAV.some((b) => b.href === i.href))
               .filter((i) => !i.adminOnly || user.role === 'admin')
