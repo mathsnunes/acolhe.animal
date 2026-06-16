@@ -191,7 +191,7 @@ export default async function AnimalDetailPage({
             </p>
           </div>
           <Button asChild>
-            <Link href="/candidatos">
+            <Link href={`/candidatos?animal=${id}`}>
               {t('detail.viewCandidates')} <ArrowRight />
             </Link>
           </Button>
