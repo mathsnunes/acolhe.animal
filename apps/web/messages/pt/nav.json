@@ -27,6 +27,7 @@
     "notifications": "Notificações",
     "noNotifications": "Sem novidades por aqui.",
     "newApplications": "{count, plural, one {# nova candidatura esperando} other {# novas candidaturas esperando}}",
-    "newAnimal": "Novo animal"
+    "newAnimal": "Novo animal",
+    "newCandidacy": "Nova candidatura"
   }
 }

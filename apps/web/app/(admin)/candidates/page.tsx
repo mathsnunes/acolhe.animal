@@ -1,15 +1,17 @@
+import Link from 'next/link';
+import { UserPlus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import { countApplicationsByStatus, listAnimals, listApplicationAnimals } from '@acolhe-animal/domain';
+import { countApplicationsByStatus, listApplicationAnimals } from '@acolhe-animal/domain';
 import { db, organizationMember, user } from '@acolhe-animal/db';
 
 import { requireCtx } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
 import { PageHeaderHero } from '@/components/page-header';
 import { EmptyState } from '@/components/empty-state';
 import { CandidatesFilters } from '@/components/candidates/candidates-filters';
 import { CandidatesListing } from '@/components/candidates/candidates-listing';
-import { ManualCandidacyForm } from '@/components/candidates/manual-candidacy-form';
 import { decodeCandidatesParams } from '@/lib/candidates-search-params';
 import {
   CANDIDATES_KANBAN_CAP,
@@ -55,7 +57,7 @@ export default async function CandidatosPage({
 
   // The kanban needs the full set (one capped fetch) for accurate columns; the
   // table/mobile need only the first flat page (infinite scroll pulls the rest).
-  const [firstPage, byStatus, animalOptions, members, adoptableAnimals] = await Promise.all([
+  const [firstPage, byStatus, animalOptions, members] = await Promise.all([
     loadCandidatesPage(ctx, filters, 0, isKanban ? CANDIDATES_KANBAN_CAP : CANDIDATES_PAGE_SIZE),
     countApplicationsByStatus(ctx, {
       search: filters.search?.trim() || undefined,
@@ -66,7 +68,6 @@ export default async function CandidatosPage({
     }),
     listApplicationAnimals(ctx),
     listOrgMembers(ctx.organizationId),
-    listAnimals(ctx, { status: ['available', 'reserved'] }),
   ]);
 
   const counts = {
@@ -98,12 +99,17 @@ export default async function CandidatosPage({
         title={t('page.title')}
         description={t('page.description')}
         metric={{ value: waiting, label: t('page.metricLabel') }}
-        actions={
-          <ManualCandidacyForm
-            animals={adoptableAnimals.map((a) => ({ id: a.id, name: a.name }))}
-          />
-        }
       />
+
+      {/* Mobile-only primary CTA — on desktop the topbar carries it. */}
+      <div className="mb-5 px-6 lg:hidden">
+        <Button asChild className="w-full">
+          <Link href="/candidatos/nova">
+            <UserPlus className="size-4" />
+            {t('manual.trigger')}
+          </Link>
+        </Button>
+      </div>
 
       <CandidatesFilters
         counts={counts}

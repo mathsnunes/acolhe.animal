@@ -7,7 +7,8 @@ import {
   setApplicationStatus,
   updateApplicationNotes,
   finalizeDigitalAdoption,
-  createManualApplication,
+  saveManualDraft,
+  submitManualApplication,
   getApplication,
 } from '@acolhe-animal/domain';
 
@@ -74,25 +75,36 @@ export const assignAction = async (id: string, userId: string) =>
     return { ok: true };
   });
 
-/** Staff-create a candidacy (fair/presential) straight into the funnel. */
-export const createManualCandidacyAction = async (input: {
+interface ManualPersonInput {
+  name: string;
+  phone: string;
+  email?: string;
+  cpf?: string;
+  cityId?: string;
+  streetAddress?: string;
+  addressNumber?: string;
+  addressComplement?: string;
+  addressNeighborhood?: string;
+  postalCode?: string;
+}
+
+/** Autosave a staff-built candidacy draft (fair/presential). Returns the draft id. */
+export const saveManualDraftAction = async (input: {
+  applicationId?: string;
   animalId: string;
-  person: {
-    name: string;
-    phone: string;
-    email?: string;
-    cpf?: string;
-    cityId?: string;
-    streetAddress?: string;
-    addressNumber?: string;
-    addressComplement?: string;
-    addressNeighborhood?: string;
-    postalCode?: string;
-  };
+  person: ManualPersonInput;
+  applicationData?: Record<string, unknown>;
 }) =>
   action(async () => {
     const ctx = await requireCtx();
-    const app = await createManualApplication(ctx, input);
+    return saveManualDraft(ctx, input);
+  });
+
+/** Finalize the draft into the funnel as "em avaliação". */
+export const submitManualCandidacyAction = async (applicationId: string) =>
+  action(async () => {
+    const ctx = await requireCtx();
+    const app = await submitManualApplication(ctx, applicationId);
     revalidatePath('/candidatos');
     return { id: app.id };
   });

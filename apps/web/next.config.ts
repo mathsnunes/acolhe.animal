@@ -46,7 +46,8 @@ const nextConfig: NextConfig = {
         { source: '/animais/:id/editar', destination: '/animals/:id/edit' },
         { source: '/animais/:id', destination: '/animals/:id' },
         { source: '/animais', destination: '/animals' },
-        // Candidatos
+        // Candidatos ("nova" before ":id" so it isn't captured as an id)
+        { source: '/candidatos/nova', destination: '/candidates/new' },
         { source: '/candidatos/:id', destination: '/candidates/:id' },
         { source: '/candidatos', destination: '/candidates' },
         // Adoções
