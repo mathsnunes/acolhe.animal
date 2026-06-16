@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type FormEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -41,12 +33,8 @@ import {
   sleepOptions,
   vetOptions,
 } from '@/components/portal/adoption-form-options';
-import { cn } from '@/lib/utils';
 import { maskCep, maskCpf, maskPhoneBR } from '@/lib/masks';
-import {
-  saveManualDraftAction,
-  submitManualCandidacyAction,
-} from '@/app/(admin)/candidates/actions';
+import { createManualCandidacyAction } from '@/app/(admin)/candidates/actions';
 
 export interface CandidacyAnimal {
   id: string;
@@ -82,8 +70,6 @@ type Values = {
   questions: string;
 };
 
-export type ManualCandidacyInitial = Partial<Values>;
-
 const EMPTY: Values = {
   animalId: '',
   name: '',
@@ -116,20 +102,6 @@ const EMPTY: Values = {
 const isCpf = (s: string) => s.replace(/\D/g, '').length === 11;
 const isEmail = (s: string) => /^\S+@\S+\.\S+$/.test(s.trim());
 
-const buildPerson = (v: Values, e164: string) => ({
-  name: v.name.trim(),
-  phone: e164,
-  // Only send optionals when valid, so a partial entry never blocks the autosave.
-  email: isEmail(v.email) ? v.email.trim() : undefined,
-  cpf: isCpf(v.cpf) ? v.cpf.replace(/\D/g, '') : undefined,
-  cityId: v.cityId ?? undefined,
-  streetAddress: v.street.trim() || undefined,
-  addressNumber: v.number.trim() || undefined,
-  addressComplement: v.complement.trim() || undefined,
-  addressNeighborhood: v.neighborhood.trim() || undefined,
-  postalCode: v.postalCode.trim() || undefined,
-});
-
 const buildApplicationData = (v: Values): Record<string, unknown> => {
   const data: Record<string, unknown> = {};
   const put = (k: string, val: unknown) => {
@@ -160,31 +132,15 @@ const buildApplicationData = (v: Values): Record<string, unknown> => {
 
 /**
  * Full-page manual candidacy (presential / fair). Mirrors the public form's
- * questions and autosaves to a draft (like the animal wizard): a draft is created
- * once animal + name + a valid phone are present, every change autosaves it, and
- * "Criar candidatura" finalizes it into the funnel as "em avaliação". Drafts stay
- * out of the funnel until finalized. Resumes from `?rascunho=<id>` on reload.
+ * questions; everything but animal + name + phone is optional (staff fill what
+ * they have). On submit the candidacy lands in the funnel as "em avaliação".
  */
-export const ManualCandidacyForm = ({
-  animals,
-  draftId,
-  initial,
-}: {
-  animals: CandidacyAnimal[];
-  draftId?: string;
-  initial?: ManualCandidacyInitial;
-}) => {
+export const ManualCandidacyForm = ({ animals }: { animals: CandidacyAnimal[] }) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const tf = useTranslations('form');
-  const [values, setValues] = useState<Values>({ ...EMPTY, ...initial });
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
-  const [isSubmitting, startSubmit] = useTransition();
-
-  const idRef = useRef<string | null>(draftId ?? null);
-  const skipNextSave = useRef(true);
-  const valuesRef = useRef(values);
-  valuesRef.current = values;
+  const [values, setValues] = useState<Values>(EMPTY);
+  const [pending, startTransition] = useTransition();
 
   const set = useCallback(<K extends keyof Values>(key: K, value: Values[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -192,54 +148,32 @@ export const ManualCandidacyForm = ({
 
   const animalName = animals.find((a) => a.id === values.animalId)?.name ?? tf('routine.theAnimalFallback');
 
-  // ── Autosave (debounced) ──────────────────────────────────────────────────
-  const persist = useCallback(async (v: Values): Promise<string | null> => {
-    const e164 = normalizePhoneBR(v.phone);
-    if (!v.animalId || !v.name.trim() || !e164) return idRef.current; // too little to save
-    setSaveStatus('saving');
-    try {
-      const res = await saveManualDraftAction({
-        applicationId: idRef.current ?? undefined,
-        animalId: v.animalId,
-        person: buildPerson(v, e164),
-        applicationData: buildApplicationData(v),
-      });
-      if (res.ok) {
-        const created = !idRef.current;
-        idRef.current = res.data.id;
-        if (created) {
-          window.history.replaceState(null, '', `/candidatos/nova?rascunho=${res.data.id}`);
-        }
-      }
-    } finally {
-      setSaveStatus('saved');
-    }
-    return idRef.current;
-  }, []);
-
-  useEffect(() => {
-    if (skipNextSave.current) {
-      skipNextSave.current = false;
-      return;
-    }
-    const timer = setTimeout(() => void persist(valuesRef.current), 800);
-    return () => clearTimeout(timer);
-  }, [values, persist]);
-
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!values.animalId) return toast.error(t('manual.chooseAnimal'));
     if (!values.name.trim()) return toast.error(t('manual.nameRequired'));
-    if (!normalizePhoneBR(values.phone)) return toast.error(t('manual.phoneInvalid'));
+    const e164 = normalizePhoneBR(values.phone);
+    if (!e164) return toast.error(t('manual.phoneInvalid'));
     if (values.cpf && !isCpf(values.cpf)) return toast.error(t('manual.cpfInvalid'));
 
-    startSubmit(async () => {
-      const id = await persist(valuesRef.current);
-      if (!id) {
-        toast.error(t('manual.chooseAnimal'));
-        return;
-      }
-      const res = await submitManualCandidacyAction(id);
+    const data = buildApplicationData(values);
+    startTransition(async () => {
+      const res = await createManualCandidacyAction({
+        animalId: values.animalId,
+        person: {
+          name: values.name.trim(),
+          phone: e164,
+          email: isEmail(values.email) ? values.email.trim() : undefined,
+          cpf: isCpf(values.cpf) ? values.cpf.replace(/\D/g, '') : undefined,
+          cityId: values.cityId ?? undefined,
+          streetAddress: values.street.trim() || undefined,
+          addressNumber: values.number.trim() || undefined,
+          addressComplement: values.complement.trim() || undefined,
+          addressNeighborhood: values.neighborhood.trim() || undefined,
+          postalCode: values.postalCode.trim() || undefined,
+        },
+        applicationData: Object.keys(data).length ? data : undefined,
+      });
       if (res.ok) {
         toast.success(t('manual.created'));
         router.push(`/candidatos/${res.data.id}`);
@@ -311,7 +245,6 @@ export const ManualCandidacyForm = ({
             label={t('manual.cityLabel')}
             placeholder={t('manual.cityPlaceholder')}
             emptyLabel={t('manual.cityEmpty')}
-            initialText={initial?.cityText ?? ''}
             onChange={(c) => {
               set('cityId', c?.id ?? null);
               set('cityText', c ? `${c.name}, ${c.stateCode}` : '');
@@ -401,19 +334,13 @@ export const ManualCandidacyForm = ({
           </QField>
         </Section>
 
-        <div className="flex flex-col gap-4 border-t border-line-soft pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <span className={cn('inline-flex items-center gap-2 text-xs text-ink-mute', saveStatus === 'saving' && 'text-terra')}>
-            <span className={cn('size-1.5 rounded-full', saveStatus === 'saving' ? 'bg-terra' : 'bg-green')} />
-            {saveStatus === 'saving' ? t('manual.saving') : t('manual.saved')}
-          </span>
-          <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" asChild>
-              <Link href="/candidatos">{t('manual.cancel')}</Link>
-            </Button>
-            <Button type="submit" pending={isSubmitting}>
-              {t('manual.submit')}
-            </Button>
-          </div>
+        <div className="flex items-center justify-end gap-2 border-t border-line-soft pt-5">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/candidatos">{t('manual.cancel')}</Link>
+          </Button>
+          <Button type="submit" pending={pending}>
+            {t('manual.submit')}
+          </Button>
         </div>
       </form>
     </div>

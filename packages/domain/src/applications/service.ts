@@ -23,7 +23,7 @@ import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
 import { emitTimelineEvent } from '../timeline/timeline';
 import { getPerson, getPersonByPk, upsertPersonByPhone } from '../people/service';
-import { startApplicationSchema, saveDraftSchema, manualDraftSchema } from './schemas';
+import { startApplicationSchema, saveDraftSchema, manualApplicationSchema } from './schemas';
 
 const DRAFT_TTL_DAYS = 7;
 const ACTIVE_STATUSES = ['draft', 'new', 'in-progress', 'approved'] as const;
@@ -86,14 +86,14 @@ export const startOrResumeApplication = async (ctx: Ctx, input: unknown): Promis
 };
 
 /**
- * Create or update a staff-built candidacy DRAFT (autosave). Drafts stay out of
- * the funnel (no `draft` in the listed statuses) until {@link submitManualApplication}
- * finalizes them. The first call (no `applicationId`) creates the draft and upserts
- * the person; later calls update both. Returns the draft's id either way.
+ * Staff-created candidacy (e.g. someone met the animal at a fair). Skips the
+ * draft/form and lands straight in the funnel as `in-progress` ("em avaliação"),
+ * carrying the optional questionnaire answers. Reuses the person upsert and the
+ * one-active-per-animal rule.
  */
-export const saveManualDraft = async (ctx: Ctx, input: unknown): Promise<{ id: string }> => {
+export const createManualApplication = async (ctx: Ctx, input: unknown): Promise<Application> => {
   assertCanManageAnimals(ctx);
-  const data = manualDraftSchema.parse(input);
+  const data = manualApplicationSchema.parse(input);
 
   const [animalRow] = await ctx.db
     .select({ pk: animal.pk, species: animal.species })
@@ -104,30 +104,8 @@ export const saveManualDraft = async (ctx: Ctx, input: unknown): Promise<{ id: s
 
   const personRow = await upsertPersonByPhone(ctx, data.person);
 
-  // Updating an existing draft.
-  if (data.applicationId) {
-    const [existing] = await ctx.db
-      .select()
-      .from(application)
-      .where(and(eq(application.id, data.applicationId), eq(application.organizationId, ctx.organizationId)))
-      .limit(1);
-    if (!existing) throw new NotFoundError('Rascunho não encontrado.');
-    if (existing.status !== 'draft') throw new ConflictError('Candidatura já criada.');
-    await ctx.db
-      .update(application)
-      .set({
-        personId: personRow.pk,
-        animalId: animalRow.pk,
-        applicationData: data.applicationData ?? existing.applicationData,
-      })
-      .where(eq(application.id, existing.id));
-    return { id: existing.id };
-  }
-
-  // First save: resume an existing draft for this (person, animal), or create one.
-  // A non-draft active candidacy blocks a new manual one (one active per animal).
-  const [active] = await ctx.db
-    .select({ id: application.id, status: application.status })
+  const [existing] = await ctx.db
+    .select({ id: application.id })
     .from(application)
     .where(
       and(
@@ -138,57 +116,30 @@ export const saveManualDraft = async (ctx: Ctx, input: unknown): Promise<{ id: s
       ),
     )
     .limit(1);
-  if (active) {
-    if (active.status !== 'draft') {
-      throw new ConflictError('Já existe uma candidatura ativa dessa pessoa para este animal.');
-    }
-    await ctx.db
-      .update(application)
-      .set({ applicationData: data.applicationData ?? {} })
-      .where(eq(application.id, active.id));
-    return { id: active.id };
+  if (existing) {
+    throw new ConflictError('Já existe uma candidatura ativa dessa pessoa para este animal.');
   }
-
-  const expiresAt = new Date(Date.now() + DRAFT_TTL_DAYS * 24 * 60 * 60 * 1000);
-  const [row] = await ctx.db
-    .insert(application)
-    .values({
-      id: createId('application'),
-      organizationId: ctx.organizationId,
-      animalId: animalRow.pk,
-      personId: personRow.pk,
-      formVersion: `${animalRow.species}-v1`,
-      status: 'draft',
-      applicationData: data.applicationData ?? {},
-      expiresAt,
-    })
-    .returning();
-  return { id: row!.id };
-};
-
-/** Finalize a manual draft into the funnel as `in-progress` ("em avaliação"). */
-export const submitManualApplication = async (ctx: Ctx, applicationId: string): Promise<Application> => {
-  assertCanManageAnimals(ctx);
-  const [app] = await ctx.db
-    .select()
-    .from(application)
-    .where(and(eq(application.id, applicationId), eq(application.organizationId, ctx.organizationId)))
-    .limit(1);
-  if (!app) throw new NotFoundError('Candidatura não encontrada.');
-  if (app.status === 'in-progress') return app; // idempotent re-submit
-  if (app.status !== 'draft') throw new ConflictError('Esta candidatura já foi processada.');
 
   const now = new Date();
   return withTransaction(ctx, async (tx) => {
     const [row] = await tx.db
-      .update(application)
-      .set({ status: 'in-progress', submittedAt: now, statusChangedAt: now, expiresAt: null })
-      .where(eq(application.id, applicationId))
+      .insert(application)
+      .values({
+        id: createId('application'),
+        organizationId: ctx.organizationId,
+        animalId: animalRow.pk,
+        personId: personRow.pk,
+        formVersion: `${animalRow.species}-v1`,
+        status: 'in-progress',
+        applicationData: data.applicationData ?? {},
+        submittedAt: now,
+        statusChangedAt: now,
+      })
       .returning();
     await emitTimelineEvent(tx, {
       eventType: 'application.submitted',
       entityType: 'application',
-      entityId: applicationId,
+      entityId: row!.id,
       payload: { manual: true },
     });
     return row!;
