@@ -14,7 +14,11 @@
     "sharp": "catalog:",
     "fluent-ffmpeg": "catalog:",
     "ffmpeg-static": "catalog:",
-    "ffprobe-static": "catalog:"
+    "ffprobe-static": "catalog:",
+    "satori": "catalog:",
+    "@resvg/resvg-js": "catalog:",
+    "@fontsource/fraunces": "catalog:",
+    "@fontsource/inter-tight": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

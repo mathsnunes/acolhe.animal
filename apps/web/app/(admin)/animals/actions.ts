@@ -9,6 +9,7 @@ import {
   createAnimalDraft,
   deleteAnimalPhoto,
   deleteAnimalVideo,
+  generateInstagramArt,
   listAnimalPhotos,
   listAnimalVideos,
   publishAnimal,
@@ -21,8 +22,8 @@ import {
   type RequestUploadsInput,
   type UploadTicketResult,
 } from '@acolhe-animal/domain';
-import type { Animal, AnimalPhoto, AnimalVideo } from '@acolhe-animal/db';
-import type { ActionResult } from '@acolhe-animal/shared';
+import type { Animal, AnimalInstagramArt, AnimalPhoto, AnimalVideo } from '@acolhe-animal/db';
+import type { ActionResult, GenerateInstagramArtInput } from '@acolhe-animal/shared';
 
 import { action } from '@/lib/action';
 import { requireCtx } from '@/lib/auth-context';
@@ -157,4 +158,18 @@ export const setAnimalCoverAction = async (photoId: string): Promise<ActionResul
 export const deleteAnimalVideoAction = async (videoId: string): Promise<ActionResult> => {
   const ctx = await requireCtx();
   return action(() => deleteAnimalVideo(ctx, videoId));
+};
+
+/* ── Instagram art ──────────────────────────────────────────────────────────
+ * Deterministic, brand-styled feed/story PNG + suggested caption for an animal.
+ * The product never publishes — the user copies/downloads and posts themselves. */
+
+/** Generate (or regenerate) the feed/story art + caption for the chosen photo. */
+export const generateInstagramArtAction = async (
+  input: GenerateInstagramArtInput,
+): Promise<ActionResult<AnimalInstagramArt>> => {
+  const ctx = await requireCtx();
+  const result = await action(() => generateInstagramArt(ctx, input));
+  if (result.ok) revalidatePath(`/animais/${input.animalId}`);
+  return result;
 };

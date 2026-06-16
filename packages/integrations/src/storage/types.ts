@@ -58,4 +58,6 @@ export interface StorageProvider {
   createUploadUrl(input: CreateUploadUrlInput): Promise<UploadTicket>;
   /** Public URL for an already-stored key. */
   getPublicUrl(key: string): string;
+  /** Inverse of `getPublicUrl`: recover the storage key from a public URL. */
+  keyFromUrl(url: string): string;
 }

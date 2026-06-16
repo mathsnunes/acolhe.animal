@@ -28,6 +28,21 @@ const nextConfig: NextConfig = {
   // breaks transcoding/poster extraction. Externalizing loads them from
   // node_modules at runtime. (sharp is externalized by Next automatically.)
   serverExternalPackages: ['fluent-ffmpeg', 'ffmpeg-static', 'ffprobe-static'],
+  /**
+   * Force-externalize `@resvg/resvg-js` on the server build. It's a native
+   * `.node` addon webpack can't parse. `serverExternalPackages` doesn't cover it
+   * because it's imported from a `transpilePackages` workspace package
+   * (`@acolhe-animal/integrations`), so Next bundles the chain and webpack
+   * follows it (including `createRequire` calls). An explicit `commonjs` external
+   * makes the server `require()` it from node_modules at runtime.
+   */
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      const externals = Array.isArray(config.externals) ? config.externals : [config.externals].filter(Boolean);
+      config.externals = [...externals, { '@resvg/resvg-js': 'commonjs @resvg/resvg-js' }];
+    }
+    return config;
+  },
   images: {
     // Mock storage serves uploaded images from a local route in dev.
     remotePatterns: [{ protocol: 'https', hostname: '**' }],

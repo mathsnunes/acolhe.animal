@@ -12,6 +12,7 @@ import {
   listAnimalPhotos,
   listAnimalVideos,
   listEntityTimeline,
+  listInstagramArt,
 } from '@acolhe-animal/domain';
 import { formatCpf, formatDateBR, formatPhoneBR, formatRelative, isDomainError } from '@acolhe-animal/shared';
 import type { Animal, TimelineEvent } from '@acolhe-animal/db';
@@ -37,6 +38,7 @@ import { whatsappHref } from '@/components/candidates/whatsapp';
 import { FinalizeAdoptionDialog } from '@/components/candidates/finalize-adoption-dialog';
 import { ReturnAdoptionDialog } from '@/components/adoptions/return-adoption-dialog';
 import { OpenCandidaciesNote } from '@/components/animals/open-candidacies-note';
+import { InstagramArtDialog } from '@/components/animals/instagram-art-dialog';
 import { archiveAnimalAction, unarchiveAnimalAction } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -89,13 +91,14 @@ export default async function AnimalDetailPage({
     throw err;
   }
 
-  const [timeline, photos, videos, waitingCounts, adoption, approvedApp] = await Promise.all([
+  const [timeline, photos, videos, waitingCounts, adoption, approvedApp, instagramArt] = await Promise.all([
     listEntityTimeline(ctx, 'animal', id),
     listAnimalPhotos(ctx, id),
     listAnimalVideos(ctx, id),
     countWaitingApplicationsByAnimal(ctx),
     animal.status === 'adopted' ? getAdoptionByAnimal(ctx, id) : Promise.resolve(null),
     animal.status === 'reserved' ? getApprovedApplicationForAnimal(ctx, id) : Promise.resolve(null),
+    listInstagramArt(ctx, id),
   ]);
 
   const archived = animal.archivedAt != null;
@@ -182,6 +185,17 @@ export default async function AnimalDetailPage({
                 <Pencil /> {t('detail.editFicha')}
               </Link>
             </Button>
+            <InstagramArtDialog
+              animalId={id}
+              animalName={animal.name}
+              photos={photos.map((p) => ({ id: p.id, thumbUrl: p.thumbUrl, isPrimary: p.isPrimary }))}
+              initialArt={instagramArt.map((a) => ({
+                type: a.type,
+                imageUrl: a.imageUrl,
+                caption: a.caption,
+                generatedAt: new Date(a.generatedAt).toISOString(),
+              }))}
+            />
             <AnimalActionsMenu
               archived={archived}
               action={

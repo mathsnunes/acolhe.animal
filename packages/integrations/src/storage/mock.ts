@@ -73,6 +73,11 @@ export class MockStorageProvider implements StorageProvider {
     // (`R2_PUBLIC_URL` is the absolute public domain used by the live R2 adapter.)
     return `/local-storage/${key}`;
   }
+
+  keyFromUrl(url: string): string {
+    // Strip the origin-relative prefix and any cache-busting query.
+    return url.split('?')[0]!.replace(/^\/local-storage\//, '');
+  }
 }
 
 const guessContentType = (key: string): string => {

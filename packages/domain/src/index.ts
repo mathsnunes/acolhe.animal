@@ -14,6 +14,7 @@ export * from './cities';
 export * from './invitations';
 export * from './members';
 export * from './animals';
+export * from './instagram';
 export * from './uploads';
 export * from './people';
 export * from './applications';
