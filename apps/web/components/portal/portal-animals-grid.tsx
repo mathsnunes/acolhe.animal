@@ -62,7 +62,13 @@ export const PortalAnimalsGrid = ({ slug, initial }: { slug: string; initial: Po
     <>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((it) => (
-          <PortalAnimalCard key={it.animal.id} slug={slug} animal={it.animal} photoUrl={it.photoUrl} />
+          <PortalAnimalCard
+            key={it.animal.id}
+            slug={slug}
+            animal={it.animal}
+            photoUrl={it.photoUrl}
+            listedForAdoption={it.animal.listedForAdoption}
+          />
         ))}
         {loading && Array.from({ length: 3 }, (_, i) => <PortalAnimalCardSkeleton key={`s${i}`} />)}
       </div>

@@ -7,6 +7,7 @@ import {
   setApplicationStatus,
   updateApplicationNotes,
   finalizeDigitalAdoption,
+  createManualApplication,
   getApplication,
 } from '@acolhe-animal/domain';
 
@@ -73,6 +74,18 @@ export const assignAction = async (id: string, userId: string) =>
     return { ok: true };
   });
 
+/** Staff-create a candidacy (fair/presential) straight into the funnel. */
+export const createManualCandidacyAction = async (input: {
+  animalId: string;
+  person: { name: string; phone: string; email?: string; cpf?: string; cityId?: string };
+}) =>
+  action(async () => {
+    const ctx = await requireCtx();
+    const app = await createManualApplication(ctx, input);
+    revalidatePath('/candidatos');
+    return { id: app.id };
+  });
+
 /** Formalize a digital adoption from an approved candidacy. */
 export const finalizeAdoptionAction = async (input: {
   applicationId: string;
@@ -81,6 +94,7 @@ export const finalizeAdoptionAction = async (input: {
     street: string;
     number: string;
     complement?: string;
+    neighborhood?: string;
     city: string;
     state: string;
     postalCode: string;

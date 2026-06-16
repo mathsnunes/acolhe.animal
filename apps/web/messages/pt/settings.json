@@ -10,6 +10,37 @@
     "city": "Cidade",
     "phone": "Telefone"
   },
+  "edit": {
+    "nameLabel": "Nome",
+    "emailLabel": "E-mail (opcional)",
+    "cityPlaceholder": "Busque sua cidade…",
+    "cityEmpty": "Nenhuma cidade encontrada.",
+    "streetLabel": "Endereço",
+    "numberLabel": "Número",
+    "complementLabel": "Complemento",
+    "postalCodeLabel": "CEP",
+    "aboutLabel": "Sobre",
+    "aboutHint": "Um texto curto que aparece no portal público.",
+    "save": "Salvar alterações",
+    "saved": "Dados atualizados.",
+    "phoneInvalid": "Telefone inválido."
+  },
+  "portal": {
+    "title": "Portal público",
+    "enabledLabel": "Portal habilitado",
+    "enabledHint": "Quando ligado, sua página pública fica acessível no endereço abaixo.",
+    "slugLabel": "Endereço do portal",
+    "slugPlaceholder": "sua-ong",
+    "slugChecking": "Verificando…",
+    "slugAvailable": "Endereço disponível.",
+    "slugTaken": "Endereço já em uso.",
+    "slugReserved": "Esse endereço é reservado.",
+    "slugInvalid": "Use só letras minúsculas, números e hífens.",
+    "liveAt": "No ar em",
+    "disabled": "Desabilitado",
+    "save": "Salvar portal",
+    "saved": "Portal atualizado."
+  },
   "finance": {
     "title": "Financeiro",
     "descriptionCnpj": "Ative o recebimento de doações com reconciliação automática.",

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { normalizePhoneBR, slugify } from '@acolhe-animal/shared';
+import { normalizePhoneBR } from '@acolhe-animal/shared';
 
 import { AuthHeading, titleEm } from '@/components/auth/auth-heading';
 import { AuthModeTabs } from '@/components/auth/auth-mode-tabs';
@@ -22,10 +22,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { phoneNumber } from '@/lib/auth-client';
 
-import { checkSlugAction, finalizeSignupAction } from './actions';
+import { finalizeSignupAction } from './actions';
 
 type Step = 'data' | 'otp' | 'org';
-type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'reserved' | 'invalid';
 
 export default function SignupPage() {
   const t = useTranslations('auth.signup');
@@ -51,33 +50,11 @@ export default function SignupPage() {
   // Step 3 — organization
   const [profileType, setProfileType] = useState<ProfileType>('ong');
   const [orgName, setOrgName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugEdited, setSlugEdited] = useState(false);
-  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle');
   const [document, setDocument] = useState('');
   const [cityId, setCityId] = useState<string | null>(null);
 
   const steps = [t('steps.data'), t('steps.verification'), t('steps.org')];
   const stepIndex = step === 'data' ? 0 : step === 'otp' ? 1 : 2;
-
-  // Slug derives from the org name until the user edits it by hand.
-  useEffect(() => {
-    if (!slugEdited) setSlug(slugify(orgName));
-  }, [orgName, slugEdited]);
-
-  // Live availability check (debounced).
-  useEffect(() => {
-    if (slug.length < 3) {
-      setSlugStatus(slug.length === 0 ? 'idle' : 'invalid');
-      return;
-    }
-    setSlugStatus('checking');
-    const timer = setTimeout(async () => {
-      const result = await checkSlugAction(slug);
-      setSlugStatus(result.available ? 'available' : result.reason);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [slug]);
 
   const submitData = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +100,6 @@ export default function SignupPage() {
   const submitOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cityId) return toast.error(tOrg('city'));
-    if (slugStatus !== 'available') return toast.error(tOrg('slugTaken'));
     setBusy(true);
     try {
       const res = await finalizeSignupAction({
@@ -132,7 +108,6 @@ export default function SignupPage() {
         ownerEmail: email || undefined,
         profileType,
         orgName,
-        slug,
         document,
         cityId,
         phone: e164,
@@ -144,19 +119,6 @@ export default function SignupPage() {
       setBusy(false);
     }
   };
-
-  const slugHint =
-    slugStatus === 'checking'
-      ? tOrg('slugChecking')
-      : slugStatus === 'available'
-        ? tOrg('slugAvailable')
-        : slugStatus === 'taken'
-          ? tOrg('slugTaken')
-          : slugStatus === 'reserved'
-            ? tOrg('slugReserved')
-            : slugStatus === 'invalid'
-              ? tOrg('slugInvalid')
-              : '';
 
   return (
     <AuthPane slot={<AuthModeTabs current="signup" />}>
@@ -221,22 +183,8 @@ export default function SignupPage() {
               <ProfileTypeToggle value={profileType} onChange={setProfileType} />
             </Field>
 
-            <Field label={profileType === 'ong' ? tOrg('nameOng') : tOrg('nameProtetor')} htmlFor="su-orgname" hint={slugHint}>
+            <Field label={profileType === 'ong' ? tOrg('nameOng') : tOrg('nameProtetor')} htmlFor="su-orgname">
               <Input id="su-orgname" placeholder={tOrg('namePlaceholder')} value={orgName} onChange={(ev) => setOrgName(ev.target.value)} required />
-              <div className="mt-2 flex items-center overflow-hidden rounded-lg border border-line bg-bg-2 font-mono text-[12px] focus-within:border-terra focus-within:bg-paper">
-                <span className="select-none py-2 pl-3 text-ink-mute">acolhe.animal/</span>
-                <input
-                  value={slug}
-                  onChange={(ev) => {
-                    setSlugEdited(true);
-                    setSlug(slugify(ev.target.value));
-                  }}
-                  placeholder={tOrg('slugPlaceholder')}
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="min-w-0 flex-1 bg-transparent py-2 pr-3 font-medium text-terra outline-none placeholder:font-normal placeholder:text-ink-mute"
-                />
-              </div>
             </Field>
 
             <DocumentField

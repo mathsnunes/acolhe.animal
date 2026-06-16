@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, index, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { fk, surrogatePk } from './_id';
 import { city } from './city';
@@ -25,8 +25,13 @@ export const organization = pgTable(
     pk: surrogatePk(),
     id: text().notNull().unique(),
     name: text().notNull(),
-    /** Portal URL: acolhe.animal/<slug>. Globally unique. */
-    slug: text().notNull().unique(),
+    /**
+     * Portal URL: acolhe.animal/<slug>. Globally unique when set. Null until the
+     * owner enables the portal in settings — orgs no longer claim a URL at signup.
+     */
+    slug: text().unique(),
+    /** Whether the public portal is live. Off by default; turned on in settings. */
+    portalEnabled: boolean().notNull().default(false),
     /** CPF or CNPJ, digits only. */
     document: text().notNull().unique(),
     documentType: orgDocumentType().notNull(),

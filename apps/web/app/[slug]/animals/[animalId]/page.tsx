@@ -39,7 +39,9 @@ export default async function AnimalDetailPage({ params }: PageProps) {
   if (!org) notFound();
 
   const found = await getPortalAnimal(org.pk, animalId);
-  if (!found || !found.animal.visibleOnPortal || !found.animal.listedForAdoption) {
+  // Visibility controls whether the animal shows publicly at all; whether it
+  // accepts candidacies only gates the adopt button (handled in the hero).
+  if (!found || !found.animal.visibleOnPortal) {
     notFound();
   }
 
@@ -71,7 +73,12 @@ export default async function AnimalDetailPage({ params }: PageProps) {
       </nav>
 
       <main className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-        <PortalAnimalHero slug={slug} animal={animal} photoUrl={photoUrl} />
+        <PortalAnimalHero
+          slug={slug}
+          animal={animal}
+          photoUrl={photoUrl}
+          listedForAdoption={animal.listedForAdoption}
+        />
       </main>
 
       <footer className="border-t border-line-soft bg-paper">

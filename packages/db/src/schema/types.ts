@@ -28,11 +28,15 @@ export type ClinicalCondition = {
 /** `animal.vaccinations` — array of applied vaccines. */
 export type Vaccination = { name: string; date: string };
 
+/** `animal.dewormings` — array of deworming records (product optional, date is the point). */
+export type Deworming = { product?: string; date: string };
+
 /** `adoption.adopterAddress` — frozen snapshot at signature time. */
 export type AdopterAddress = {
   street: string;
   number: string;
   complement?: string;
+  neighborhood?: string;
   city: string;
   state: string;
   postalCode: string;

@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CityCombobox } from '@/components/auth/city-combobox';
-import { maskCep, maskCpf, maskUf } from '@/lib/masks';
+import { maskCep, maskCpf } from '@/lib/masks';
 import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
 
 /**
@@ -50,6 +50,7 @@ export const FinalizeAdoptionDialog = ({
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [complement, setComplement] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
@@ -65,6 +66,7 @@ export const FinalizeAdoptionDialog = ({
           street,
           number,
           complement: complement || undefined,
+          neighborhood: neighborhood || undefined,
           city,
           state,
           postalCode,
@@ -134,39 +136,41 @@ export const FinalizeAdoptionDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="complement">{t('finalize.complementLabel')}</Label>
-            <Input
-              id="complement"
-              value={complement}
-              onChange={(e) => setComplement(e.target.value)}
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="complement">{t('finalize.complementLabel')}</Label>
+              <Input
+                id="complement"
+                value={complement}
+                onChange={(e) => setComplement(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="neighborhood">{t('finalize.neighborhoodLabel')}</Label>
+              <Input
+                id="neighborhood"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_6rem_8rem]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_8rem]">
             <CityCombobox
               label={t('finalize.cityLabel')}
               placeholder={t('finalize.cityPlaceholder')}
               emptyLabel={t('finalize.cityEmpty')}
               onChange={(c) => {
+                // The autocomplete carries the UF, so there's no separate state field.
                 if (c) {
                   setCity(c.name);
                   setState(c.stateCode);
                 } else {
                   setCity('');
+                  setState('');
                 }
               }}
             />
-            <div className="space-y-2">
-              <Label htmlFor="state">{t('finalize.stateLabel')}</Label>
-              <Input
-                id="state"
-                maxLength={2}
-                value={state}
-                onChange={(e) => setState(maskUf(e.target.value))}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="postalCode">{t('finalize.postalCodeLabel')}</Label>
               <Input

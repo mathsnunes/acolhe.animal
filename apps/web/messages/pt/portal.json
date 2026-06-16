@@ -26,7 +26,8 @@
     "madeWith": "feito com"
   },
   "card": {
-    "cta": "Quero adotar"
+    "cta": "Quero adotar",
+    "ctaStoryOnly": "Conheça a história"
   },
   "labels": {
     "speciesDog": "Cão",
@@ -39,7 +40,9 @@
   },
   "detail": {
     "available": "Disponível para adoção",
-    "adoptCta": "Quero adotar a {animalName}"
+    "adoptCta": "Quero adotar a {animalName}",
+    "adoptClosed": "Adoções não abertas no momento",
+    "adoptClosedHint": "Este animal está aqui só para contar a história — as candidaturas não estão abertas no momento."
   },
   "adopt": {
     "back": "Voltar",

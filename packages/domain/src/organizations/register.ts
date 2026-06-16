@@ -7,7 +7,6 @@ import {
   documentSchema,
   optionalEmailSchema,
   phoneSchema,
-  slugSchema,
 } from '@acolhe-animal/shared';
 import type { Database, Organization } from '@acolhe-animal/db';
 import { organization, organizationMember } from '@acolhe-animal/db';
@@ -21,9 +20,9 @@ import { setUserProfile } from '../users/service';
  * the owner's user id, mirroring `organizations/service.ts`.
  *
  * Runs in a single transaction: finalize the owner's profile, create the org
- * (status `active` — all required fields are collected up front), and create the
- * admin membership. The owner's phone becomes the org contact phone; it can be
- * separated later.
+ * (status `active`), and create the admin membership. The public portal is OFF
+ * by default (no slug claimed at signup) — the owner enables it later in settings.
+ * The owner's phone becomes the org contact phone; it can be separated later.
  */
 const registerOrganizationSchema = z.object({
   ownerUserId: z.string().min(1),
@@ -31,7 +30,6 @@ const registerOrganizationSchema = z.object({
   ownerEmail: optionalEmailSchema,
   profileType: z.enum(['ong', 'protetor']),
   orgName: z.string().trim().min(1, 'Informe o nome do perfil.'),
-  slug: slugSchema,
   document: z.string().trim(),
   cityId: z.string().min(1, 'Selecione uma cidade.'),
   phone: phoneSchema,
@@ -49,14 +47,7 @@ export const registerOrganization = async (db: Database, input: RegisterOrganiza
 
   return db.transaction(async (tx) => {
     // Pre-check uniqueness for friendly field errors; the unique indexes on
-    // slug/document/phone are the backstop against a race.
-    const [slugTaken] = await tx
-      .select({ pk: organization.pk })
-      .from(organization)
-      .where(eq(organization.slug, data.slug))
-      .limit(1);
-    if (slugTaken) throw new ConflictError('Este endereço já está em uso.', { slug: 'Endereço já em uso.' });
-
+    // document/phone are the backstop against a race.
     const [docTaken] = await tx
       .select({ pk: organization.pk })
       .from(organization)
@@ -82,7 +73,8 @@ export const registerOrganization = async (db: Database, input: RegisterOrganiza
       .values({
         id: createId('organization'),
         name: data.orgName,
-        slug: data.slug,
+        // No slug / portal yet — the owner claims a URL and turns the portal on
+        // from settings when they're ready.
         document,
         documentType,
         status: 'active',

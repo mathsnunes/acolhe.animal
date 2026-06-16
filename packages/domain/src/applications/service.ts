@@ -1,6 +1,6 @@
 import { and, desc, eq, getTableColumns, ilike, inArray, isNull, ne, notInArray, or, sql } from 'drizzle-orm';
 
-import { createId, NotFoundError } from '@acolhe-animal/shared';
+import { ConflictError, createId, NotFoundError } from '@acolhe-animal/shared';
 import {
   adoption,
   animal,
@@ -83,6 +83,67 @@ export const startOrResumeApplication = async (ctx: Ctx, input: unknown): Promis
     })
     .returning();
   return row!;
+};
+
+/**
+ * Staff-created candidacy (e.g. someone met the animal at a fair). Same shape as
+ * the public start, but it skips the draft/form and lands straight in the funnel
+ * as `in-progress` ("em avaliação"), so it can be triaged and finalized like any
+ * other candidacy. Reuses the person upsert and the one-active-per-animal rule.
+ */
+export const createManualApplication = async (ctx: Ctx, input: unknown): Promise<Application> => {
+  assertCanManageAnimals(ctx);
+  const data = startApplicationSchema.parse(input);
+
+  const [animalRow] = await ctx.db
+    .select({ pk: animal.pk, species: animal.species })
+    .from(animal)
+    .where(and(eq(animal.id, data.animalId), eq(animal.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  const personRow = await upsertPersonByPhone(ctx, data.person);
+
+  const [existing] = await ctx.db
+    .select({ id: application.id })
+    .from(application)
+    .where(
+      and(
+        eq(application.organizationId, ctx.organizationId),
+        eq(application.personId, personRow.pk),
+        eq(application.animalId, animalRow.pk),
+        notInArray(application.status, ['rejected', 'withdrew']),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    throw new ConflictError('Já existe uma candidatura ativa dessa pessoa para este animal.');
+  }
+
+  const now = new Date();
+  return withTransaction(ctx, async (tx) => {
+    const [row] = await tx.db
+      .insert(application)
+      .values({
+        id: createId('application'),
+        organizationId: ctx.organizationId,
+        animalId: animalRow.pk,
+        personId: personRow.pk,
+        formVersion: `${animalRow.species}-v1`,
+        status: 'in-progress',
+        applicationData: {},
+        submittedAt: now,
+        statusChangedAt: now,
+      })
+      .returning();
+    await emitTimelineEvent(tx, {
+      eventType: 'application.submitted',
+      entityType: 'application',
+      entityId: row!.id,
+      payload: { manual: true },
+    });
+    return row!;
+  });
 };
 
 /** Autosave a draft's partial answers and refresh its expiry. */

@@ -27,8 +27,10 @@ const toRow = (data: ReturnType<typeof createAnimalSchema.parse>, organizationId
     size: data.size ?? null,
     predominantColor: data.predominantColor ?? null,
     weightKg: data.weightKg != null ? String(data.weightKg) : null,
+    microchipCode: data.microchipCode ?? null,
     neutered: data.neutered,
     vaccinations: data.vaccinations,
+    dewormings: data.dewormings,
     specialConditions: data.specialConditions,
     clinicalCondition: data.clinicalCondition ?? null,
     energyLevel: data.energyLevel ?? null,
@@ -249,6 +251,7 @@ const NULLABLE_ON_PUBLISH = new Set<keyof NewAnimal>([
   'size',
   'predominantColor',
   'weightKg',
+  'microchipCode',
   'estimatedBirthDate',
   'ageMonthsAtIntake',
   'ageReferenceDate',
@@ -286,8 +289,10 @@ const buildAnimalRow = (
   put('size', data.size);
   put('predominantColor', data.predominantColor);
   put('weightKg', data.weightKg != null ? String(data.weightKg) : undefined);
+  put('microchipCode', data.microchipCode);
   put('neutered', data.neutered);
   put('vaccinations', data.vaccinations);
+  put('dewormings', data.dewormings);
   put('specialConditions', data.specialConditions);
   put('clinicalCondition', data.clinicalCondition ?? undefined);
   put('energyLevel', data.energyLevel);

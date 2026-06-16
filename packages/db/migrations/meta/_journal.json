@@ -22,6 +22,20 @@
       "when": 1781542903337,
       "tag": "0002_eager_redwing",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781580865157,
+      "tag": "0003_add_microchip_and_dewormings",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781592732869,
+      "tag": "0004_portal_enabled_and_optional_slug",
+      "breakpoints": true
     }
   ]
 }

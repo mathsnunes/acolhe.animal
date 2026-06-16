@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { createId, NotFoundError, ConflictError } from '@acolhe-animal/shared';
 import { cpfSchema, optionalEmailSchema, phoneSchema, postalCodeSchema } from '@acolhe-animal/shared';
+import { formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
 import {
   adoption,
   animal,
@@ -12,6 +13,7 @@ import {
   organization,
   person,
   type Adoption,
+  type Animal,
 } from '@acolhe-animal/db';
 import { getStorage } from '@acolhe-animal/integrations';
 
@@ -20,12 +22,13 @@ import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
 import { emitTimelineEvent } from '../timeline/timeline';
 import { getPersonByPk, upsertPersonByPhone } from '../people/service';
-import { composeAdoptionTerm, renderTermHtml } from './term';
+import { renderTermPdf, type AdoptionTermData } from './term';
 
 const addressSnapshotSchema = z.object({
   street: z.string().default(''),
   number: z.string().default(''),
   complement: z.string().optional(),
+  neighborhood: z.string().optional(),
   city: z.string().default(''),
   state: z.string().default(''),
   postalCode: z.string().default(''),
@@ -54,17 +57,40 @@ export const registerOfflineSchema = z.object({
   adoptedAt: z.coerce.date(),
 });
 
-/** Store the rendered term and return its public URL + sha256 hash. */
-const storeTerm = async (adoptionId: string, termText: string): Promise<{ url: string; hash: string }> => {
-  const html = renderTermHtml(termText);
-  const bytes = Buffer.from(html, 'utf-8');
-  const hash = createHash('sha256').update(bytes).digest('hex');
+/** Store the rendered term PDF and return its public URL + sha256 hash. */
+const storeTerm = async (
+  adoptionId: string,
+  bytes: Uint8Array,
+): Promise<{ url: string; hash: string }> => {
+  const buf = Buffer.from(bytes);
+  const hash = createHash('sha256').update(buf).digest('hex');
   const { url } = await getStorage().put({
-    key: `adoptions/${adoptionId}/term.html`,
-    body: bytes,
-    contentType: 'text/html; charset=utf-8',
+    key: `adoptions/${adoptionId}/term.pdf`,
+    body: buf,
+    contentType: 'application/pdf',
   });
   return { url, hash };
+};
+
+/** A short "idade aproximada" line for the term, from the animal's age fields. */
+const animalAgeText = (a: Pick<Animal, 'estimatedBirthDate' | 'ageMonthsAtIntake' | 'ageReferenceDate'>): string => {
+  let months: number | null = null;
+  if (a.estimatedBirthDate) {
+    const now = new Date();
+    months =
+      (now.getFullYear() - a.estimatedBirthDate.getFullYear()) * 12 +
+      (now.getMonth() - a.estimatedBirthDate.getMonth());
+  } else if (a.ageMonthsAtIntake != null) {
+    const since = a.ageReferenceDate ?? null;
+    const extra = since
+      ? Math.max(0, Math.floor((Date.now() - since.getTime()) / (1000 * 60 * 60 * 24 * 30.44)))
+      : 0;
+    months = a.ageMonthsAtIntake + extra;
+  }
+  if (months == null || months < 0) return '';
+  if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
+  const years = Math.floor(months / 12);
+  return `${years} ${years === 1 ? 'ano' : 'anos'}`;
 };
 
 /**
@@ -90,7 +116,12 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
     getPersonByPk(ctx, app.personId),
     ctx.db.select().from(animal).where(eq(animal.pk, app.animalId)).limit(1),
     ctx.db
-      .select({ name: organization.name })
+      .select({
+        name: organization.name,
+        document: organization.document,
+        documentType: organization.documentType,
+        phone: organization.phone,
+      })
       .from(organization)
       .where(eq(organization.pk, ctx.organizationId))
       .limit(1),
@@ -98,16 +129,46 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
 
   const adoptionId = createId('adoption');
-  const termText = composeAdoptionTerm({
-    organizationName: org?.name ?? 'a organização',
-    adopterName: personRow.name,
-    adopterDocument: data.adopterDocument,
-    animalName: animalRow.name,
-    animalSpecies: animalRow.species,
+  const orgDocLabel = org
+    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
+        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
+      }`
+    : null;
+  const termData: AdoptionTermData = {
+    org: {
+      name: org?.name ?? 'a organização',
+      documentLabel: orgDocLabel,
+      phone: org ? formatPhoneBR(org.phone) : null,
+      logo: null, // logo upload is a follow-up; embed once orgs can set one.
+    },
+    adopter: {
+      name: personRow.name,
+      cpf: formatCpf(data.adopterDocument),
+      phone: formatPhoneBR(personRow.phone),
+      email: personRow.email,
+      address: {
+        street: data.adopterAddress.street,
+        number: data.adopterAddress.number,
+        complement: data.adopterAddress.complement,
+        neighborhood: data.adopterAddress.neighborhood,
+        city: data.adopterAddress.city,
+        state: data.adopterAddress.state,
+        postalCode: data.adopterAddress.postalCode,
+      },
+    },
+    animal: {
+      name: animalRow.name,
+      species: animalRow.species,
+      sex: animalRow.sex,
+      color: animalRow.predominantColor,
+      ageText: animalAgeText(animalRow),
+      microchip: animalRow.microchipCode,
+    },
     date: new Date(),
     extraClauses: data.extraClauses,
-  });
-  const { url, hash } = await storeTerm(adoptionId, termText);
+  };
+  const pdfBytes = await renderTermPdf(termData);
+  const { url, hash } = await storeTerm(adoptionId, pdfBytes);
 
   return withTransaction(ctx, async (tx) => {
     // Backfill the adopter's CPF on the Person (collected at signature time) — but

@@ -25,7 +25,7 @@ import {
 } from './enums';
 import { fk, surrogatePk } from './_id';
 import { organization } from './organization';
-import type { ClinicalCondition, Vaccination } from './types';
+import type { ClinicalCondition, Deworming, Vaccination } from './types';
 
 /** The animal's living record — core of adoption management. See `modelagem-dados.md` › Animal. */
 export const animal = pgTable(
@@ -48,6 +48,8 @@ export const animal = pgTable(
     size: animalSize(),
     predominantColor: text(),
     weightKg: numeric({ precision: 4, scale: 2 }),
+    /** Optional microchip code — presence implies the animal is chipped. */
+    microchipCode: text(),
     status: animalStatus().notNull().default('available'),
 
     /** Temporary, structured health state (does NOT block adoption). */
@@ -55,6 +57,7 @@ export const animal = pgTable(
     /** Nullable so a draft can exist before the health step is filled. */
     neutered: neuteredStatus(),
     vaccinations: jsonb().$type<Vaccination[]>().notNull().default(sql`'[]'::jsonb`),
+    dewormings: jsonb().$type<Deworming[]>().notNull().default(sql`'[]'::jsonb`),
     /** Permanent free tags (FIV+, three legs, epilepsy). */
     specialConditions: text()
       .array()

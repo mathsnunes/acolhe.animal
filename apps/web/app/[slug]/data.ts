@@ -16,14 +16,16 @@ import type { PortalAnimalsPage } from '@/lib/portal-query';
 /** Resolve a public, active organization by slug (or null when not adoptable). */
 export const getPublicOrganization = async (slug: string): Promise<Organization | null> => {
   const org = await getOrganizationBySlug(db, slug);
-  if (!org || org.status !== 'active') return null;
+  // The portal is live only when the org is active AND the owner enabled it.
+  if (!org || org.status !== 'active' || !org.portalEnabled) return null;
   return org;
 };
 
 /**
- * A page of available animals the org chose to show publicly. The portal flags
- * (`visibleOnPortal && listedForAdoption`) and pagination are pushed down to the
- * query so infinite scroll fetches only what it renders.
+ * A page of animals the org chose to show publicly. Visibility (`visibleOnPortal`)
+ * gates portal presence; animals that aren't accepting candidacies still appear
+ * (story-only), they just won't have an adopt button. Pagination is pushed down so
+ * infinite scroll fetches only what it renders.
  */
 export const getPortalAnimals = async (
   organizationPk: number,
@@ -33,7 +35,6 @@ export const getPortalAnimals = async (
   const rows = await listAnimals(ctx, {
     status: ['available'],
     visibleOnPortal: true,
-    listedForAdoption: true,
     limit: page.limit,
     offset: page.offset,
   });

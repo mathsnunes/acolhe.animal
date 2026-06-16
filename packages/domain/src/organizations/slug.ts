@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 import { RESERVED_SLUGS, slugSchema } from '@acolhe-animal/shared';
 import type { Database } from '@acolhe-animal/db';
@@ -13,7 +13,11 @@ export type SlugAvailability =
   | { available: true }
   | { available: false; reason: 'invalid' | 'reserved' | 'taken' };
 
-export const checkSlugAvailability = async (db: Database, rawSlug: string): Promise<SlugAvailability> => {
+export const checkSlugAvailability = async (
+  db: Database,
+  rawSlug: string,
+  excludeOrgPk?: number,
+): Promise<SlugAvailability> => {
   const slug = rawSlug.trim().toLowerCase();
 
   const parsed = slugSchema.safeParse(slug);
@@ -24,7 +28,11 @@ export const checkSlugAvailability = async (db: Database, rawSlug: string): Prom
   const [existing] = await db
     .select({ pk: organization.pk })
     .from(organization)
-    .where(eq(organization.slug, parsed.data))
+    .where(
+      excludeOrgPk != null
+        ? and(eq(organization.slug, parsed.data), ne(organization.pk, excludeOrgPk))
+        : eq(organization.slug, parsed.data),
+    )
     .limit(1);
 
   return existing ? { available: false, reason: 'taken' } : { available: true };

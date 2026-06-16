@@ -20,11 +20,13 @@ export const PortalAnimalCard = ({
   animal,
   photoUrl,
   preview = false,
+  listedForAdoption = true,
 }: {
   slug: string;
   animal: Pick<Animal, 'id' | 'name' | 'species' | 'sex' | 'size' | 'shortStory'>;
   photoUrl?: string | null;
   preview?: boolean;
+  listedForAdoption?: boolean;
 }) => {
   const t = useTranslations('portal');
   const meta = animalMeta(t, animal);
@@ -54,7 +56,7 @@ export const PortalAnimalCard = ({
         )}
 
         <span className="eyebrow mt-4 inline-flex items-center gap-2 pt-1">
-          {t('card.cta')}
+          {listedForAdoption ? t('card.cta') : t('card.ctaStoryOnly')}
           <svg
             viewBox="0 0 24 24"
             fill="none"

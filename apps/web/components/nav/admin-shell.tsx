@@ -25,7 +25,8 @@ import { BOTTOM_NAV, NAV_GROUP_LABELS, NAV_GROUPS, type NavCounts, type NavItem 
 
 export interface ShellOrg {
   name: string;
-  slug: string;
+  /** Null when the public portal isn't set up yet — the public-page link is hidden. */
+  slug: string | null;
   cityLabel?: string;
 }
 export interface ShellOrgOption {
@@ -223,15 +224,17 @@ const SidebarContent = ({
           );
         })}
 
-        <a
-          href={`/${org.slug}`}
-          target="_blank"
-          rel="noopener"
-          className="mx-2 mt-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] text-terra transition-colors hover:bg-bg-2"
-        >
-          <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
-          <span className="flex-1">{tc('nav.viewPublicPage')}</span>
-        </a>
+        {org.slug && (
+          <a
+            href={`/${org.slug}`}
+            target="_blank"
+            rel="noopener"
+            className="mx-2 mt-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] text-terra transition-colors hover:bg-bg-2"
+          >
+            <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
+            <span className="flex-1">{tc('nav.viewPublicPage')}</span>
+          </a>
+        )}
       </nav>
 
       <div className="divider-soft mx-4" />

@@ -18,7 +18,6 @@ export interface FinalizeSignupInput {
   ownerEmail?: string;
   profileType: 'ong' | 'protetor';
   orgName: string;
-  slug: string;
   document: string;
   cityId: string;
   phone: string;
@@ -39,10 +38,9 @@ export const finalizeSignupAction = async (input: FinalizeSignupInput) =>
       ownerEmail: input.ownerEmail,
       profileType: input.profileType,
       orgName: input.orgName,
-      slug: input.slug,
       document: input.document,
       cityId: input.cityId,
       phone: input.phone,
     });
-    return { slug: org.slug };
+    return { organizationId: org.id };
   });

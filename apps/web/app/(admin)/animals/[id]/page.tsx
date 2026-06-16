@@ -171,6 +171,9 @@ export default async function AnimalDetailPage({
             <QuickStat label={t('detail.factAge')} value={formatAge(t, animal) ?? t('detail.empty')} />
             <QuickStat label={t('detail.factSize')} value={porte} />
             <QuickStat label={t('detail.factIntake')} value={monthYear(animal.intakeDate)} />
+            {animal.microchipCode && (
+              <QuickStat label={t('detail.factMicrochip')} value={animal.microchipCode} />
+            )}
           </dl>
 
           <div className="mt-4 flex flex-wrap gap-2.5">
@@ -352,6 +355,12 @@ export default async function AnimalDetailPage({
             <dt className="text-ink-mute">{t('detail.factNeutered')}</dt>
             <dd className="font-medium text-ink">
               {animal.neutered ? neuteredLabel(t, animal.neutered) : t('detail.empty')}
+            </dd>
+            <dt className="text-ink-mute">{t('detail.dewormingsTitle')}</dt>
+            <dd className="font-medium text-ink">
+              {animal.dewormings.length > 0
+                ? animal.dewormings.map((d) => d.product || formatVaccineDate(d.date)).join(', ')
+                : t('detail.dewormingsEmpty')}
             </dd>
             <dt className="text-ink-mute">{t('detail.healthSpecialConditions')}</dt>
             <dd className="font-medium text-ink">
