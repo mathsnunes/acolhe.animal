@@ -111,7 +111,7 @@ export const InstagramArtDialog = ({ animalId, animalName, photos, initialArt }:
           <ImageIcon /> {t('trigger')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl gap-5">
+      <DialogContent className="max-h-[92dvh] w-[calc(100%-1.5rem)] max-w-3xl gap-5 overflow-y-auto p-5 sm:p-6">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('subtitle', { name: animalName })}</DialogDescription>
@@ -122,7 +122,7 @@ export const InstagramArtDialog = ({ animalId, animalName, photos, initialArt }:
             {TYPES.map((ty) => (
               <TabsTrigger key={ty} value={ty}>
                 {t(`tabs.${ty === 'feed-square' ? 'feed' : 'story'}`)}
-                <span className="ml-1.5 text-[11px] font-normal text-ink-mute">{t(`dimensions.${ty}`)}</span>
+                <span className="ml-1.5 hidden text-[11px] font-normal text-ink-mute sm:inline">{t(`dimensions.${ty}`)}</span>
               </TabsTrigger>
             ))}
           </TabsList>

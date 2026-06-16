@@ -68,7 +68,6 @@ export const generateInstagramArt = async (
   const png = await renderInstagramArt({
     type,
     photo: photoBytes,
-    orgName: org.name,
     eyebrow: content.eyebrow,
     title: content.title,
     facts: content.facts,

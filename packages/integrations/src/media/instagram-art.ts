@@ -30,7 +30,6 @@ interface Canvas {
   eyebrowSize: number;
   titleSize: number;
   factsSize: number;
-  logoH: number;
 }
 
 const CANVAS: Record<InstagramArtType, Canvas> = {
@@ -42,7 +41,6 @@ const CANVAS: Record<InstagramArtType, Canvas> = {
     eyebrowSize: 28,
     titleSize: 92,
     factsSize: 32,
-    logoH: 92,
   },
   'story-vertical': {
     width: 1080,
@@ -52,7 +50,6 @@ const CANVAS: Record<InstagramArtType, Canvas> = {
     eyebrowSize: 30,
     titleSize: 104,
     factsSize: 34,
-    logoH: 104,
   },
 };
 
@@ -75,8 +72,6 @@ export interface InstagramArtInput {
   type: InstagramArtType;
   /** Source photo bytes (any decodable image). */
   photo: Buffer;
-  /** Brand mark on the art: the org name in Fraunces, top-left. */
-  orgName: string;
   eyebrow: string;
   /** Headline split so the accent word renders in gold. */
   title: { lead: string; accent: string; tail: string };
@@ -98,12 +93,6 @@ export const renderInstagramArt = async (input: InstagramArtInput): Promise<Proc
     .toBuffer();
   const photoUri = toDataUri(photoPng, 'image/jpeg');
 
-  // Brand mark: the org name in Fraunces, top-left.
-  const brandTop = div(
-    { fontFamily: 'Fraunces', fontSize: Math.round(c.logoH * 0.52), color: PAPER, textShadow: '0 2px 12px rgba(0,0,0,0.45)' },
-    input.orgName,
-  );
-
   const root = div(
     { width: c.width, height: c.height, display: 'flex', position: 'relative', fontFamily: 'Inter Tight' },
     [
@@ -111,8 +100,6 @@ export const renderInstagramArt = async (input: InstagramArtInput): Promise<Proc
       { type: 'img', props: { src: photoUri, width: c.width, height: c.height, style: { position: 'absolute', top: 0, left: 0, objectFit: 'cover' } } },
       // Bottom scrim for legibility
       div({ position: 'absolute', top: 0, left: 0, width: c.width, height: c.height, backgroundImage: `linear-gradient(to top, ${SCRIM} 0%, rgba(18,22,18,0.34) ${c.scrimStop}, rgba(18,22,18,0) 78%)` }),
-      // Logo / org name, top-left
-      div({ position: 'absolute', top: c.pad, left: c.pad, display: 'flex' }, brandTop),
       // Bottom content block
       div(
         { position: 'absolute', left: c.pad, right: c.pad, bottom: c.pad, display: 'flex', flexDirection: 'column' },
