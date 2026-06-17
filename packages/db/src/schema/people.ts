@@ -136,6 +136,12 @@ export const adoption = pgTable(
     adopterPhone: text().notNull(),
     adopterAddress: jsonb().$type<AdopterAddress>().notNull(),
 
+    // Who conducted the adoption (the member who ran the selection). Snapshotted
+    // name + phone so the term survives member changes; null on older/offline rows
+    // (the term then falls back to the org).
+    responsibleName: text(),
+    responsiblePhone: text(),
+
     extraClauses: text(),
     termPdfUrl: text().notNull(),
     termPdfHash: text().notNull(),

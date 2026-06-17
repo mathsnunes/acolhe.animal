@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
-import { registerOfflineAdoption, cancelAdoption } from '@acolhe-animal/domain';
+import { registerOfflineAdoption, cancelAdoption, updateAdoption } from '@acolhe-animal/domain';
 
 import { action } from '@/lib/action';
 import { requireCtx } from '@/lib/auth-context';
@@ -33,6 +33,34 @@ export const registerOfflineAction = async (input: {
     const adoption = await registerOfflineAdoption(ctx, input);
     revalidatePath('/adocoes');
     revalidatePath('/animais');
+    return adoption;
+  });
+
+/** Correct an existing adoption's values + responsible and regenerate the term PDF. */
+export const updateAdoptionAction = async (input: {
+  adoptionId: string;
+  animalId: string;
+  adopterName: string;
+  adopterDocument: string;
+  adopterPhone: string;
+  adopterAddress: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+  };
+  extraClauses?: string;
+  responsibleUserId?: string;
+}) =>
+  action(async () => {
+    const ctx = await requireCtx();
+    const { adoptionId, animalId, ...patch } = input;
+    const adoption = await updateAdoption(ctx, adoptionId, patch);
+    revalidatePath(`/animais/${animalId}`);
+    revalidatePath('/adocoes');
     return adoption;
   });
 

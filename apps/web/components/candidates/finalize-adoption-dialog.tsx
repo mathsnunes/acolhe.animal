@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CityCombobox } from '@/components/auth/city-combobox';
+import { ResponsibleField, type ResponsibleMember } from '@/components/adoptions/responsible-field';
 import { maskCep, maskCpf } from '@/lib/masks';
 import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
 
@@ -47,6 +48,8 @@ export const FinalizeAdoptionDialog = ({
   animalName,
   triggerClassName = 'w-full',
   initial,
+  responsibleMembers = [],
+  currentUserId,
 }: {
   applicationId: string;
   animalId: string;
@@ -55,12 +58,19 @@ export const FinalizeAdoptionDialog = ({
   triggerClassName?: string;
   /** Pre-fill from the candidacy's Person, so the data isn't re-typed. */
   initial?: FinalizeInitial;
+  /** Members eligible to be the adoption's "responsável". */
+  responsibleMembers?: ResponsibleMember[];
+  /** Defaults the responsible to the acting user. */
+  currentUserId?: string | null;
 }) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
+  const [responsibleUserId, setResponsibleUserId] = useState(
+    currentUserId ?? responsibleMembers[0]?.userId ?? '',
+  );
   const [document, setDocument] = useState(initial?.document ?? '');
   const [street, setStreet] = useState(initial?.street ?? '');
   const [number, setNumber] = useState(initial?.number ?? '');
@@ -87,6 +97,7 @@ export const FinalizeAdoptionDialog = ({
           postalCode,
         },
         extraClauses: extraClauses.trim() || undefined,
+        responsibleUserId: responsibleUserId || undefined,
         signature: {
           ip: '',
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
@@ -118,6 +129,12 @@ export const FinalizeAdoptionDialog = ({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
+          <ResponsibleField
+            members={responsibleMembers}
+            value={responsibleUserId}
+            onChange={setResponsibleUserId}
+          />
+
           <div className="space-y-2">
             <Label htmlFor="cpf">{t('finalize.cpfLabel')}</Label>
             <Input

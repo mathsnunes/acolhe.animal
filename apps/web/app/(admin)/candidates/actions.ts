@@ -114,6 +114,7 @@ export const finalizeAdoptionAction = async (input: {
     postalCode: string;
   };
   extraClauses?: string;
+  responsibleUserId?: string;
   signature: { ip: string; userAgent: string };
 }) =>
   action(async () => {

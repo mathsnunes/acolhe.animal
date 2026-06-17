@@ -11,7 +11,9 @@ import {
   animal,
   application,
   organization,
+  organizationMember,
   person,
+  user,
   type Adoption,
   type Animal,
 } from '@acolhe-animal/db';
@@ -40,7 +42,19 @@ export const finalizeDigitalSchema = z.object({
   adopterDocument: cpfSchema,
   adopterAddress: addressSnapshotSchema,
   extraClauses: z.string().trim().optional(),
+  /** The member who conducted the adoption; defaults to the acting user. */
+  responsibleUserId: z.string().optional(),
   signature: z.object({ ip: z.string(), userAgent: z.string() }),
+});
+
+/** Editable fields when correcting an existing adoption + its term. */
+export const updateAdoptionSchema = z.object({
+  adopterName: z.string().trim().min(1),
+  adopterDocument: cpfSchema,
+  adopterPhone: phoneSchema,
+  adopterAddress: addressSnapshotSchema,
+  extraClauses: z.string().trim().optional(),
+  responsibleUserId: z.string().optional(),
 });
 
 export const registerOfflineSchema = z.object({
@@ -70,7 +84,9 @@ const storeTerm = async (
     body: buf,
     contentType: 'application/pdf',
   });
-  return { url, hash };
+  // Cache-bust on the content hash so a regenerated (corrected) term loads fresh
+  // even though it overwrites the same storage key.
+  return { url: `${url}?v=${hash.slice(0, 12)}`, hash };
 };
 
 /** A short "idade aproximada" line for the term, from the animal's age fields. */
@@ -92,6 +108,42 @@ const animalAgeText = (a: Pick<Animal, 'estimatedBirthDate' | 'ageMonthsAtIntake
   if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
   const years = Math.floor(months / 12);
   return `${years} ${years === 1 ? 'ano' : 'anos'}`;
+};
+
+/**
+ * Resolve a member's name + phone (snapshotted onto the adoption + term) by user
+ * id, ensuring they're an active member of the caller's org. Null if not.
+ */
+const resolveResponsible = async (
+  ctx: Ctx,
+  userId: string,
+): Promise<{ name: string; phone: string } | null> => {
+  const [row] = await ctx.db
+    .select({ name: user.name, phone: user.phoneNumber })
+    .from(organizationMember)
+    .innerJoin(user, eq(organizationMember.userId, user.id))
+    .where(
+      and(
+        eq(organizationMember.userId, userId),
+        eq(organizationMember.organizationId, ctx.organizationId),
+        isNull(organizationMember.removedAt),
+      ),
+    )
+    .limit(1);
+  return row ? { name: row.name, phone: formatPhoneBR(row.phone) } : null;
+};
+
+/** Active members for the "responsável" picker (any animal manager can read). */
+export const listResponsibleMembers = async (
+  ctx: Ctx,
+): Promise<Array<{ userId: string; name: string; phone: string }>> => {
+  assertCanManageAnimals(ctx);
+  const rows = await ctx.db
+    .select({ userId: organizationMember.userId, name: user.name, phone: user.phoneNumber })
+    .from(organizationMember)
+    .innerJoin(user, eq(organizationMember.userId, user.id))
+    .where(and(eq(organizationMember.organizationId, ctx.organizationId), isNull(organizationMember.removedAt)));
+  return rows.map((r) => ({ userId: r.userId, name: r.name, phone: formatPhoneBR(r.phone) }));
 };
 
 /**
@@ -140,6 +192,12 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
     }
   }
 
+  // Responsible member: explicit pick, else the acting user. Snapshotted so the
+  // term keeps the right person even if they later change name or leave.
+  const fallbackUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
+  const responsibleId = data.responsibleUserId ?? fallbackUserId;
+  const responsible = responsibleId ? await resolveResponsible(ctx, responsibleId) : null;
+
   const adoptionId = createId('adoption');
   const orgDocLabel = org
     ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
@@ -153,6 +211,7 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
       phone: org ? formatPhoneBR(org.phone) : null,
       logo,
     },
+    responsible,
     adopter: {
       name: personRow.name,
       cpf: formatCpf(data.adopterDocument),
@@ -218,6 +277,8 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
         adopterDocument: data.adopterDocument,
         adopterPhone: personRow.phone,
         adopterAddress: data.adopterAddress,
+        responsibleName: responsible?.name ?? null,
+        responsiblePhone: responsible?.phone ?? null,
         extraClauses: data.extraClauses ?? null,
         termPdfUrl: url,
         termPdfHash: hash,
@@ -334,6 +395,111 @@ export const getAdoptionByAnimal = async (
     )
     .limit(1);
   return row ? { adoption: row.adoption, originApplicationId: row.originApplicationId } : null;
+};
+
+/**
+ * Correct an existing (non-cancelled) adoption: update the snapshot values and
+ * the responsible member, regenerate the term PDF, and replace it in storage.
+ * For fixing a wrong value on an already-issued term.
+ */
+export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknown): Promise<Adoption> => {
+  assertCanManageAnimals(ctx);
+  const data = updateAdoptionSchema.parse(input);
+
+  const [row] = await ctx.db
+    .select()
+    .from(adoption)
+    .where(and(eq(adoption.id, adoptionId), eq(adoption.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!row) throw new NotFoundError('Adoção não encontrada.');
+  if (row.cancelledAt) throw new ConflictError('Uma adoção cancelada não pode ser editada.');
+
+  const [personRow, [animalRow], [org]] = await Promise.all([
+    getPersonByPk(ctx, row.personId),
+    ctx.db.select().from(animal).where(eq(animal.pk, row.animalId)).limit(1),
+    ctx.db
+      .select({
+        name: organization.name,
+        document: organization.document,
+        documentType: organization.documentType,
+        phone: organization.phone,
+        logoUrl: organization.logoUrl,
+      })
+      .from(organization)
+      .where(eq(organization.pk, ctx.organizationId))
+      .limit(1),
+  ]);
+  if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
+  if (org?.logoUrl) {
+    try {
+      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
+    } catch {
+      logo = null;
+    }
+  }
+
+  // Re-resolve the responsible when a member is supplied, else keep the snapshot.
+  const responsible = data.responsibleUserId
+    ? await resolveResponsible(ctx, data.responsibleUserId)
+    : row.responsibleName
+      ? { name: row.responsibleName, phone: row.responsiblePhone }
+      : null;
+
+  const orgDocLabel = org
+    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
+        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
+      }`
+    : null;
+
+  const termData: AdoptionTermData = {
+    org: {
+      name: org?.name ?? 'a organização',
+      documentLabel: orgDocLabel,
+      phone: org ? formatPhoneBR(org.phone) : null,
+      logo,
+    },
+    responsible,
+    adopter: {
+      name: data.adopterName,
+      cpf: formatCpf(data.adopterDocument),
+      phone: formatPhoneBR(data.adopterPhone),
+      email: personRow.email,
+      address: { ...data.adopterAddress },
+    },
+    animal: {
+      name: animalRow.name,
+      species: animalRow.species,
+      sex: animalRow.sex,
+      color: animalRow.predominantColor,
+      ageText: animalAgeText(animalRow),
+      microchip: animalRow.microchipCode,
+    },
+    date: row.adoptedAt,
+    extraClauses: data.extraClauses,
+  };
+
+  const pdfBytes = await renderTermPdf(termData);
+  const { url, hash } = await storeTerm(adoptionId, pdfBytes);
+
+  const [updated] = await ctx.db
+    .update(adoption)
+    .set({
+      adopterName: data.adopterName,
+      adopterDocument: data.adopterDocument,
+      adopterPhone: data.adopterPhone,
+      adopterAddress: data.adopterAddress,
+      responsibleName: responsible?.name ?? null,
+      responsiblePhone: responsible?.phone ?? null,
+      extraClauses: data.extraClauses ?? null,
+      termPdfUrl: url,
+      termPdfHash: hash,
+    })
+    .where(eq(adoption.pk, row.pk))
+    .returning();
+
+  return updated!;
 };
 
 /** Cancel an adoption (return/giveback). Frees the animal again. */

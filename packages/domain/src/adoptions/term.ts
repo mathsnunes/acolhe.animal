@@ -38,6 +38,8 @@ export interface AdoptionTermData {
     ageText?: string | null;
     microchip?: string | null;
   };
+  /** The member who conducted the adoption; falls back to the org when absent. */
+  responsible?: { name: string; phone?: string | null } | null;
   date: Date;
   extraClauses?: string | null;
 }
@@ -280,9 +282,9 @@ export const renderTermPdf = async (data: AdoptionTermData): Promise<Uint8Array>
   y -= 30;
   field('Assinatura do adotante:', '', MARGIN, contentW);
   y -= 26;
-  field('Responsável pela adoção:', data.org.name, MARGIN, contentW);
+  field('Responsável pela adoção:', data.responsible?.name ?? data.org.name, MARGIN, contentW);
   y -= 26;
-  field('Telefone para contato:', data.org.phone ?? '', MARGIN, contentW);
+  field('Telefone para contato:', data.responsible?.phone ?? data.org.phone ?? '', MARGIN, contentW);
 
   return pdf.save();
 };

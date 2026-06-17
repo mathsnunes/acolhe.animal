@@ -13,8 +13,9 @@ import {
   listAnimalVideos,
   listEntityTimeline,
   listInstagramArt,
+  listResponsibleMembers,
 } from '@acolhe-animal/domain';
-import { formatCpf, formatDateBR, formatPhoneBR, formatRelative, isDomainError } from '@acolhe-animal/shared';
+import { formatCep, formatCpf, formatDateBR, formatPhoneBR, formatRelative, isDomainError } from '@acolhe-animal/shared';
 import type { Animal, TimelineEvent } from '@acolhe-animal/db';
 
 import { DetailBreadcrumb } from '@/components/page-header';
@@ -37,6 +38,7 @@ import { requireCtx } from '@/lib/auth-context';
 import { whatsappHref } from '@/components/candidates/whatsapp';
 import { FinalizeAdoptionDialog } from '@/components/candidates/finalize-adoption-dialog';
 import { ReturnAdoptionDialog } from '@/components/adoptions/return-adoption-dialog';
+import { EditAdoptionDialog } from '@/components/adoptions/edit-adoption-dialog';
 import { OpenCandidaciesNote } from '@/components/animals/open-candidacies-note';
 import { InstagramArtDialog } from '@/components/animals/instagram-art-dialog';
 import { archiveAnimalAction, unarchiveAnimalAction } from '../actions';
@@ -100,6 +102,10 @@ export default async function AnimalDetailPage({
     animal.status === 'reserved' ? getApprovedApplicationForAnimal(ctx, id) : Promise.resolve(null),
     listInstagramArt(ctx, id),
   ]);
+
+  const responsibleMembers =
+    animal.status === 'reserved' || animal.status === 'adopted' ? await listResponsibleMembers(ctx) : [];
+  const currentUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
 
   const archived = animal.archivedAt != null;
   const candidates = waitingCounts[id] ?? 0;
@@ -224,6 +230,8 @@ export default async function AnimalDetailPage({
             adopterName={approvedApp.adopterName}
             animalName={animal.name}
             triggerClassName="shrink-0"
+            responsibleMembers={responsibleMembers}
+            currentUserId={currentUserId}
           />
         </section>
       )}
@@ -303,6 +311,36 @@ export default async function AnimalDetailPage({
             >
               <FileText className="size-4" /> {tA('detail.openTerm')}
             </a>
+            {adoptionRecord.source === 'digital' && (
+              <EditAdoptionDialog
+                adoptionId={adoptionRecord.id}
+                animalId={id}
+                responsibleMembers={responsibleMembers}
+                initialResponsibleUserId={
+                  responsibleMembers.find((m) => m.phone === adoptionRecord.responsiblePhone)?.userId ??
+                  currentUserId
+                }
+                initial={{
+                  adopterName: adoptionRecord.adopterName,
+                  document: formatCpf(adoptionRecord.adopterDocument),
+                  phone: formatPhoneBR(adoptionRecord.adopterPhone),
+                  street: adoptionRecord.adopterAddress.street ?? '',
+                  number: adoptionRecord.adopterAddress.number ?? '',
+                  complement: adoptionRecord.adopterAddress.complement ?? '',
+                  neighborhood: adoptionRecord.adopterAddress.neighborhood ?? '',
+                  city: adoptionRecord.adopterAddress.city ?? '',
+                  state: adoptionRecord.adopterAddress.state ?? '',
+                  postalCode: adoptionRecord.adopterAddress.postalCode
+                    ? formatCep(adoptionRecord.adopterAddress.postalCode)
+                    : '',
+                  cityText:
+                    adoptionRecord.adopterAddress.city && adoptionRecord.adopterAddress.state
+                      ? `${adoptionRecord.adopterAddress.city}, ${adoptionRecord.adopterAddress.state}`
+                      : '',
+                  extraClauses: adoptionRecord.extraClauses ?? '',
+                }}
+              />
+            )}
             <ReturnAdoptionDialog adoptionId={adoptionRecord.id} animalName={animal.name} />
           </div>
         </section>

@@ -43,6 +43,13 @@
       "when": 1781609606735,
       "tag": "0005_person_neighborhood",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781650892318,
+      "tag": "0006_lumpy_molly_hayes",
+      "breakpoints": true
     }
   ]
 }
