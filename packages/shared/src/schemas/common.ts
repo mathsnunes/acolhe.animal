@@ -80,6 +80,22 @@ export const hexColorSchema = z
   .string()
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida (use formato hex, ex: #B85C3C).');
 
+/**
+ * Instagram handle, normalized to the bare username (drops `@`, a full URL, and
+ * trailing slashes). Empty is allowed so the field can be cleared.
+ */
+export const instagramHandleSchema = z
+  .string()
+  .trim()
+  .transform((v) =>
+    v
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+      .replace(/^@/, '')
+      .replace(/\/+$/, '')
+      .trim(),
+  )
+  .refine((v) => v === '' || /^[A-Za-z0-9._]{1,30}$/.test(v), 'Use só letras, números, ponto e underline.');
+
 /** A monetary amount in reais — positive, up to 2 decimals. */
 export const moneySchema = z
   .number({ invalid_type_error: 'Informe um valor.' })

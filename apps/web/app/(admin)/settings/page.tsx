@@ -59,7 +59,12 @@ export default async function ConfigPage() {
         {isAdmin ? (
           <>
             <OrgSettingsForm initial={initial} />
-            <PortalSettingsCard initialEnabled={org.portalEnabled} initialSlug={org.slug ?? ''} />
+            <PortalSettingsCard
+              initialEnabled={org.portalEnabled}
+              initialSlug={org.slug ?? ''}
+              initialPrimaryColor={org.portalConfig?.primaryColor ?? null}
+              initialInstagram={org.portalConfig?.instagram ?? null}
+            />
           </>
         ) : (
           <Card>

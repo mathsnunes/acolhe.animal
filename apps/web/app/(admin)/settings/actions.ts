@@ -32,8 +32,13 @@ export const updateOrgAction = async (input: UpdateOrganizationInput) =>
     return { id: org.id };
   });
 
-/** Enable/disable the public portal and/or set its URL. */
-export const updatePortalAction = async (input: { enabled: boolean; slug?: string }) =>
+/** Enable/disable the public portal, set its URL, and/or its accent color. */
+export const updatePortalAction = async (input: {
+  enabled: boolean;
+  slug?: string;
+  primaryColor?: string | null;
+  instagram?: string | null;
+}) =>
   action(async () => {
     const ctx = await requireCtx();
     const org = await updateOrgPortal(ctx, input);

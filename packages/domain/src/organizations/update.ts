@@ -7,6 +7,8 @@ import {
   ValidationError,
   RESERVED_SLUGS,
   documentSchema,
+  hexColorSchema,
+  instagramHandleSchema,
   optionalEmailSchema,
   phoneSchema,
   slugSchema,
@@ -94,6 +96,10 @@ export const updateOrganization = async (ctx: Ctx, input: unknown): Promise<Orga
 const updateOrgPortalSchema = z.object({
   enabled: z.boolean(),
   slug: z.string().trim().toLowerCase().optional(),
+  /** Accent color (hex) for the public portal. `null` resets to the brand default. */
+  primaryColor: hexColorSchema.nullable().optional(),
+  /** Instagram handle for the portal footer. Empty/`null` clears it. */
+  instagram: instagramHandleSchema.nullable().optional(),
 });
 
 export const updateOrgPortal = async (ctx: Ctx, input: unknown): Promise<Organization> => {
@@ -130,9 +136,28 @@ export const updateOrgPortal = async (ctx: Ctx, input: unknown): Promise<Organiz
     });
   }
 
+  // Merge portalConfig keys only when the caller sends them: a value sets it,
+  // `null`/empty clears it, `undefined` leaves it untouched.
+  let portalConfig: typeof current.portalConfig | undefined;
+  if (data.primaryColor !== undefined || data.instagram !== undefined) {
+    portalConfig = { ...(current.portalConfig ?? {}) };
+    if (data.primaryColor !== undefined) {
+      if (data.primaryColor) portalConfig.primaryColor = data.primaryColor;
+      else delete portalConfig.primaryColor;
+    }
+    if (data.instagram !== undefined) {
+      if (data.instagram) portalConfig.instagram = data.instagram;
+      else delete portalConfig.instagram;
+    }
+  }
+
   const [row] = await ctx.db
     .update(organization)
-    .set({ portalEnabled: data.enabled, ...(slugToSet ? { slug: slugToSet } : {}) })
+    .set({
+      portalEnabled: data.enabled,
+      ...(slugToSet ? { slug: slugToSet } : {}),
+      ...(portalConfig !== undefined ? { portalConfig } : {}),
+    })
     .where(eq(organization.pk, ctx.organizationId))
     .returning();
   if (!row) throw new Error('Falha ao atualizar o portal.');

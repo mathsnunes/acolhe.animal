@@ -52,6 +52,13 @@
     "slugInvalid": "Use só letras minúsculas, números e hífens.",
     "liveAt": "No ar em",
     "disabled": "Desabilitado",
+    "colorLabel": "Cor de destaque",
+    "colorHint": "A cor dos acentos do seu portal (kicker, links e botões).",
+    "colorDefault": "Padrão (terra)",
+    "colorCustom": "Cor personalizada",
+    "instagramLabel": "Instagram",
+    "instagramHint": "Aparece no rodapé do portal. Só o usuário, sem @.",
+    "instagramPlaceholder": "suaong",
     "save": "Salvar portal",
     "saved": "Portal atualizado."
   },

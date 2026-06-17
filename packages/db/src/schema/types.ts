@@ -8,6 +8,8 @@
 export type PortalConfig = {
   primaryColor?: string;
   secondaryColor?: string;
+  /** Instagram handle, stored without the leading @. */
+  instagram?: string;
   sections?: {
     animals?: boolean;
     campaigns?: boolean;
