@@ -70,7 +70,10 @@ export const acceptInvite = async (
       throw new ForbiddenError('Este convite é para outro número de telefone.');
     }
 
-    if (params.name && !account.name) {
+    // Persist the name the invitee typed. better-auth seeds `name` with the
+    // phone number on phone-OTP signup, so "no real name yet" means empty OR
+    // still equal to the phone — we must not clobber an existing user's real name.
+    if (params.name && (!account.name || account.name === account.phoneNumber)) {
       await setUserProfile(tx, params.userId, { name: params.name });
     }
 
