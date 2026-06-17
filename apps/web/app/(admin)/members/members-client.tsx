@@ -155,8 +155,8 @@ export const MembersManager = ({ members, invites, baseUrl }: { members: Member[
           </form>
 
           {lastInviteUrl ? (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-terra-bg px-4 py-3">
-              <span className="font-mono text-[12.5px] text-ink-soft">{lastInviteUrl}</span>
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-terra-bg px-4 py-3">
+              <span className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-ink-soft">{lastInviteUrl}</span>
               <CopyLink url={lastInviteUrl} />
             </div>
           ) : null}
@@ -170,34 +170,41 @@ export const MembersManager = ({ members, invites, baseUrl }: { members: Member[
         </CardHeader>
         <CardContent className="divide-y divide-line-soft">
           {members.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-              <InitialsAvatar name={m.name} tone="green" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-medium text-ink">{m.name}</span>
-                  {m.isSelf ? <span className="text-[11px] text-ink-mute">· {t('you')}</span> : null}
+            <div
+              key={m.id}
+              className="flex flex-col gap-2.5 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:gap-3"
+            >
+              <div className="flex min-w-0 items-center gap-3 sm:flex-1">
+                <InitialsAvatar name={m.name} tone="green" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium text-ink">{m.name}</span>
+                    {m.isSelf ? <span className="shrink-0 text-[11px] text-ink-mute">· {t('you')}</span> : null}
+                  </div>
+                  <div className="truncate text-[12px] text-ink-mute">{formatPhoneBR(m.phone)}</div>
                 </div>
-                <div className="truncate text-[12px] text-ink-mute">{formatPhoneBR(m.phone)}</div>
               </div>
-              <Select value={m.role} onValueChange={(v) => onChangeRole(m.id, v as Role)} disabled={m.isSelf || pending}>
-                <SelectTrigger className="h-9 w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="volunteer">{t('roleVolunteer')}</SelectItem>
-                  <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={t('remove')}
-                disabled={m.isSelf || pending}
-                onClick={() => onRemove(m.id, m.name)}
-                className="text-ink-mute hover:text-rose"
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              <div className="flex items-center gap-2 pl-11 sm:pl-0">
+                <Select value={m.role} onValueChange={(v) => onChangeRole(m.id, v as Role)} disabled={m.isSelf || pending}>
+                  <SelectTrigger className="h-9 w-full sm:w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="volunteer">{t('roleVolunteer')}</SelectItem>
+                    <SelectItem value="admin">{t('roleAdmin')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('remove')}
+                  disabled={m.isSelf || pending}
+                  onClick={() => onRemove(m.id, m.name)}
+                  className="shrink-0 text-ink-mute hover:text-rose"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </CardContent>
