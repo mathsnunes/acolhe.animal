@@ -238,21 +238,21 @@ const SidebarContent = ({
               {items.map((item) => (
                 <NavLink key={item.href} item={item} counts={counts} pathname={pathname} />
               ))}
+              {/* "Ver página pública" lives at the foot of the Organização group. */}
+              {sectionKey === 'org' && org.slug && (
+                <a
+                  href={`/${org.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="mx-2 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] text-terra transition-colors hover:bg-bg-2"
+                >
+                  <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
+                  <span className="flex-1">{tc('nav.viewPublicPage')}</span>
+                </a>
+              )}
             </div>
           );
         })}
-
-        {org.slug && (
-          <a
-            href={`/${org.slug}`}
-            target="_blank"
-            rel="noopener"
-            className="mx-2 mt-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13px] text-terra transition-colors hover:bg-bg-2"
-          >
-            <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
-            <span className="flex-1">{tc('nav.viewPublicPage')}</span>
-          </a>
-        )}
       </nav>
 
       <div className="divider-soft mx-4" />

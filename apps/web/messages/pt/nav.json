@@ -6,15 +6,15 @@
   "cashflow": "Caixa",
   "campaigns": "Campanhas",
   "stories": "Histórias",
-  "neededItems": "Itens em falta",
   "supporters": "Apoiadores",
+  "recurringNeeds": "Necessidades Recorrentes",
   "members": "Membros",
   "settings": "Configurações",
   "more": "Mais",
   "logout": "Sair",
   "sections": {
     "general": "Geral",
-    "content": "Conteúdo",
+    "fundraising": "Arrecadação",
     "org": "Organização"
   },
   "roleAdmin": "admin",

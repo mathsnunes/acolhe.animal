@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
         { source: '/caixa', destination: '/cashflow' },
         { source: '/campanhas', destination: '/campaigns' },
         { source: '/historias', destination: '/stories' },
-        { source: '/itens-em-falta', destination: '/needed-items' },
+        { source: '/necessidades-recorrentes', destination: '/recurring-needs' },
         { source: '/apoiadores', destination: '/supporters' },
         { source: '/membros', destination: '/members' },
         { source: '/config', destination: '/settings' },

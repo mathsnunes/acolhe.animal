@@ -3,8 +3,8 @@ import {
   Heart,
   Home,
   Megaphone,
-  Package,
   PawPrint,
+  Repeat,
   Settings,
   UserCog,
   Users,
@@ -34,6 +34,7 @@ export interface NavItem {
  * grouping silently. See `04-componentes-navegacao.md` › Ordem dos itens.
  */
 export const NAV_GROUPS: NavItem[][] = [
+  // Geral — day-to-day adoption work.
   [
     { href: '/inicio', labelKey: 'home', icon: Home },
     {
@@ -52,15 +53,17 @@ export const NAV_GROUPS: NavItem[][] = [
       createHref: '/candidatos/nova',
       createLabelKey: 'topbar.newCandidacy',
     },
+    { href: '/historias', labelKey: 'stories', icon: BookOpen },
+  ],
+  // Arrecadação — the donation pillar (admin-only).
+  [
     { href: '/doacoes', labelKey: 'donations', icon: Heart, adminOnly: true },
     { href: '/caixa', labelKey: 'cashflow', icon: Wallet, adminOnly: true },
-  ],
-  [
     { href: '/campanhas', labelKey: 'campaigns', icon: Megaphone, adminOnly: true },
-    { href: '/historias', labelKey: 'stories', icon: BookOpen },
-    { href: '/itens-em-falta', labelKey: 'neededItems', icon: Package },
     { href: '/apoiadores', labelKey: 'supporters', icon: UsersRound, adminOnly: true },
+    { href: '/necessidades-recorrentes', labelKey: 'recurringNeeds', icon: Repeat, adminOnly: true },
   ],
+  // Organização — settings & administration.
   [
     { href: '/membros', labelKey: 'members', icon: UserCog, adminOnly: true },
     { href: '/config', labelKey: 'settings', icon: Settings },
@@ -68,7 +71,7 @@ export const NAV_GROUPS: NavItem[][] = [
 ];
 
 /** Editorial section label per NAV_GROUPS entry (keys into `nav.sections.*`). */
-export const NAV_GROUP_LABELS = ['general', 'content', 'org'] as const;
+export const NAV_GROUP_LABELS = ['general', 'fundraising', 'org'] as const;
 
 /** The 5 fixed bottom-nav slots on mobile (the rest live in "Mais"). */
 export const BOTTOM_NAV: NavItem[] = [
