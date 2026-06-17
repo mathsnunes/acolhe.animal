@@ -1,12 +1,18 @@
 import 'server-only';
 
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull } from 'drizzle-orm';
 
-import { animal, animalPhoto, db, type Animal, type Organization } from '@acolhe-animal/db';
+import { adoption, animal, animalPhoto, animalVideo, db, type Animal, type Organization } from '@acolhe-animal/db';
 import { getOrganizationBySlug, listAnimals } from '@acolhe-animal/domain';
 
 import { publicCtx } from '@/lib/auth-context';
-import type { PortalAnimalsPage } from '@/lib/portal-query';
+import type { PortalAnimalItem, PortalAnimalsPage } from '@/lib/portal-query';
+
+/** A simple count + a few adopted animals, for the portal's "lives changed" section. */
+export interface PortalStats {
+  adoptionsCount: number;
+  recent: Array<{ id: string; name: string; photoUrl: string | null }>;
+}
 
 /**
  * Shared server-side loaders for the public portal. The org id is always
@@ -44,6 +50,53 @@ export const getPortalAnimals = async (
   return { items, nextOffset: page.offset + rows.length, hasMore: rows.length === page.limit };
 };
 
+/** Cap on animals loaded for the portal (sections + client-side filters). */
+const PORTAL_ANIMALS_CAP = 200;
+
+/**
+ * Every adoptable animal the org shows publicly, loaded at once so the client can
+ * split them into Cães/Gatos sections and filter instantly. Capped — orgs have
+ * tens of animals, not thousands.
+ */
+export const getAllPortalAnimals = async (organizationPk: number): Promise<PortalAnimalItem[]> => {
+  const ctx = publicCtx(organizationPk);
+  const rows = await listAnimals(ctx, {
+    status: ['available'],
+    visibleOnPortal: true,
+    limit: PORTAL_ANIMALS_CAP,
+    offset: 0,
+  });
+  const photos = await getPrimaryPhotos(rows.map((a) => a.pk));
+  return rows.map((a) => ({ animal: a, photoUrl: photos[a.id] ?? null }));
+};
+
+/** Lives changed: count of active adoptions + a few recently adopted animals. */
+export const getPortalStats = async (organizationPk: number): Promise<PortalStats> => {
+  const [counted] = await db
+    .select({ n: count() })
+    .from(adoption)
+    .where(and(eq(adoption.organizationId, organizationPk), isNull(adoption.cancelledAt)));
+
+  const rows = await db
+    .select({ id: animal.id, name: animal.name, animalPk: animal.pk })
+    .from(adoption)
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
+    .where(and(eq(adoption.organizationId, organizationPk), isNull(adoption.cancelledAt)))
+    .orderBy(desc(adoption.adoptedAt))
+    .limit(24);
+
+  const photos = await getPrimaryPhotos(rows.map((r) => r.animalPk));
+  const seen = new Set<string>();
+  const recent: PortalStats['recent'] = [];
+  for (const r of rows) {
+    if (seen.has(r.id)) continue; // an animal returned + re-adopted shows once
+    seen.add(r.id);
+    recent.push({ id: r.id, name: r.name, photoUrl: photos[r.id] ?? null });
+    if (recent.length >= 10) break;
+  }
+  return { adoptionsCount: Number(counted?.n ?? 0), recent };
+};
+
 /**
  * Map of animal *public* id → primary (or first) photo medium URL. Takes the
  * animals' surrogate keys (photo FKs reference `animal.pk`) but keys the result
@@ -73,14 +126,47 @@ export const getPrimaryPhotos = async (animalPks: number[]): Promise<Record<stri
   return byAnimal;
 };
 
-/** A single public animal that is still listed/visible, or null. */
-export const getPortalAnimal = async (organizationPk: number, animalId: string): Promise<{ animal: Animal; photoUrl: string | null } | null> => {
+/**
+ * A single public animal that is still listed/visible, plus its full ordered
+ * photo set (primary first, then display order) so the detail page can show a
+ * gallery. `photoUrl` is kept as the primary for metadata/OG.
+ */
+export interface PortalVideo {
+  id: string;
+  src: string;
+  poster: string | null;
+}
+
+export const getPortalAnimal = async (
+  organizationPk: number,
+  animalId: string,
+): Promise<{ animal: Animal; photoUrl: string | null; photos: string[]; videos: PortalVideo[] } | null> => {
   const [row] = await db
     .select()
     .from(animal)
     .where(and(eq(animal.id, animalId), eq(animal.organizationId, organizationPk)))
     .limit(1);
   if (!row) return null;
-  const photos = await getPrimaryPhotos([row.pk]);
-  return { animal: row, photoUrl: photos[row.id] ?? null };
+
+  const photoRows = await db
+    .select({ mediumUrl: animalPhoto.mediumUrl, isPrimary: animalPhoto.isPrimary })
+    .from(animalPhoto)
+    .where(eq(animalPhoto.animalId, row.pk))
+    .orderBy(asc(animalPhoto.displayOrder));
+  // Stable sort keeps display order while floating the primary to the front.
+  const photos = [...photoRows]
+    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+    .map((p) => p.mediumUrl);
+
+  // Only fully-transcoded videos are playable on the public portal.
+  const videoRows = await db
+    .select({ id: animalVideo.id, processedUrl: animalVideo.processedUrl, posterUrl: animalVideo.posterUrl })
+    .from(animalVideo)
+    .where(and(eq(animalVideo.animalId, row.pk), eq(animalVideo.processingStatus, 'ready')))
+    .orderBy(asc(animalVideo.displayOrder));
+  const videos: PortalVideo[] = videoRows
+    .filter((v): v is { id: string; processedUrl: string; posterUrl: string | null } => Boolean(v.processedUrl))
+    .map((v) => ({ id: v.id, src: v.processedUrl, poster: v.posterUrl }));
+
+  return { animal: row, photoUrl: photos[0] ?? null, photos, videos };
 };

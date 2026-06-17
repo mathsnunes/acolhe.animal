@@ -1,11 +1,15 @@
+import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-import { BrandMark } from '@/components/brand';
-import { PortalAnimalsGrid } from '@/components/portal/portal-animals-grid';
-import { PORTAL_PAGE_SIZE } from '@/lib/portal-query';
-import { getPortalAnimals, getPublicOrganization } from './data';
+import { formatCnpj, formatCpf } from '@acolhe-animal/shared';
+
+import { PortalHeader } from '@/components/portal/portal-header';
+import { PortalAnimalsBrowser } from '@/components/portal/portal-animals-browser';
+import { PortalLivesChanged } from '@/components/portal/portal-lives-changed';
+import { PortalFooter } from '@/components/portal/portal-footer';
+import { getAllPortalAnimals, getPortalStats, getPublicOrganization } from './data';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -15,9 +19,7 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
   const org = await getPublicOrganization(slug);
   if (!org) return { title: t('metadata.portalNotFound') };
 
-  const description =
-    org.aboutText?.trim() ||
-    t('metadata.defaultDescription', { orgName: org.name });
+  const description = org.aboutText?.trim() || t('metadata.defaultDescription', { orgName: org.name });
 
   return {
     title: org.name,
@@ -26,9 +28,7 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
       title: org.name,
       description,
       type: 'website',
-      ...(org.coverUrl || org.logoUrl
-        ? { images: [{ url: org.coverUrl ?? org.logoUrl! }] }
-        : {}),
+      ...(org.coverUrl || org.logoUrl ? { images: [{ url: org.coverUrl ?? org.logoUrl! }] } : {}),
     },
   };
 };
@@ -42,80 +42,63 @@ export default async function PortalPage({ params }: PageProps) {
   const sections = org.portalConfig?.sections;
   const showAnimals = sections?.animals !== false; // animals on by default for MVP
 
-  const animalsPage = showAnimals
-    ? await getPortalAnimals(org.pk, { limit: PORTAL_PAGE_SIZE, offset: 0 })
-    : { items: [], nextOffset: 0, hasMore: false };
+  const [animals, stats] = await Promise.all([
+    showAnimals ? getAllPortalAnimals(org.pk) : Promise.resolve([]),
+    getPortalStats(org.pk),
+  ]);
+
+  // Org accent: retint the terra-based tokens for this portal only. Solid hex
+  // (no color-mix) so it degrades safely on older browsers.
+  const accent = org.portalConfig?.primaryColor;
+  const accentStyle = accent ? ({ '--color-terra': accent, '--color-ring': accent } as CSSProperties) : undefined;
+
+  const documentLabel =
+    org.documentType === 'cnpj' ? `CNPJ ${formatCnpj(org.document)}` : `CPF ${formatCpf(org.document)}`;
+
+  const hasAbout = !!org.aboutText?.trim();
 
   return (
-    <div className="min-h-dvh bg-bg">
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden border-b border-line-soft bg-paper">
-        {org.coverUrl && (
-          <div className="absolute inset-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={org.coverUrl} alt="" className="size-full object-cover opacity-25" />
-            <div className="absolute inset-0 bg-gradient-to-b from-paper/40 to-paper" />
-          </div>
-        )}
+    <div className="min-h-dvh bg-bg" style={accentStyle}>
+      {/* ── Top header — logo + section nav, sticky; the animals are the focus ─ */}
+      <PortalHeader slug={slug} orgName={org.name} logoUrl={org.logoUrl} showAbout={hasAbout} />
 
-        <div className="relative mx-auto max-w-5xl px-6 py-16 sm:py-24">
-          {org.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={org.logoUrl}
-              alt={org.name}
-              className="mb-8 h-24 w-auto max-w-[280px] object-contain object-left"
-            />
-          )}
-
-          <p className="eyebrow mb-4">{t('hero.eyebrow')}</p>
-          <h1 className="display max-w-3xl text-5xl text-ink sm:text-6xl">{org.name}</h1>
-
-          {org.aboutText?.trim() && (
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-soft">
-              {org.aboutText}
-            </p>
-          )}
-        </div>
-      </header>
-
-      {/* ── Available animals ────────────────────────────────── */}
-      <main className="mx-auto max-w-5xl px-6 py-16">
-        {showAnimals && (
-          <section aria-labelledby="disponiveis">
-            <div className="mb-8">
-              <p className="eyebrow mb-3">{t('available.eyebrow')}</p>
-              <h2 id="disponiveis" className="display text-3xl text-ink sm:text-4xl">
-                {t('available.titlePrefix')}<em>{t('available.titleEm')}</em>
-              </h2>
+      {/* ── Animals — start immediately ──────────────────────────────────────── */}
+      <main id="animais" className="mx-auto max-w-5xl px-6 py-12 sm:py-14">
+        {showAnimals &&
+          (animals.length === 0 ? (
+            <div className="rounded-xl border border-line-soft bg-paper px-6 py-16 text-center">
+              <p className="display text-2xl text-ink">{t('available.emptyTitle')}</p>
+              <p className="mt-3 text-sm text-ink-soft">{t('available.emptyDescription', { orgName: org.name })}</p>
             </div>
-
-            {animalsPage.items.length === 0 ? (
-              <div className="rounded-xl border border-line-soft bg-paper px-6 py-16 text-center">
-                <p className="display text-2xl text-ink">
-                  {t('available.emptyTitle')}
-                </p>
-                <p className="mt-3 text-sm text-ink-soft">
-                  {t('available.emptyDescription', { orgName: org.name })}
-                </p>
-              </div>
-            ) : (
-              <PortalAnimalsGrid slug={slug} initial={animalsPage} />
-            )}
-          </section>
-        )}
+          ) : (
+            <>
+              <p className="eyebrow mb-8">{t('available.eyebrow')}</p>
+              <PortalAnimalsBrowser slug={slug} items={animals} />
+            </>
+          ))}
       </main>
 
-      {/* ── Footer ───────────────────────────────────────────── */}
-      <footer className="border-t border-line-soft bg-paper">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-6 py-12 text-center">
-          <p className="display text-xl text-ink">{org.name}</p>
-          <span className="inline-flex items-center gap-2 font-mono text-[11px] tracking-wider text-ink-mute">
-            <span>{t('footer.madeWith')}</span>
-            <BrandMark className="text-[13px]" />
-          </span>
-        </div>
-      </footer>
+      {/* ── Lives changed — social proof ───────────────────────────────────── */}
+      <PortalLivesChanged count={stats.adoptionsCount} animals={stats.recent} />
+
+      {/* ── About — the org's identity, anchored for the header/footer nav ───── */}
+      {hasAbout && (
+        <section id="sobre" className="border-t border-line-soft bg-paper">
+          <div className="mx-auto max-w-3xl px-6 py-16 text-center">
+            <p className="eyebrow eyebrow-mute mb-4">{t('nav.about')}</p>
+            <h2 className="display text-3xl text-ink sm:text-4xl">{org.name}</h2>
+            <p className="mt-5 text-lg leading-relaxed text-ink-soft">{org.aboutText}</p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Footer — org identity, links, made-with ────────────────────────── */}
+      <PortalFooter
+        orgName={org.name}
+        documentLabel={documentLabel}
+        instagram={org.portalConfig?.instagram}
+        showAbout={hasAbout}
+      />
     </div>
   );
 }
