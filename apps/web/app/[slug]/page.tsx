@@ -1,15 +1,12 @@
-import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-
-import { formatCnpj, formatCpf } from '@acolhe-animal/shared';
 
 import { PortalHeader } from '@/components/portal/portal-header';
 import { PortalAnimalsBrowser } from '@/components/portal/portal-animals-browser';
 import { PortalLivesChanged } from '@/components/portal/portal-lives-changed';
 import { PortalFooter } from '@/components/portal/portal-footer';
-import { getAllPortalAnimals, getPortalStats, getPublicOrganization } from './data';
+import { getAllPortalAnimals, getPortalStats, getPublicOrganization, portalChrome } from './data';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -47,15 +44,7 @@ export default async function PortalPage({ params }: PageProps) {
     getPortalStats(org.pk),
   ]);
 
-  // Org accent: retint the terra-based tokens for this portal only. Solid hex
-  // (no color-mix) so it degrades safely on older browsers.
-  const accent = org.portalConfig?.primaryColor;
-  const accentStyle = accent ? ({ '--color-terra': accent, '--color-ring': accent } as CSSProperties) : undefined;
-
-  const documentLabel =
-    org.documentType === 'cnpj' ? `CNPJ ${formatCnpj(org.document)}` : `CPF ${formatCpf(org.document)}`;
-
-  const hasAbout = !!org.aboutText?.trim();
+  const { accentStyle, documentLabel, hasAbout } = portalChrome(org);
 
   return (
     <div className="min-h-dvh bg-bg" style={accentStyle}>

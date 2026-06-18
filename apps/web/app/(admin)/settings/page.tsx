@@ -1,9 +1,8 @@
-import { eq } from 'drizzle-orm';
 import { getTranslations } from 'next-intl/server';
 
-import { city, db } from '@acolhe-animal/db';
+import { db } from '@acolhe-animal/db';
 import { formatCep, formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
-import { getOrganizationByPk } from '@acolhe-animal/domain';
+import { getCityById, getOrganizationByPk } from '@acolhe-animal/domain';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,18 +17,10 @@ export default async function ConfigPage() {
   const t = await getTranslations('settings');
   const org = await getOrganizationByPk(db, ctx.organizationId);
   if (!org) throw new Error('Organização não encontrada.');
-  const cityRow = org.cityId
-    ? (
-        await db
-          .select({ name: city.name, uf: city.stateCode })
-          .from(city)
-          .where(eq(city.id, org.cityId))
-          .limit(1)
-      )[0]
-    : undefined;
+  const cityRow = org.cityId ? await getCityById(db, org.cityId) : null;
 
   const isAdmin = ctx.actor.type === 'user' && ctx.actor.role === 'admin';
-  const cityText = cityRow ? `${cityRow.name}, ${cityRow.uf}` : '';
+  const cityText = cityRow ? `${cityRow.name}, ${cityRow.stateCode}` : '';
   const documentDisplay =
     org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document);
   const financeStatusKey = `finance.status.${org.asaasOnboardingStatus}` as const;

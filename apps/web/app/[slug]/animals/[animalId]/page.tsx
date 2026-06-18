@@ -1,14 +1,11 @@
-import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-import { formatCnpj, formatCpf } from '@acolhe-animal/shared';
-
 import { PortalAnimalDetail } from '@/components/portal/portal-animal-detail';
 import { PortalHeader } from '@/components/portal/portal-header';
 import { PortalFooter } from '@/components/portal/portal-footer';
-import { getPortalAnimal, getPublicOrganization } from '../../data';
+import { getPortalAnimal, getPublicOrganization, portalChrome } from '../../data';
 
 type PageProps = { params: Promise<{ slug: string; animalId: string }> };
 
@@ -49,14 +46,7 @@ export default async function AnimalDetailPage({ params }: PageProps) {
 
   const { animal, photos, videos } = found;
 
-  // Match the portal's accent so the CTA/links stay on-brand for this org.
-  const accent = org.portalConfig?.primaryColor;
-  const accentStyle = accent ? ({ '--color-terra': accent, '--color-ring': accent } as CSSProperties) : undefined;
-
-  const documentLabel =
-    org.documentType === 'cnpj' ? `CNPJ ${formatCnpj(org.document)}` : `CPF ${formatCpf(org.document)}`;
-
-  const hasAbout = !!org.aboutText?.trim();
+  const { accentStyle, documentLabel, hasAbout } = portalChrome(org);
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg" style={accentStyle}>

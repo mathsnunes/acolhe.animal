@@ -1,10 +1,8 @@
 import Link from 'next/link';
 import { UserPlus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { and, eq, isNull } from 'drizzle-orm';
 
-import { countApplicationsByStatus, listApplicationAnimals } from '@acolhe-animal/domain';
-import { db, organizationMember, user } from '@acolhe-animal/db';
+import { countApplicationsByStatus, listApplicationAnimals, listOrgMemberOptions } from '@acolhe-animal/domain';
 
 import { requireCtx } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
@@ -21,19 +19,6 @@ import {
 import { loadCandidatesPage } from './load-candidates';
 
 export const dynamic = 'force-dynamic';
-
-/** Active members of the org — the options for the "Responsável" filter. */
-const listOrgMembers = async (organizationId: number): Promise<{ userId: string; name: string }[]> =>
-  db
-    .select({ userId: organizationMember.userId, name: user.name })
-    .from(organizationMember)
-    .innerJoin(user, eq(organizationMember.userId, user.id))
-    .where(
-      and(
-        eq(organizationMember.organizationId, organizationId),
-        isNull(organizationMember.removedAt),
-      ),
-    );
 
 export default async function CandidatosPage({
   searchParams,
@@ -67,7 +52,7 @@ export default async function CandidatosPage({
         filters.responsible && filters.responsible !== 'sem' ? filters.responsible : undefined,
     }),
     listApplicationAnimals(ctx),
-    listOrgMembers(ctx.organizationId),
+    listOrgMemberOptions(ctx),
   ]);
 
   const counts = {

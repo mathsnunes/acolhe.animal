@@ -46,7 +46,7 @@ export const PortalAnimalCard = ({
 }) => {
   const t = useTranslations('portal');
 
-  const meta = [ageLabel(animal), sizeLabel(t, animal.size), sexLabel(t, animal.sex)].filter(Boolean);
+  const meta = [ageLabel(t, animal), sizeLabel(t, animal.size), sexLabel(t, animal.sex)].filter(Boolean);
   const tags = (animal.specialConditions ?? []).slice(0, 3);
   const goodWith = [
     animal.goodWithChildren === 'yes' && { Icon: Baby, label: t('card.goodWithChildren') },

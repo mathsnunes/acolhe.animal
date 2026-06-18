@@ -8,12 +8,13 @@ import {
   getApplication,
   getAnimalByPk,
   getAnimalCovers,
+  getCityById,
   getPersonByPk,
   getPersonSignals,
   listEntityTimeline,
+  listOrgMemberOptions,
 } from '@acolhe-animal/domain';
-import { city, db, organizationMember, user, type TimelineEvent } from '@acolhe-animal/db';
-import { and, eq, isNull } from 'drizzle-orm';
+import { db, type TimelineEvent } from '@acolhe-animal/db';
 
 import { requireCtx } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,7 @@ import { ApplicationSections } from '@/components/candidates/application-section
 import { AnimalSideCard } from '@/components/candidates/animal-side-card';
 import { CandidateAlertsCard } from '@/components/candidates/candidate-alerts-card';
 import { StatusControl } from '@/components/candidates/status-control';
-import { AssignControl, type OrgMember } from '@/components/candidates/assign-control';
+import { AssignControl } from '@/components/candidates/assign-control';
 import { InternalNotes } from '@/components/candidates/internal-notes';
 import { EntityTimeline } from '@/components/candidates/entity-timeline';
 import { FinalizeAdoptionDialog } from '@/components/candidates/finalize-adoption-dialog';
@@ -29,18 +30,6 @@ import { STATUS_META, statusLabelKey } from '@/components/candidates/status-meta
 import { whatsappHref } from '@/components/candidates/whatsapp';
 
 export const dynamic = 'force-dynamic';
-
-const listOrgMembers = async (organizationId: number): Promise<OrgMember[]> =>
-  db
-    .select({ userId: organizationMember.userId, name: user.name })
-    .from(organizationMember)
-    .innerJoin(user, eq(organizationMember.userId, user.id))
-    .where(
-      and(
-        eq(organizationMember.organizationId, organizationId),
-        isNull(organizationMember.removedAt),
-      ),
-    );
 
 export default async function CandidatoDetalhePage({
   params,
@@ -56,7 +45,7 @@ export default async function CandidatoDetalhePage({
     getPersonByPk(ctx, application.personId),
     getAnimalByPk(ctx, application.animalId),
     listEntityTimeline(ctx, 'application', id),
-    listOrgMembers(ctx.organizationId),
+    listOrgMemberOptions(ctx),
     getAnimalCovers(ctx, [application.animalId]),
     countWaitingApplicationsByAnimal(ctx),
     getPersonSignals(ctx, application.personId, application.pk),
@@ -74,15 +63,7 @@ export default async function CandidatoDetalhePage({
   // Pre-fill the finalize form from the candidacy's Person, so the term data
   // collected when the candidacy was created isn't re-typed.
   const personCity =
-    isApproved && person.cityId
-      ? (
-          await db
-            .select({ name: city.name, uf: city.stateCode })
-            .from(city)
-            .where(eq(city.id, person.cityId))
-            .limit(1)
-        )[0]
-      : undefined;
+    isApproved && person.cityId ? await getCityById(db, person.cityId) : null;
   const finalizeInitial = isApproved
     ? {
         document: person.cpf ? formatCpf(person.cpf) : '',
@@ -92,8 +73,8 @@ export default async function CandidatoDetalhePage({
         neighborhood: person.addressNeighborhood ?? '',
         postalCode: person.postalCode ? formatCep(person.postalCode) : '',
         city: personCity?.name ?? '',
-        state: personCity?.uf ?? '',
-        cityText: personCity ? `${personCity.name}, ${personCity.uf}` : '',
+        state: personCity?.stateCode ?? '',
+        cityText: personCity ? `${personCity.name}, ${personCity.stateCode}` : '',
       }
     : undefined;
 

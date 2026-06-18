@@ -72,7 +72,9 @@
     "sexFemale": "Fêmea",
     "sizeSmall": "Pequeno porte",
     "sizeMedium": "Médio porte",
-    "sizeLarge": "Grande porte"
+    "sizeLarge": "Grande porte",
+    "ageMonths": "{months, plural, one {# mês} other {# meses}}",
+    "ageYears": "{years, plural, one {# ano} other {# anos}}"
   },
   "detail": {
     "available": "Disponível para adoção",

@@ -3,9 +3,7 @@ import { FileText } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { formatDateBR } from '@acolhe-animal/shared';
-import { listAnimals } from '@acolhe-animal/domain';
-import { db, adoption, animal } from '@acolhe-animal/db';
-import { desc, eq } from 'drizzle-orm';
+import { listAdoptions, listAnimals, type AdoptionListRow } from '@acolhe-animal/domain';
 
 import { requireCtx } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -18,42 +16,12 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-interface AdoptionRow {
-  id: string;
-  source: 'digital' | 'offline';
-  adopterName: string;
-  termPdfUrl: string;
-  adoptedAt: Date;
-  cancelledAt: Date | null;
-  animalId: string;
-  animalName: string;
-}
-
-const listAdoptions = async (organizationId: number): Promise<AdoptionRow[]> => {
-  const rows = await db
-    .select({
-      id: adoption.id,
-      source: adoption.source,
-      adopterName: adoption.adopterName,
-      termPdfUrl: adoption.termPdfUrl,
-      adoptedAt: adoption.adoptedAt,
-      cancelledAt: adoption.cancelledAt,
-      animalId: animal.id,
-      animalName: animal.name,
-    })
-    .from(adoption)
-    .innerJoin(animal, eq(adoption.animalId, animal.pk))
-    .where(eq(adoption.organizationId, organizationId))
-    .orderBy(desc(adoption.adoptedAt));
-  return rows as AdoptionRow[];
-};
-
 export default async function AdocoesPage() {
   const ctx = await requireCtx();
   const t = await getTranslations('adoptions');
 
   const [adoptions, animals] = await Promise.all([
-    listAdoptions(ctx.organizationId),
+    listAdoptions(ctx),
     listAnimals(ctx, { status: ['available', 'reserved'] }),
   ]);
 
@@ -104,7 +72,7 @@ const AdoptionListItem = ({
   row,
   labels,
 }: {
-  row: AdoptionRow;
+  row: AdoptionListRow;
   labels: {
     adoptedBy: string;
     sourceDigital: string;

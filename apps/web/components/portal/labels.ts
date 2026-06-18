@@ -1,9 +1,14 @@
+import { ageInMonths, ageGroupOf, type AgeGroup, type AgeInput } from '@acolhe-animal/shared';
 import type { Animal } from '@acolhe-animal/db';
+
+// Age derivation is shared with the admin (single source of truth); re-exported
+// so the portal browser can keep importing it from here.
+export { ageGroupOf, type AgeGroup };
 
 /** pt-BR display labels for animal attributes shown on the public portal. */
 
 /** A translator for the `portal` namespace (e.g. from `useTranslations('portal')`). */
-type Translator = (key: string) => string;
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 export const speciesLabel = (t: Translator, species: Animal['species']): string => species === 'dog' ? t('labels.speciesDog') : t('labels.speciesCat');
 
@@ -37,40 +42,9 @@ export const animalMeta = (t: Translator, animal: Pick<Animal, 'species' | 'sex'
   return parts;
 };
 
-type AgeFields = Partial<Pick<Animal, 'estimatedBirthDate' | 'ageMonthsAtIntake' | 'ageReferenceDate'>>;
-
-const ageInMonths = (a: AgeFields): number | null => {
-  if (a.estimatedBirthDate) {
-    const b = new Date(a.estimatedBirthDate);
-    const now = new Date();
-    const m = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
-    return m >= 0 ? m : null;
-  }
-  if (a.ageMonthsAtIntake != null) {
-    const elapsed = a.ageReferenceDate
-      ? Math.max(0, Math.floor((Date.now() - new Date(a.ageReferenceDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44)))
-      : 0;
-    return a.ageMonthsAtIntake + elapsed;
-  }
-  return null;
-};
-
-/** "8 meses" / "2 anos" — pt-BR, or null when the age is unknown. */
-export const ageLabel = (a: AgeFields): string | null => {
+/** "8 meses" / "2 anos" via next-intl plurals, or null when the age is unknown. */
+export const ageLabel = (t: Translator, a: AgeInput): string | null => {
   const m = ageInMonths(a);
   if (m == null) return null;
-  if (m < 12) return `${m} ${m === 1 ? 'mês' : 'meses'}`;
-  const y = Math.floor(m / 12);
-  return `${y} ${y === 1 ? 'ano' : 'anos'}`;
-};
-
-export type AgeGroup = 'baby' | 'adult' | 'senior';
-
-/** Filhote (<1a), adulto (1–7a), idoso (7a+) — for the portal age filter. */
-export const ageGroupOf = (a: AgeFields): AgeGroup | null => {
-  const m = ageInMonths(a);
-  if (m == null) return null;
-  if (m < 12) return 'baby';
-  if (m < 84) return 'adult';
-  return 'senior';
+  return m < 12 ? t('labels.ageMonths', { months: m }) : t('labels.ageYears', { years: Math.floor(m / 12) });
 };

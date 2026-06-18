@@ -74,7 +74,7 @@ export const PortalAnimalDetail = ({
   const meta = [
     speciesLabel(t, animal.species),
     sexLabel(t, animal.sex),
-    ageLabel(animal),
+    ageLabel(t, animal),
     animal.size ? sizeLabel(t, animal.size) : null,
   ].filter(Boolean);
 
@@ -82,7 +82,7 @@ export const PortalAnimalDetail = ({
 
   // ── Characteristics rows ───────────────────────────────────────────────────
   const facts: { label: string; value: ReactNode }[] = [];
-  const age = ageLabel(animal);
+  const age = ageLabel(t, animal);
   if (age) facts.push({ label: t('detail.factAge'), value: age });
   if (animal.size) facts.push({ label: t('detail.factSize'), value: sizeLabel(t, animal.size) });
   if (animal.predominantColor) facts.push({ label: t('detail.factColor'), value: animal.predominantColor });
