@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getFinanceSetupState } from '@acolhe-animal/domain';
+import { getFinanceSetupState, getConfirmDataFields } from '@acolhe-animal/domain';
 
 import { requireCtx } from '@/lib/auth-context';
 import { NotStartedState } from './states/not-started';
@@ -15,17 +15,24 @@ import { RejectedState } from './states/rejected';
 
 export const dynamic = 'force-dynamic';
 
-const FinancePage = async () => {
+interface Props {
+  searchParams: Promise<{ step?: string }>;
+}
+
+const FinancePage = async ({ searchParams }: Props) => {
   const ctx = await requireCtx();
   if (ctx.actor.type !== 'user' || ctx.actor.role !== 'admin') redirect('/inicio');
 
   const state = await getFinanceSetupState(ctx);
 
+  if (state.screen === 'not_started' && (await searchParams).step === 'confirm') {
+    const fields = await getConfirmDataFields(ctx);
+    return <ConfirmDataState fields={fields} />;
+  }
+
   switch (state.screen) {
     case 'not_started':
       return <NotStartedState pixKey={state.pixKey} />;
-    case 'confirm_data':
-      return <ConfirmDataState fields={state.fields} />;
     case 'creating':
       return <CreatingState />;
     case 'awaiting_revenue':
