@@ -50,6 +50,7 @@ import {
 import { AnimalMediaUploader } from '@/components/uploads/animal-media-uploader';
 import { PortalAnimalCard } from '@/components/portal/portal-animal-card';
 import { PortalAnimalHero } from '@/components/portal/portal-animal-hero';
+import { Stepper } from '@/components/ui/stepper';
 
 /**
  * Six-step animal wizard with real server-side drafts.
@@ -431,7 +432,7 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
         <p className="mt-3 max-w-xl text-ink-soft">{t(`wizard.subtitles.${step}`)}</p>
       </div>
 
-      <Stepper t={t} step={step} errorSteps={stepErrorSet} onJump={jumpToStep} />
+      <WizardStepper t={t} step={step} errorSteps={stepErrorSet} onJump={jumpToStep} />
 
       <div className="mt-6 rounded-2xl border border-line-soft bg-paper p-6 shadow-card sm:p-8">
         {step === 1 && <StepIdentity t={t} v={values} set={set} errors={errors} />}
@@ -493,7 +494,7 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
 
 const STEP_KEYS = ['identification', 'story', 'entry', 'health', 'behavior', 'review'] as const;
 
-const Stepper = ({
+const WizardStepper = ({
   t,
   step,
   errorSteps,
@@ -519,51 +520,14 @@ const Stepper = ({
 
   return (
     <>
-      {/* Desktop: evenly-spaced horizontal stepper. Each step is an equal-width
-          column with a centered dot; the connector is an absolute line through
-          the dot row, drawn behind the (opaque) dots. */}
-      <nav className="hidden items-start sm:flex" aria-label={t('wizard.stepperAria')}>
-        {STEP_KEYS.map((key, i) => {
-          const s = i + 1;
-          const complete = s < step;
-          const current = s === step;
-          const error = errorSteps.has(s) && !current && !complete;
-          return (
-            <div key={key} className="relative flex flex-1 flex-col items-center">
-              {i > 0 && (
-                <span
-                  className={cn(
-                    'absolute right-1/2 top-4 h-0.5 w-full -translate-y-1/2',
-                    i < step ? 'bg-green' : 'bg-line',
-                  )}
-                  aria-hidden
-                />
-              )}
-              <button
-                type="button"
-                onClick={() => onJump(s)}
-                aria-current={current ? 'step' : undefined}
-                className="relative z-10 flex flex-col items-center gap-2"
-              >
-                <span
-                  className={cn(
-                    'flex size-8 items-center justify-center rounded-full border text-xs font-semibold transition',
-                    current && 'border-terra bg-terra text-paper',
-                    complete && 'border-green bg-green text-paper',
-                    !current && !complete && 'border-line bg-bg text-ink-mute',
-                    error && 'border-rose text-rose',
-                  )}
-                >
-                  {complete ? <Check className="size-4" /> : s}
-                </span>
-                <span className={cn('text-center text-xs', current ? 'font-medium text-ink' : 'text-ink-mute')}>
-                  {t(`wizard.steps.${key}`)}
-                </span>
-              </button>
-            </div>
-          );
-        })}
-      </nav>
+      {/* Desktop stepper — uses the shared Stepper primitive. */}
+      <Stepper
+        className="hidden sm:flex"
+        steps={STEP_KEYS.map((key) => ({ label: t(`wizard.steps.${key}`) }))}
+        activeIndex={step - 1}
+        onStepClick={(i: number) => onJump(i + 1)}
+        errorIndices={new Set([...errorSteps].map((s) => s - 1))}
+      />
 
       {/* Mobile: compact bar whose center opens a step picker (bottom sheet). */}
       <div className="flex items-center gap-1 rounded-xl border border-line-soft bg-paper px-1.5 py-1.5 sm:hidden">
