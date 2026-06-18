@@ -1,4 +1,6 @@
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
+import { Banknote } from 'lucide-react';
 
 import { db } from '@acolhe-animal/db';
 import { formatCep, formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
@@ -79,23 +81,30 @@ export default async function ConfigPage() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('finance.title')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between text-sm">
-            <div>
-              <p className="text-ink-soft">
-                {org.documentType === 'cnpj'
-                  ? t('finance.descriptionCnpj')
-                  : t('finance.descriptionCpf')}
-              </p>
-            </div>
-            <Badge variant={org.asaasOnboardingStatus === 'approved' ? 'success' : 'outline'}>
-              {t(financeStatusKey)}
-            </Badge>
-          </CardContent>
-        </Card>
+        {isAdmin && (
+          <Link href="/config/financeiro">
+            <Card className="cursor-pointer transition-shadow hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Banknote className="size-4 text-ink-mute" />
+                  {t('finance.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between text-sm">
+                <div>
+                  <p className="text-ink-soft">
+                    {org.documentType === 'cnpj'
+                      ? t('finance.descriptionCnpj')
+                      : t('finance.descriptionCpf')}
+                  </p>
+                </div>
+                <Badge variant={org.asaasOnboardingStatus === 'approved' ? 'success' : 'outline'}>
+                  {t(financeStatusKey)}
+                </Badge>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </div>
     </div>
   );
