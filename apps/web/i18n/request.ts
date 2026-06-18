@@ -14,6 +14,7 @@ import adoptions from '@/messages/pt/adoptions.json';
 import portal from '@/messages/pt/portal.json';
 import form from '@/messages/pt/form.json';
 import instagram from '@/messages/pt/instagram.json';
+import finance from '@/messages/pt/finance.json';
 
 /**
  * Single-locale i18n (pt-BR) without URL routing. All UI copy lives in the
@@ -39,5 +40,6 @@ export default getRequestConfig(async () => ({
     portal,
     form,
     instagram,
+    finance,
   },
 }));

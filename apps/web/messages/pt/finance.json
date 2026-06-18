@@ -1,0 +1,46 @@
+{
+  "eyebrow": "Configurações · Financeiro",
+  "title": "Dinheiro",
+  "subtitle": "Como as doações entram e para onde elas vão. Duas coisas separadas — configure uma de cada vez.",
+  "tabs": {
+    "recebimento": "↓ Recebimento",
+    "saque": "↑ Saque"
+  },
+  "notStarted": {
+    "modeBanner": "Você está no modo simples. Dá pra receber doações, mas a plataforma não consegue registrar elas pra você — sem reconciliação automática.",
+    "currentPixTitle": "Chave Pix divulgada",
+    "currentPixDesc": "Você divulga esta chave e o doador faz Pix direto. Funciona, mas cada doação cai na sua conta sem passar pela plataforma — você anota na mão se quiser controle.",
+    "featureDesc": "Abrimos uma conta de recebimento no nome da sua organização. As doações passam a cair nela e aparecem aqui automaticamente — com nome do doador, data e valor, sem planilha.",
+    "benefit1": "Cada doação vira registro rastreável, sem conferência manual.",
+    "benefit2": "Botão \"Doar\" no portal com QR Code, além da chave pra copiar.",
+    "benefit3": "Apoio mensal recorrente para quem quer ajudar sempre.",
+    "cta": "Ativar recebimento gerenciado",
+    "ctaHint": "Leva alguns minutos · precisa de um documento com foto"
+  },
+  "confirmData": {
+    "desc": "Vamos abrir a conta de recebimento com estes dados. A maior parte você já preencheu no cadastro — é só conferir. Os campos marcados são os únicos que ainda faltam.",
+    "sectionOrg": "Organização",
+    "sectionAddress": "Endereço",
+    "sectionResponsible": "Sobre o responsável",
+    "alreadyHave": "✓ já temos",
+    "stillNeed": "só faltam estes",
+    "companyTypeLabel": "Tipo da organização",
+    "companyTypeMEI": "MEI — Microempreendedor Individual",
+    "companyTypeLIMITED": "Empresa (LTDA, EIRELI)",
+    "companyTypeINDIVIDUAL": "Empresa Individual",
+    "companyTypeASSOCIATION": "Associação / ONG",
+    "birthDateLabel": "Data de nascimento do responsável",
+    "whyWeAsk": "Por que pedimos: o Banco Central exige confirmar quem é a pessoa responsável legal pela conta. Esses dados vão só para a abertura da conta, não aparecem no seu portal.",
+    "cta": "Criar conta de recebimento",
+    "back": "Voltar"
+  },
+  "documentsPending": {
+    "tagUpload": "Enviar aqui",
+    "tagDone": "Enviado",
+    "externalButton": "Enviar pela Asaas →",
+    "awaitingExternal": "Aguardando confirmação…",
+    "refreshStatus": "Verificar status"
+  },
+  "asaasFooter": "Recebimentos processados com segurança por Asaas",
+  "asaasLearnMore": "saiba mais"
+}
