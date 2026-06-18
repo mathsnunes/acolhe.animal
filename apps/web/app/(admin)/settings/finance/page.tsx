@@ -1,0 +1,46 @@
+import { redirect } from 'next/navigation';
+
+import { getFinanceSetupState } from '@acolhe-animal/domain';
+
+import { requireCtx } from '@/lib/auth-context';
+import { NotStartedState } from './states/not-started';
+import { ConfirmDataState } from './states/confirm-data';
+import { CreatingState } from './states/creating';
+import { AwaitingRevenueState } from './states/awaiting-revenue';
+import { DocumentsPendingState } from './states/documents-pending';
+import { UnderReviewState } from './states/under-review';
+import { ApprovedState } from './states/approved';
+import { ManagedState } from './states/managed';
+import { RejectedState } from './states/rejected';
+
+export const dynamic = 'force-dynamic';
+
+const FinancePage = async () => {
+  const ctx = await requireCtx();
+  if (ctx.actor.type !== 'user' || ctx.actor.role !== 'admin') redirect('/inicio');
+
+  const state = await getFinanceSetupState(ctx);
+
+  switch (state.screen) {
+    case 'not_started':
+      return <NotStartedState pixKey={state.pixKey} />;
+    case 'confirm_data':
+      return <ConfirmDataState fields={state.fields} />;
+    case 'creating':
+      return <CreatingState />;
+    case 'awaiting_revenue':
+      return <AwaitingRevenueState />;
+    case 'documents_pending':
+      return <DocumentsPendingState documents={state.documents} />;
+    case 'under_review':
+      return <UnderReviewState />;
+    case 'approved':
+      return <ApprovedState />;
+    case 'managed':
+      return <ManagedState pixKey={state.pixKey} />;
+    case 'rejected':
+      return <RejectedState reason={state.reason} />;
+  }
+};
+
+export default FinancePage;

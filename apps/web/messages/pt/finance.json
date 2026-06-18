@@ -1,4 +1,14 @@
 {
+  "layout": {
+    "eyebrow": "Configurações",
+    "title": "Financeiro",
+    "tabReceiving": "Recebimento",
+    "tabPayout": "Saque"
+  },
+  "settingsCard": {
+    "title": "Financeiro",
+    "description": "Configure meios de pagamento e dados bancários"
+  },
   "eyebrow": "Configurações · Financeiro",
   "title": "Dinheiro",
   "subtitle": "Como as doações entram e para onde elas vão. Duas coisas separadas — configure uma de cada vez.",

@@ -76,6 +76,8 @@ const nextConfig: NextConfig = {
         { source: '/necessidades-recorrentes', destination: '/recurring-needs' },
         { source: '/apoiadores', destination: '/supporters' },
         { source: '/membros', destination: '/members' },
+        { source: '/config/financeiro/:path*', destination: '/settings/finance/:path*' },
+        { source: '/config/financeiro', destination: '/settings/finance' },
         { source: '/config', destination: '/settings' },
         { source: '/inicio', destination: '/home' },
         // Auth surface
