@@ -1,62 +1,60 @@
 import { Check } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
-type StepStatus = 'done' | 'current' | 'upcoming';
+type StepKey = 'data' | 'verify' | 'docs' | 'review' | 'done';
 
-interface Step {
-  label: string;
-  status: StepStatus;
+interface Props {
+  activeStep: StepKey;
 }
 
-interface FinanceStepperProps {
-  activeStep: 'data' | 'verify' | 'docs' | 'review' | 'done';
-}
-
-const STEPS = [
-  { key: 'data', label: 'Dados' },
+const STEPS: { key: StepKey; label: string }[] = [
+  { key: 'data',   label: 'Dados' },
   { key: 'verify', label: 'Verificação' },
-  { key: 'docs', label: 'Documentos' },
+  { key: 'docs',   label: 'Documentos' },
   { key: 'review', label: 'Análise' },
-  { key: 'done', label: 'Pronto' },
-] as const;
+  { key: 'done',   label: 'Pronto' },
+];
 
 const ORDER = STEPS.map((s) => s.key);
 
-export const FinanceStepper = ({ activeStep }: FinanceStepperProps) => {
+export const FinanceStepper = ({ activeStep }: Props) => {
   const activeIdx = ORDER.indexOf(activeStep);
-  const steps: Step[] = STEPS.map((s, i) => ({
-    label: s.label,
-    status: i < activeIdx ? 'done' : i === activeIdx ? 'current' : 'upcoming',
-  }));
 
   return (
-    <div className="mb-8 flex items-center">
-      {steps.map((step, i) => (
-        <div key={step.label} className="flex items-center">
-          <div
-            className={cn('flex items-center gap-2 text-[12.5px]', {
-              'text-ink-mute': step.status === 'upcoming',
-              'font-medium text-terra': step.status === 'current',
-              'text-ink-soft': step.status === 'done',
-            })}
-          >
-            <span
-              className={cn(
-                'flex size-6 items-center justify-center rounded-full border text-[11px] font-medium',
-                {
-                  'border-line bg-paper': step.status === 'upcoming',
-                  'border-terra bg-terra text-white': step.status === 'current',
-                  'border-green-soft bg-green-soft text-white': step.status === 'done',
-                },
-              )}
-            >
-              {step.status === 'done' ? <Check className="size-3" /> : i + 1}
-            </span>
-            <span className="hidden sm:inline">{step.label}</span>
+    <nav className="mb-8 flex items-start">
+      {STEPS.map(({ key, label }, i) => {
+        const complete = i < activeIdx;
+        const current  = i === activeIdx;
+        return (
+          <div key={key} className="relative flex flex-1 flex-col items-center">
+            {i > 0 && (
+              <span
+                className={cn(
+                  'absolute right-1/2 top-4 h-0.5 w-full -translate-y-1/2',
+                  i <= activeIdx ? 'bg-green' : 'bg-line',
+                )}
+                aria-hidden
+              />
+            )}
+            <div className="relative z-10 flex flex-col items-center gap-2">
+              <span
+                className={cn(
+                  'flex size-8 items-center justify-center rounded-full border text-xs font-semibold transition',
+                  current  && 'border-terra bg-terra text-paper',
+                  complete && 'border-green bg-green text-paper',
+                  !current && !complete && 'border-line bg-bg text-ink-mute',
+                )}
+              >
+                {complete ? <Check className="size-4" /> : i + 1}
+              </span>
+              <span className={cn('text-center text-xs', current ? 'font-medium text-ink' : 'text-ink-mute')}>
+                {label}
+              </span>
+            </div>
           </div>
-          {i < steps.length - 1 && <div className="mx-3 h-px min-w-[18px] flex-1 bg-line" />}
-        </div>
-      ))}
-    </div>
+        );
+      })}
+    </nav>
   );
 };
