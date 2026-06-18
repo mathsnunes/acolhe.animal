@@ -54,6 +54,9 @@ const nextConfig: NextConfig = {
    * otherwise capture single-segment pt-BR URLs (e.g. `/animais`) before a normal
    * rewrite runs. Most-specific paths first. Query strings are preserved.
    */
+  redirects: async () => [
+    { source: '/membros', destination: '/config/membros', permanent: true },
+  ],
   rewrites: async () => ({
       beforeFiles: [
         // Animais (nested create / edit / detail)
@@ -75,7 +78,7 @@ const nextConfig: NextConfig = {
         { source: '/historias', destination: '/stories' },
         { source: '/necessidades-recorrentes', destination: '/recurring-needs' },
         { source: '/apoiadores', destination: '/supporters' },
-        { source: '/membros', destination: '/members' },
+        { source: '/config/membros', destination: '/settings/members' },
         { source: '/config/financeiro/:path*', destination: '/settings/finance/:path*' },
         { source: '/config/financeiro', destination: '/settings/finance' },
         { source: '/config', destination: '/settings' },

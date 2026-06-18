@@ -1,5 +1,4 @@
 import {
-  Banknote,
   BookOpen,
   Heart,
   Home,
@@ -7,7 +6,6 @@ import {
   PawPrint,
   Repeat,
   Settings,
-  UserCog,
   Users,
   UsersRound,
   Wallet,
@@ -63,11 +61,9 @@ export const NAV_GROUPS: NavItem[][] = [
     { href: '/campanhas', labelKey: 'campaigns', icon: Megaphone, adminOnly: true },
     { href: '/apoiadores', labelKey: 'supporters', icon: UsersRound, adminOnly: true },
     { href: '/necessidades-recorrentes', labelKey: 'recurringNeeds', icon: Repeat, adminOnly: true },
-    { href: '/config/financeiro', labelKey: 'financeSetup', icon: Banknote, adminOnly: true },
   ],
   // Organização — settings & administration.
   [
-    { href: '/membros', labelKey: 'members', icon: UserCog, adminOnly: true },
     { href: '/config', labelKey: 'settings', icon: Settings },
   ],
 ];

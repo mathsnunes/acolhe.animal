@@ -9,11 +9,7 @@ interface Props {
 const FinanceLayout = async ({ children }: Props) => {
   const t = await getTranslations('finance');
   return (
-    <div className="mx-auto max-w-2xl py-6">
-      <div className="mb-6">
-        <div className="eyebrow-mute mb-1">— {t('layout.eyebrow')}</div>
-        <h1 className="display text-3xl">{t('layout.title')}</h1>
-      </div>
+    <div>
       <Tabs defaultValue="recebimento" className="mb-6">
         <TabsList>
           <TabsTrigger value="recebimento">{t('layout.tabReceiving')}</TabsTrigger>
@@ -23,6 +19,7 @@ const FinanceLayout = async ({ children }: Props) => {
       {children}
     </div>
   );
+
 };
 
 export default FinanceLayout;
