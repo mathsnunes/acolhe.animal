@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { createId, NotFoundError, ConflictError } from '@acolhe-animal/shared';
@@ -110,6 +110,51 @@ const animalAgeText = (a: Pick<Animal, 'estimatedBirthDate' | 'ageMonthsAtIntake
   return `${years} ${years === 1 ? 'ano' : 'anos'}`;
 };
 
+/** The org columns the adoption term needs (header + document label). */
+const selectTermOrg = (ctx: Ctx) =>
+  ctx.db
+    .select({
+      name: organization.name,
+      document: organization.document,
+      documentType: organization.documentType,
+      phone: organization.phone,
+      logoUrl: organization.logoUrl,
+    })
+    .from(organization)
+    .where(eq(organization.pk, ctx.organizationId))
+    .limit(1);
+
+type TermOrgRow = Awaited<ReturnType<typeof selectTermOrg>>[number];
+
+/** Build the term's org header from an org row, embedding the logo PNG when set. */
+const buildTermOrg = async (ctx: Ctx, org: TermOrgRow | undefined): Promise<AdoptionTermData['org']> => {
+  // A missing/unreadable logo shouldn't block the term.
+  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
+  if (org?.logoUrl) {
+    try {
+      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
+    } catch {
+      logo = null;
+    }
+  }
+  const documentLabel = org
+    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
+        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
+      }`
+    : null;
+  return { name: org?.name ?? 'a organização', documentLabel, phone: org ? formatPhoneBR(org.phone) : null, logo };
+};
+
+/** Build the term's animal block from an animal row. */
+const toTermAnimal = (a: Animal): AdoptionTermData['animal'] => ({
+  name: a.name,
+  species: a.species,
+  sex: a.sex,
+  color: a.predominantColor,
+  ageText: animalAgeText(a),
+  microchip: a.microchipCode,
+});
+
 /**
  * Resolve a member's name + phone (snapshotted onto the adoption + term) by user
  * id, ensuring they're an active member of the caller's org. Null if not.
@@ -168,29 +213,9 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
   const [personRow, [animalRow], [org]] = await Promise.all([
     getPersonByPk(ctx, app.personId),
     ctx.db.select().from(animal).where(eq(animal.pk, app.animalId)).limit(1),
-    ctx.db
-      .select({
-        name: organization.name,
-        document: organization.document,
-        documentType: organization.documentType,
-        phone: organization.phone,
-        logoUrl: organization.logoUrl,
-      })
-      .from(organization)
-      .where(eq(organization.pk, ctx.organizationId))
-      .limit(1),
+    selectTermOrg(ctx),
   ]);
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
-
-  // Embed the org logo (a resized PNG) in the term header when one is set.
-  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
-  if (org?.logoUrl) {
-    try {
-      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
-    } catch {
-      logo = null; // a missing/unreadable logo shouldn't block the term
-    }
-  }
 
   // Responsible member: explicit pick, else the acting user. Snapshotted so the
   // term keeps the right person even if they later change name or leave.
@@ -199,18 +224,8 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
   const responsible = responsibleId ? await resolveResponsible(ctx, responsibleId) : null;
 
   const adoptionId = createId('adoption');
-  const orgDocLabel = org
-    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
-        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
-      }`
-    : null;
   const termData: AdoptionTermData = {
-    org: {
-      name: org?.name ?? 'a organização',
-      documentLabel: orgDocLabel,
-      phone: org ? formatPhoneBR(org.phone) : null,
-      logo,
-    },
+    org: await buildTermOrg(ctx, org),
     responsible,
     adopter: {
       name: personRow.name,
@@ -227,14 +242,7 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
         postalCode: data.adopterAddress.postalCode,
       },
     },
-    animal: {
-      name: animalRow.name,
-      species: animalRow.species,
-      sex: animalRow.sex,
-      color: animalRow.predominantColor,
-      ageText: animalAgeText(animalRow),
-      microchip: animalRow.microchipCode,
-    },
+    animal: toTermAnimal(animalRow),
     date: new Date(),
     extraClauses: data.extraClauses,
   };
@@ -417,28 +425,9 @@ export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknow
   const [personRow, [animalRow], [org]] = await Promise.all([
     getPersonByPk(ctx, row.personId),
     ctx.db.select().from(animal).where(eq(animal.pk, row.animalId)).limit(1),
-    ctx.db
-      .select({
-        name: organization.name,
-        document: organization.document,
-        documentType: organization.documentType,
-        phone: organization.phone,
-        logoUrl: organization.logoUrl,
-      })
-      .from(organization)
-      .where(eq(organization.pk, ctx.organizationId))
-      .limit(1),
+    selectTermOrg(ctx),
   ]);
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
-
-  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
-  if (org?.logoUrl) {
-    try {
-      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
-    } catch {
-      logo = null;
-    }
-  }
 
   // Re-resolve the responsible when a member is supplied, else keep the snapshot.
   const responsible = data.responsibleUserId
@@ -447,19 +436,8 @@ export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknow
       ? { name: row.responsibleName, phone: row.responsiblePhone }
       : null;
 
-  const orgDocLabel = org
-    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
-        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
-      }`
-    : null;
-
   const termData: AdoptionTermData = {
-    org: {
-      name: org?.name ?? 'a organização',
-      documentLabel: orgDocLabel,
-      phone: org ? formatPhoneBR(org.phone) : null,
-      logo,
-    },
+    org: await buildTermOrg(ctx, org),
     responsible,
     adopter: {
       name: data.adopterName,
@@ -468,14 +446,7 @@ export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknow
       email: personRow.email,
       address: { ...data.adopterAddress },
     },
-    animal: {
-      name: animalRow.name,
-      species: animalRow.species,
-      sex: animalRow.sex,
-      color: animalRow.predominantColor,
-      ageText: animalAgeText(animalRow),
-      microchip: animalRow.microchipCode,
-    },
+    animal: toTermAnimal(animalRow),
     date: row.adoptedAt,
     extraClauses: data.extraClauses,
   };
@@ -501,6 +472,35 @@ export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknow
 
   return updated!;
 };
+
+export interface AdoptionListRow {
+  id: string;
+  source: 'digital' | 'offline';
+  adopterName: string;
+  termPdfUrl: string;
+  adoptedAt: Date;
+  cancelledAt: Date | null;
+  animalId: string;
+  animalName: string;
+}
+
+/** All adoptions of the org (active + cancelled), most recent first, for the list page. */
+export const listAdoptions = async (ctx: Ctx): Promise<AdoptionListRow[]> =>
+  ctx.db
+    .select({
+      id: adoption.id,
+      source: adoption.source,
+      adopterName: adoption.adopterName,
+      termPdfUrl: adoption.termPdfUrl,
+      adoptedAt: adoption.adoptedAt,
+      cancelledAt: adoption.cancelledAt,
+      animalId: animal.id,
+      animalName: animal.name,
+    })
+    .from(adoption)
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
+    .where(eq(adoption.organizationId, ctx.organizationId))
+    .orderBy(desc(adoption.adoptedAt));
 
 /** Cancel an adoption (return/giveback). Frees the animal again. */
 export const cancelAdoption = async (ctx: Ctx, adoptionId: string, reason: string): Promise<void> => {

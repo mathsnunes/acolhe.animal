@@ -87,6 +87,14 @@ export const listMembers = async (ctx: Ctx): Promise<MemberRow[]> => {
   return rows.map((r) => ({ ...r, isSelf: r.userId === selfId }));
 };
 
+/** Active members as lightweight options for the "Responsável"/assign pickers. */
+export const listOrgMemberOptions = async (ctx: Ctx): Promise<{ userId: string; name: string }[]> =>
+  ctx.db
+    .select({ userId: organizationMember.userId, name: user.name })
+    .from(organizationMember)
+    .innerJoin(user, eq(organizationMember.userId, user.id))
+    .where(and(eq(organizationMember.organizationId, ctx.organizationId), isNull(organizationMember.removedAt)));
+
 export const listPendingInvites = async (ctx: Ctx): Promise<PendingInviteRow[]> => {
   assertAdmin(ctx);
   return ctx.db

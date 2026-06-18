@@ -1,23 +1,50 @@
 import 'server-only';
 
-import { and, asc, count, desc, eq, inArray, isNull } from 'drizzle-orm';
+import type { CSSProperties } from 'react';
 
-import { adoption, animal, animalPhoto, animalVideo, db, type Animal, type Organization } from '@acolhe-animal/db';
-import { getOrganizationBySlug, listAnimals } from '@acolhe-animal/domain';
+import { formatCnpj, formatCpf } from '@acolhe-animal/shared';
+import { db, type Organization } from '@acolhe-animal/db';
+import {
+  getOrganizationBySlug,
+  getPortalAnimal as loadPortalAnimal,
+  getPortalStats as loadPortalStats,
+  listPortalAnimals as loadPortalAnimals,
+  listPortalAnimalsPage as loadPortalAnimalsPage,
+  type PortalAnimalDetail,
+  type PortalAnimalItem,
+  type PortalAnimalsPage,
+  type PortalStats,
+} from '@acolhe-animal/domain';
 
 import { publicCtx } from '@/lib/auth-context';
-import type { PortalAnimalItem, PortalAnimalsPage } from '@/lib/portal-query';
 
-/** A simple count + a few adopted animals, for the portal's "lives changed" section. */
-export interface PortalStats {
-  adoptionsCount: number;
-  recent: Array<{ id: string; name: string; photoUrl: string | null }>;
+/**
+ * Thin web adapters for the public portal: resolve the org from the slug, build a
+ * public `Ctx`, and call the domain read model. All DB access lives in
+ * `@acolhe-animal/domain` (portal service) — the web layer never queries directly.
+ */
+
+/** Shared portal-shell derivations, identical on the home and detail pages. */
+export interface PortalChrome {
+  accentStyle: CSSProperties | undefined;
+  documentLabel: string;
+  hasAbout: boolean;
 }
 
 /**
- * Shared server-side loaders for the public portal. The org id is always
- * resolved from the slug here — never trusted from the client.
+ * Per-org portal chrome: accent tokens retinted from the saved primary color,
+ * the formatted CNPJ/CPF label, and whether there's an about section to anchor.
  */
+export const portalChrome = (org: Organization): PortalChrome => {
+  const accent = org.portalConfig?.primaryColor;
+  return {
+    // Solid hex (no color-mix) so it degrades safely on older browsers.
+    accentStyle: accent ? ({ '--color-terra': accent, '--color-ring': accent } as CSSProperties) : undefined,
+    documentLabel:
+      org.documentType === 'cnpj' ? `CNPJ ${formatCnpj(org.document)}` : `CPF ${formatCpf(org.document)}`,
+    hasAbout: !!org.aboutText?.trim(),
+  };
+};
 
 /** Resolve a public, active organization by slug (or null when not adoptable). */
 export const getPublicOrganization = async (slug: string): Promise<Organization | null> => {
@@ -27,146 +54,22 @@ export const getPublicOrganization = async (slug: string): Promise<Organization 
   return org;
 };
 
-/**
- * A page of animals the org chose to show publicly. Visibility (`visibleOnPortal`)
- * gates portal presence; animals that aren't accepting candidacies still appear
- * (story-only), they just won't have an adopt button. Pagination is pushed down so
- * infinite scroll fetches only what it renders.
- */
-export const getPortalAnimals = async (
+/** A page of publicly-shown animals (legacy infinite-scroll path). */
+export const getPortalAnimals = (
   organizationPk: number,
   page: { limit: number; offset: number },
-): Promise<PortalAnimalsPage> => {
-  const ctx = publicCtx(organizationPk);
-  const rows = await listAnimals(ctx, {
-    status: ['available'],
-    visibleOnPortal: true,
-    limit: page.limit,
-    offset: page.offset,
-  });
-  const photos = await getPrimaryPhotos(rows.map((a) => a.pk));
-  const items = rows.map((a) => ({ animal: a, photoUrl: photos[a.id] ?? null }));
+): Promise<PortalAnimalsPage> => loadPortalAnimalsPage(publicCtx(organizationPk), page);
 
-  return { items, nextOffset: page.offset + rows.length, hasMore: rows.length === page.limit };
-};
-
-/** Cap on animals loaded for the portal (sections + client-side filters). */
-const PORTAL_ANIMALS_CAP = 200;
-
-/**
- * Every adoptable animal the org shows publicly, loaded at once so the client can
- * split them into Cães/Gatos sections and filter instantly. Capped — orgs have
- * tens of animals, not thousands.
- */
-export const getAllPortalAnimals = async (organizationPk: number): Promise<PortalAnimalItem[]> => {
-  const ctx = publicCtx(organizationPk);
-  const rows = await listAnimals(ctx, {
-    status: ['available'],
-    visibleOnPortal: true,
-    limit: PORTAL_ANIMALS_CAP,
-    offset: 0,
-  });
-  const photos = await getPrimaryPhotos(rows.map((a) => a.pk));
-  return rows.map((a) => ({ animal: a, photoUrl: photos[a.id] ?? null }));
-};
+/** Every adoptable animal shown publicly, loaded at once for the sections + filters. */
+export const getAllPortalAnimals = (organizationPk: number): Promise<PortalAnimalItem[]> =>
+  loadPortalAnimals(publicCtx(organizationPk));
 
 /** Lives changed: count of active adoptions + a few recently adopted animals. */
-export const getPortalStats = async (organizationPk: number): Promise<PortalStats> => {
-  const [counted] = await db
-    .select({ n: count() })
-    .from(adoption)
-    .where(and(eq(adoption.organizationId, organizationPk), isNull(adoption.cancelledAt)));
+export const getPortalStats = (organizationPk: number): Promise<PortalStats> =>
+  loadPortalStats(publicCtx(organizationPk));
 
-  const rows = await db
-    .select({ id: animal.id, name: animal.name, animalPk: animal.pk })
-    .from(adoption)
-    .innerJoin(animal, eq(adoption.animalId, animal.pk))
-    .where(and(eq(adoption.organizationId, organizationPk), isNull(adoption.cancelledAt)))
-    .orderBy(desc(adoption.adoptedAt))
-    .limit(24);
-
-  const photos = await getPrimaryPhotos(rows.map((r) => r.animalPk));
-  const seen = new Set<string>();
-  const recent: PortalStats['recent'] = [];
-  for (const r of rows) {
-    if (seen.has(r.id)) continue; // an animal returned + re-adopted shows once
-    seen.add(r.id);
-    recent.push({ id: r.id, name: r.name, photoUrl: photos[r.id] ?? null });
-    if (recent.length >= 10) break;
-  }
-  return { adoptionsCount: Number(counted?.n ?? 0), recent };
-};
-
-/**
- * Map of animal *public* id → primary (or first) photo medium URL. Takes the
- * animals' surrogate keys (photo FKs reference `animal.pk`) but keys the result
- * by the public id the UI holds.
- */
-export const getPrimaryPhotos = async (animalPks: number[]): Promise<Record<string, string>> => {
-  if (animalPks.length === 0) return {};
-  const rows = await db
-    .select({
-      animalId: animal.id,
-      mediumUrl: animalPhoto.mediumUrl,
-      isPrimary: animalPhoto.isPrimary,
-      displayOrder: animalPhoto.displayOrder,
-    })
-    .from(animalPhoto)
-    .innerJoin(animal, eq(animalPhoto.animalId, animal.pk))
-    .where(inArray(animalPhoto.animalId, animalPks))
-    .orderBy(asc(animalPhoto.displayOrder));
-
-  const byAnimal: Record<string, string> = {};
-  for (const row of rows) {
-    // Prefer an explicit primary; otherwise keep the first (lowest order) seen.
-    if (row.isPrimary || !byAnimal[row.animalId]) {
-      byAnimal[row.animalId] = row.mediumUrl;
-    }
-  }
-  return byAnimal;
-};
-
-/**
- * A single public animal that is still listed/visible, plus its full ordered
- * photo set (primary first, then display order) so the detail page can show a
- * gallery. `photoUrl` is kept as the primary for metadata/OG.
- */
-export interface PortalVideo {
-  id: string;
-  src: string;
-  poster: string | null;
-}
-
-export const getPortalAnimal = async (
+/** A single public animal with its full ordered photo set + playable videos. */
+export const getPortalAnimal = (
   organizationPk: number,
   animalId: string,
-): Promise<{ animal: Animal; photoUrl: string | null; photos: string[]; videos: PortalVideo[] } | null> => {
-  const [row] = await db
-    .select()
-    .from(animal)
-    .where(and(eq(animal.id, animalId), eq(animal.organizationId, organizationPk)))
-    .limit(1);
-  if (!row) return null;
-
-  const photoRows = await db
-    .select({ mediumUrl: animalPhoto.mediumUrl, isPrimary: animalPhoto.isPrimary })
-    .from(animalPhoto)
-    .where(eq(animalPhoto.animalId, row.pk))
-    .orderBy(asc(animalPhoto.displayOrder));
-  // Stable sort keeps display order while floating the primary to the front.
-  const photos = [...photoRows]
-    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
-    .map((p) => p.mediumUrl);
-
-  // Only fully-transcoded videos are playable on the public portal.
-  const videoRows = await db
-    .select({ id: animalVideo.id, processedUrl: animalVideo.processedUrl, posterUrl: animalVideo.posterUrl })
-    .from(animalVideo)
-    .where(and(eq(animalVideo.animalId, row.pk), eq(animalVideo.processingStatus, 'ready')))
-    .orderBy(asc(animalVideo.displayOrder));
-  const videos: PortalVideo[] = videoRows
-    .filter((v): v is { id: string; processedUrl: string; posterUrl: string | null } => Boolean(v.processedUrl))
-    .map((v) => ({ id: v.id, src: v.processedUrl, poster: v.posterUrl }));
-
-  return { animal: row, photoUrl: photos[0] ?? null, photos, videos };
-};
+): Promise<PortalAnimalDetail | null> => loadPortalAnimal(publicCtx(organizationPk), animalId);

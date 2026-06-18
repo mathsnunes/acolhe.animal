@@ -1,6 +1,10 @@
+import { ageInMonths, ageGroupOf, type AgeGroup } from '@acolhe-animal/shared';
 import type { Animal } from '@acolhe-animal/db';
 
 import type { Translator } from '@/lib/i18n';
+
+// Re-exported so existing `@/components/animals/labels` imports keep working.
+export { ageInMonths, ageGroupOf, type AgeGroup };
 
 /**
  * Portuguese display labels for the animal enums + a couple of derived helpers
@@ -54,39 +58,6 @@ export const ENERGY_KEYS: NonNullable<Animal['energyLevel']>[] = [
   'energetic',
 ];
 export const SOCIABILITY_KEYS: Sociability[] = ['yes', 'no', 'with-care', 'unknown'];
-
-/** The animal's current age in months, derived from birth date or months-at-intake. */
-export const ageInMonths = (animal: Animal): number | null => {
-  let months: number | null = null;
-
-  if (animal.estimatedBirthDate) {
-    const birth = new Date(animal.estimatedBirthDate);
-    const now = new Date();
-    months =
-      (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
-  } else if (animal.ageMonthsAtIntake != null) {
-    const elapsed = animal.ageReferenceDate
-      ? Math.floor(
-          (Date.now() - new Date(animal.ageReferenceDate).getTime()) /
-            (1000 * 60 * 60 * 24 * 30.44),
-        )
-      : 0;
-    months = animal.ageMonthsAtIntake + Math.max(0, elapsed);
-  }
-
-  return months != null && months >= 0 ? months : null;
-};
-
-export type AgeGroup = 'baby' | 'adult' | 'senior';
-
-/** Bucket for the age filter: filhote (<1y), adulto (1–7y), idoso (7y+). */
-export const ageGroupOf = (animal: Animal): AgeGroup | null => {
-  const months = ageInMonths(animal);
-  if (months == null) return null;
-  if (months < 12) return 'baby';
-  if (months < 84) return 'adult';
-  return 'senior';
-};
 
 /** "2 anos", "8 meses" — derived from birth date or months-at-intake. */
 export const formatAge = (t: Translator, animal: Animal): string | null => {

@@ -1,4 +1,4 @@
-import { asc, eq, ilike, sql } from 'drizzle-orm';
+import { asc, eq, ilike, inArray, sql } from 'drizzle-orm';
 
 import { normalizeForSearch } from '@acolhe-animal/shared';
 import type { Database } from '@acolhe-animal/db';
@@ -41,4 +41,13 @@ export const getCityById = async (db: Database, id: string): Promise<CitySuggest
     .where(eq(city.id, id))
     .limit(1);
   return row ?? null;
+};
+
+/** Resolve many cities at once (e.g. city labels for the org switcher). */
+export const getCitiesByIds = async (db: Database, ids: string[]): Promise<CitySuggestion[]> => {
+  if (ids.length === 0) return [];
+  return db
+    .select({ id: city.id, name: city.name, stateCode: city.stateCode })
+    .from(city)
+    .where(inArray(city.id, ids));
 };

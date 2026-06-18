@@ -17,6 +17,12 @@ export interface UserContact {
   email: string | null;
 }
 
+/** The display name of a user by id (for the admin shell's user menu). */
+export const getUserName = async (db: DbExecutor, userId: string): Promise<string | null> => {
+  const [row] = await db.select({ name: user.name }).from(user).where(eq(user.id, userId)).limit(1);
+  return row?.name ?? null;
+};
+
 /** Resolve a user by their E.164 phone number (the primary identifier). */
 export const getUserByPhone = async (db: Database, phoneNumber: string): Promise<UserContact | null> => {
   const [row] = await db
