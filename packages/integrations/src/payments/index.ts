@@ -1,4 +1,4 @@
-import { isLiveIntegrations } from '@acolhe-animal/shared/env';
+import { isLivePayments } from '@acolhe-animal/shared/env';
 
 import { AsaasPaymentsProvider } from './asaas';
 import { MockPaymentsProvider } from './mock';
@@ -10,7 +10,7 @@ let cached: PaymentsProvider | null = null;
 
 export const getPayments = (): PaymentsProvider => {
   if (!cached) {
-    cached = isLiveIntegrations() ? new AsaasPaymentsProvider() : new MockPaymentsProvider();
+    cached = isLivePayments() ? new AsaasPaymentsProvider() : new MockPaymentsProvider();
   }
   return cached;
 };

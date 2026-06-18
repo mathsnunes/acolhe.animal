@@ -27,6 +27,13 @@ const envSchema = z.object({
   /** `mock` stubs every external provider; `live` uses real adapters. */
   INTEGRATIONS_MODE: z.enum(['mock', 'live']).default('mock'),
 
+  /**
+   * Per-provider override for payments/Asaas. When set, takes precedence over
+   * `INTEGRATIONS_MODE` for the payments provider only — letting you run live
+   * Asaas in an otherwise fully-mocked dev environment.
+   */
+  ASAAS_MODE: z.enum(['mock', 'live']).optional(),
+
   // ── Encryption (always present; defaults are dev-only placeholders) ──
   ASAAS_KEY_ENCRYPTION_SECRET: z.string().min(16).default('dev-only-insecure-secret-32chars!'),
   PAYOUT_ENCRYPTION_SECRET: z.string().min(16).default('dev-only-insecure-secret-32char2!'),
@@ -77,3 +84,9 @@ export const serverEnv = (): ServerEnv => {
 };
 
 export const isLiveIntegrations = (): boolean => serverEnv().INTEGRATIONS_MODE === 'live';
+
+/** Payments-specific live check — respects ASAAS_MODE override over INTEGRATIONS_MODE. */
+export const isLivePayments = (): boolean => {
+  const env = serverEnv();
+  return (env.ASAAS_MODE ?? env.INTEGRATIONS_MODE) === 'live';
+};
