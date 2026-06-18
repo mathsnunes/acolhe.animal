@@ -14,6 +14,8 @@ export interface CreateSubaccountInput {
   cpfCnpj: string;
   email: string;
   phone: string;
+  mobilePhone?: string;
+  birthDate?: string;
   companyType?: string;
   address?: {
     street: string;
@@ -74,10 +76,30 @@ export interface CreateTransferResult {
   fee: number;
 }
 
+export interface AsaasAccountStatus {
+  id: string;
+  status: 'AWAITING_DOCUMENTS' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'ACTIVE';
+  /** Full raw status string from Asaas — kept for logging. */
+  rawStatus: string;
+}
+
+export interface UploadDocumentInput {
+  /** The subaccount's API key. */
+  accountApiKey: string;
+  /** Document id from getRequiredDocuments(). */
+  documentId: string;
+  fileBuffer: Buffer;
+  mimeType: string;
+  /** Original filename for the multipart part. */
+  filename: string;
+}
+
 export interface PaymentsProvider {
   readonly name: string;
   createSubaccount(input: CreateSubaccountInput): Promise<CreateSubaccountResult>;
+  getAccountStatus(accountApiKey: string): Promise<AsaasAccountStatus>;
   getRequiredDocuments(accountApiKey: string): Promise<RequiredDocument[]>;
+  uploadDocument(input: UploadDocumentInput): Promise<void>;
   getPixKey(accountApiKey: string): Promise<string>;
   createPixCharge(input: CreatePixChargeInput): Promise<CreatePixChargeResult>;
   createTransfer(input: CreateTransferInput): Promise<CreateTransferResult>;

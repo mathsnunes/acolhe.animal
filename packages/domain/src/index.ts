@@ -20,3 +20,4 @@ export * from './people';
 export * from './applications';
 export * from './adoptions';
 export * from './portal';
+export * from './finance';

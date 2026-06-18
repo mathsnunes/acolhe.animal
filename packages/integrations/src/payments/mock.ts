@@ -1,6 +1,7 @@
 import { createToken } from '@acolhe-animal/shared';
 
 import type {
+  AsaasAccountStatus,
   CreatePixChargeInput,
   CreatePixChargeResult,
   CreateSubaccountInput,
@@ -9,11 +10,13 @@ import type {
   CreateTransferResult,
   PaymentsProvider,
   RequiredDocument,
+  UploadDocumentInput,
 } from './types';
 
 /**
  * Mock payments provider — returns deterministic fake data so Pillar 2 flows can
  * be exercised end-to-end locally without an Asaas account.
+ * Shapes match real Asaas sandbox responses (verified via explore-asaas-sandbox.ts).
  */
 export class MockPaymentsProvider implements PaymentsProvider {
   readonly name = 'mock-payments';
@@ -21,20 +24,32 @@ export class MockPaymentsProvider implements PaymentsProvider {
   async createSubaccount(_input: CreateSubaccountInput): Promise<CreateSubaccountResult> {
     return {
       accountId: `acc_mock_${createToken(12)}`,
-      apiKey: `key_mock_${createToken(24)}`,
+      apiKey: `$aact_mock_${createToken(24)}`,
       walletId: `wal_mock_${createToken(12)}`,
     };
   }
 
+  async getAccountStatus(_accountApiKey: string): Promise<AsaasAccountStatus> {
+    return { id: 'acc_mock', status: 'ACTIVE', rawStatus: 'ACTIVE' };
+  }
+
   async getRequiredDocuments(_accountApiKey: string): Promise<RequiredDocument[]> {
     return [
-      { id: 'doc_identification', type: 'IDENTIFICATION' },
       { id: 'doc_selfie', type: 'SELFIE' },
+      {
+        id: 'doc_identification',
+        type: 'IDENTIFICATION',
+        onboardingUrl: 'https://sandbox.asaas.com/onboarding/mock',
+      },
     ];
   }
 
+  async uploadDocument(_input: UploadDocumentInput): Promise<void> {
+    // no-op in mock
+  }
+
   async getPixKey(_accountApiKey: string): Promise<string> {
-    return `mock-pix-key-${createToken(8)}@acolhe.animal`;
+    return `mock-pix@acolhe.test`;
   }
 
   async createPixCharge(input: CreatePixChargeInput): Promise<CreatePixChargeResult> {
