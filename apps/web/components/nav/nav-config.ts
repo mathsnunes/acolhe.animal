@@ -1,4 +1,5 @@
 import {
+  Banknote,
   BookOpen,
   Heart,
   Home,
@@ -62,6 +63,7 @@ export const NAV_GROUPS: NavItem[][] = [
     { href: '/campanhas', labelKey: 'campaigns', icon: Megaphone, adminOnly: true },
     { href: '/apoiadores', labelKey: 'supporters', icon: UsersRound, adminOnly: true },
     { href: '/necessidades-recorrentes', labelKey: 'recurringNeeds', icon: Repeat, adminOnly: true },
+    { href: '/config/financeiro', labelKey: 'financeSetup', icon: Banknote, adminOnly: true },
   ],
   // Organização — settings & administration.
   [
