@@ -48,6 +48,14 @@ export const UPLOAD_POLICIES = {
     maxFileSize: 200 * MB,
     maxTotalSize: 400 * MB,
   },
+  'org-logo': {
+    key: 'org-logo',
+    kind: 'image',
+    accept: ['image/jpeg', 'image/png', 'image/webp'],
+    maxFiles: 1,
+    maxFileSize: 5 * MB,
+    maxTotalSize: 5 * MB,
+  },
 } as const satisfies Record<string, UploadPolicy>;
 
 export type UploadPolicyKey = keyof typeof UPLOAD_POLICIES;

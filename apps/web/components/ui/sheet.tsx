@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 
@@ -56,7 +57,10 @@ const SheetContent = ({
   children,
   side = 'right',
   ...props
-}: SheetContentProps) => <SheetPortal>
+}: SheetContentProps) => {
+  const t = useTranslations('common');
+  return (
+    <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
@@ -72,10 +76,12 @@ const SheetContent = ({
           )}
         >
           <X className="size-4" />
-          <span className="sr-only">Fechar</span>
+          <span className="sr-only">{t('actions.close')}</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
-    </SheetPortal>;
+    </SheetPortal>
+  );
+};
 
 const SheetHeader = ({ className, ...props }: React.ComponentProps<'div'>) => <div
       data-slot="sheet-header"

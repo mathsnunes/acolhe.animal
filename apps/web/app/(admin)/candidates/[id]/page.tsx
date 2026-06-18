@@ -1,19 +1,20 @@
 import Link from 'next/link';
-import { ArrowLeft, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MessageCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-import { formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
+import { formatCep, formatCpf, formatPhoneBR, formatRelative } from '@acolhe-animal/shared';
 import {
   countWaitingApplicationsByAnimal,
   getApplication,
   getAnimalByPk,
   getAnimalCovers,
+  getCityById,
   getPersonByPk,
   getPersonSignals,
   listEntityTimeline,
+  listOrgMemberOptions,
 } from '@acolhe-animal/domain';
-import { db, organizationMember, user, type TimelineEvent } from '@acolhe-animal/db';
-import { and, eq, isNull } from 'drizzle-orm';
+import { db, type TimelineEvent } from '@acolhe-animal/db';
 
 import { requireCtx } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,7 @@ import { ApplicationSections } from '@/components/candidates/application-section
 import { AnimalSideCard } from '@/components/candidates/animal-side-card';
 import { CandidateAlertsCard } from '@/components/candidates/candidate-alerts-card';
 import { StatusControl } from '@/components/candidates/status-control';
-import { AssignControl, type OrgMember } from '@/components/candidates/assign-control';
+import { AssignControl } from '@/components/candidates/assign-control';
 import { InternalNotes } from '@/components/candidates/internal-notes';
 import { EntityTimeline } from '@/components/candidates/entity-timeline';
 import { FinalizeAdoptionDialog } from '@/components/candidates/finalize-adoption-dialog';
@@ -29,18 +30,6 @@ import { STATUS_META, statusLabelKey } from '@/components/candidates/status-meta
 import { whatsappHref } from '@/components/candidates/whatsapp';
 
 export const dynamic = 'force-dynamic';
-
-const listOrgMembers = async (organizationId: number): Promise<OrgMember[]> =>
-  db
-    .select({ userId: organizationMember.userId, name: user.name })
-    .from(organizationMember)
-    .innerJoin(user, eq(organizationMember.userId, user.id))
-    .where(
-      and(
-        eq(organizationMember.organizationId, organizationId),
-        isNull(organizationMember.removedAt),
-      ),
-    );
 
 export default async function CandidatoDetalhePage({
   params,
@@ -56,7 +45,7 @@ export default async function CandidatoDetalhePage({
     getPersonByPk(ctx, application.personId),
     getAnimalByPk(ctx, application.animalId),
     listEntityTimeline(ctx, 'application', id),
-    listOrgMembers(ctx.organizationId),
+    listOrgMemberOptions(ctx),
     getAnimalCovers(ctx, [application.animalId]),
     countWaitingApplicationsByAnimal(ctx),
     getPersonSignals(ctx, application.personId, application.pk),
@@ -68,7 +57,26 @@ export default async function CandidatoDetalhePage({
   const surname = nameParts.slice(1).join(' ');
   const statusLabel = t(`status.${statusLabelKey(application.status)}`);
   const isApproved = application.status === 'approved';
+  const isAdopted = application.status === 'adopted';
   const currentUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
+
+  // Pre-fill the finalize form from the candidacy's Person, so the term data
+  // collected when the candidacy was created isn't re-typed.
+  const personCity =
+    isApproved && person.cityId ? await getCityById(db, person.cityId) : null;
+  const finalizeInitial = isApproved
+    ? {
+        document: person.cpf ? formatCpf(person.cpf) : '',
+        street: person.streetAddress ?? '',
+        number: person.addressNumber ?? '',
+        complement: person.addressComplement ?? '',
+        neighborhood: person.addressNeighborhood ?? '',
+        postalCode: person.postalCode ? formatCep(person.postalCode) : '',
+        city: personCity?.name ?? '',
+        state: personCity?.stateCode ?? '',
+        cityText: personCity ? `${personCity.name}, ${personCity.stateCode}` : '',
+      }
+    : undefined;
 
   // "Quem é" composite rows, from the form answers (falling back to the person record).
   const answers = (application.applicationData ?? {}) as Record<string, unknown>;
@@ -212,7 +220,28 @@ export default async function CandidatoDetalhePage({
           {isApproved && (
             <div className="section-card p-[18px]">
               <p className="eyebrow mb-3">{t('detail.nextStepEyebrow')}</p>
-              <FinalizeAdoptionDialog applicationId={application.id} adopterName={person.name} animalName={animal.name} />
+              <FinalizeAdoptionDialog
+                applicationId={application.id}
+                animalId={animal.id}
+                adopterName={person.name}
+                animalName={animal.name}
+                initial={finalizeInitial}
+              />
+            </div>
+          )}
+
+          {isAdopted && (
+            <div className="section-card p-[18px]">
+              <p className="eyebrow mb-3">{t('detail.adoptionDoneEyebrow')}</p>
+              <Link
+                href={`/animais/${animal.id}`}
+                className="flex items-center justify-between gap-2 text-[13.5px] font-medium text-ink transition hover:text-terra"
+              >
+                {t('detail.adoptionDoneText')}
+                <span className="inline-flex items-center gap-1 text-terra">
+                  {t('detail.viewAdoption')} <ArrowRight className="size-4" />
+                </span>
+              </Link>
             </div>
           )}
         </aside>

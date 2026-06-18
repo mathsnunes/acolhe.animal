@@ -1,6 +1,6 @@
 import { and, desc, eq, getTableColumns, ilike, inArray, isNull, ne, notInArray, or, sql } from 'drizzle-orm';
 
-import { createId, NotFoundError } from '@acolhe-animal/shared';
+import { ConflictError, createId, NotFoundError } from '@acolhe-animal/shared';
 import {
   adoption,
   animal,
@@ -23,7 +23,7 @@ import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
 import { emitTimelineEvent } from '../timeline/timeline';
 import { getPerson, getPersonByPk, upsertPersonByPhone } from '../people/service';
-import { startApplicationSchema, saveDraftSchema } from './schemas';
+import { startApplicationSchema, saveDraftSchema, manualApplicationSchema } from './schemas';
 
 const DRAFT_TTL_DAYS = 7;
 const ACTIVE_STATUSES = ['draft', 'new', 'in-progress', 'approved'] as const;
@@ -83,6 +83,67 @@ export const startOrResumeApplication = async (ctx: Ctx, input: unknown): Promis
     })
     .returning();
   return row!;
+};
+
+/**
+ * Staff-created candidacy (e.g. someone met the animal at a fair). Skips the
+ * draft/form and lands straight in the funnel as `in-progress` ("em avaliação"),
+ * carrying the optional questionnaire answers. Reuses the person upsert and the
+ * one-active-per-animal rule.
+ */
+export const createManualApplication = async (ctx: Ctx, input: unknown): Promise<Application> => {
+  assertCanManageAnimals(ctx);
+  const data = manualApplicationSchema.parse(input);
+
+  const [animalRow] = await ctx.db
+    .select({ pk: animal.pk, species: animal.species })
+    .from(animal)
+    .where(and(eq(animal.id, data.animalId), eq(animal.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  const personRow = await upsertPersonByPhone(ctx, data.person);
+
+  const [existing] = await ctx.db
+    .select({ id: application.id })
+    .from(application)
+    .where(
+      and(
+        eq(application.organizationId, ctx.organizationId),
+        eq(application.personId, personRow.pk),
+        eq(application.animalId, animalRow.pk),
+        notInArray(application.status, ['rejected', 'withdrew']),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    throw new ConflictError('Já existe uma candidatura ativa dessa pessoa para este animal.');
+  }
+
+  const now = new Date();
+  return withTransaction(ctx, async (tx) => {
+    const [row] = await tx.db
+      .insert(application)
+      .values({
+        id: createId('application'),
+        organizationId: ctx.organizationId,
+        animalId: animalRow.pk,
+        personId: personRow.pk,
+        formVersion: `${animalRow.species}-v1`,
+        status: 'in-progress',
+        applicationData: data.applicationData ?? {},
+        submittedAt: now,
+        statusChangedAt: now,
+      })
+      .returning();
+    await emitTimelineEvent(tx, {
+      eventType: 'application.submitted',
+      entityType: 'application',
+      entityId: row!.id,
+      payload: { manual: true },
+    });
+    return row!;
+  });
 };
 
 /** Autosave a draft's partial answers and refresh its expiry. */
@@ -252,6 +313,67 @@ export const setApplicationStatus = async (ctx: Ctx, applicationId: string, stat
 };
 
 /**
+ * Reject every still-open candidacy for an animal at once — the "recusar
+ * restantes" action surfaced once an animal has been adopted. Only `new` /
+ * `in-progress` candidacies are touched (the adopted/closed ones stay as they
+ * are); each rejected candidate gets the usual notification. Returns how many
+ * were rejected (0 when there was nothing waiting).
+ */
+export const rejectWaitingApplicationsForAnimal = async (
+  ctx: Ctx,
+  animalId: string,
+): Promise<number> => {
+  assertCanManageAnimals(ctx);
+  const [animalRow] = await ctx.db
+    .select({ pk: animal.pk, name: animal.name })
+    .from(animal)
+    .where(and(eq(animal.id, animalId), eq(animal.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  const waiting = await ctx.db
+    .select({ id: application.id, personId: application.personId })
+    .from(application)
+    .where(
+      and(
+        eq(application.organizationId, ctx.organizationId),
+        eq(application.animalId, animalRow.pk),
+        inArray(application.status, ['new', 'in-progress']),
+      ),
+    );
+  if (waiting.length === 0) return 0;
+
+  await withTransaction(ctx, async (tx) => {
+    for (const w of waiting) {
+      await tx.db
+        .update(application)
+        .set({ status: 'rejected', statusChangedAt: new Date() })
+        .where(eq(application.id, w.id));
+      await emitTimelineEvent(tx, {
+        eventType: 'application.rejected',
+        entityType: 'application',
+        entityId: w.id,
+      });
+    }
+  });
+
+  // Notify the rejected candidates outside the transaction (best-effort).
+  await Promise.all(
+    waiting.map(async (w) => {
+      const person = await getPersonByPk(ctx, w.personId);
+      const msg = applicationStatusWhatsApp({
+        candidateName: person.name.split(' ')[0] ?? person.name,
+        animalName: animalRow.name,
+        status: 'rejected',
+      });
+      await notify(person.phone, msg.text);
+    }),
+  );
+
+  return waiting.length;
+};
+
+/**
  * Edit the internal triage notes without touching the funnel stage. Safe at any
  * status, including terminal ones (`adopted`, `cancelled`) — unlike routing notes
  * through {@link setApplicationStatus}, which only accepts the four triage states.
@@ -311,6 +433,33 @@ export const countWaitingApplicationsByAnimal = async (ctx: Ctx): Promise<Record
     )
     .groupBy(animal.id);
   return Object.fromEntries(rows.map((r) => [r.animalId, Number(r.count)]));
+};
+
+/**
+ * The approved candidacy holding a reserved animal, if any — used to offer a
+ * "formalizar adoção" shortcut straight from the animal page. Returns the public
+ * application id and the candidate's name (most recently approved wins if more
+ * than one is somehow approved).
+ */
+export const getApprovedApplicationForAnimal = async (
+  ctx: Ctx,
+  animalId: string,
+): Promise<{ applicationId: string; adopterName: string } | null> => {
+  const [row] = await ctx.db
+    .select({ applicationId: application.id, adopterName: person.name })
+    .from(application)
+    .innerJoin(animal, eq(application.animalId, animal.pk))
+    .innerJoin(person, eq(application.personId, person.pk))
+    .where(
+      and(
+        eq(animal.id, animalId),
+        eq(application.organizationId, ctx.organizationId),
+        eq(application.status, 'approved'),
+      ),
+    )
+    .orderBy(desc(application.statusChangedAt))
+    .limit(1);
+  return row ?? null;
 };
 
 export const getApplication = async (ctx: Ctx, id: string): Promise<Application> => {

@@ -6,10 +6,17 @@
   "cashflow": "Caixa",
   "campaigns": "Campanhas",
   "stories": "Histórias",
-  "neededItems": "Itens em falta",
   "supporters": "Apoiadores",
+  "recurringNeeds": "Necessidades Recorrentes",
+  "members": "Membros",
   "settings": "Configurações",
   "more": "Mais",
+  "logout": "Sair",
+  "sections": {
+    "general": "Geral",
+    "fundraising": "Arrecadação",
+    "org": "Organização"
+  },
   "roleAdmin": "admin",
   "roleVolunteer": "voluntário(a)",
   "you": "Você",
@@ -20,6 +27,7 @@
     "notifications": "Notificações",
     "noNotifications": "Sem novidades por aqui.",
     "newApplications": "{count, plural, one {# nova candidatura esperando} other {# novas candidaturas esperando}}",
-    "newAnimal": "Novo animal"
+    "newAnimal": "Novo animal",
+    "newCandidacy": "Nova candidatura"
   }
 }

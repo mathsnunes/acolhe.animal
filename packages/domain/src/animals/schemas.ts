@@ -20,6 +20,7 @@ export const clinicalConditionSchema = z.object({
 });
 
 export const vaccinationSchema = z.object({ name: z.string().min(1), date: z.string() });
+export const dewormingSchema = z.object({ product: z.string().optional(), date: z.string().min(1) });
 
 export const createAnimalSchema = z
   .object({
@@ -34,9 +35,11 @@ export const createAnimalSchema = z
     size: z.enum(['small', 'medium', 'large']).optional(),
     predominantColor: z.string().trim().optional(),
     weightKg: z.number().positive().optional(),
+    microchipCode: z.string().trim().optional(),
 
     neutered: z.enum(['yes', 'no', 'scheduled']),
     vaccinations: z.array(vaccinationSchema).default([]),
+    dewormings: z.array(dewormingSchema).default([]),
     specialConditions: z.array(z.string().trim().min(1)).default([]),
     clinicalCondition: clinicalConditionSchema.nullish(),
 
@@ -77,6 +80,7 @@ export const animalDraftSchema = createAnimalSchema
   .extend({
     intakeDate: z.coerce.date().optional(),
     vaccinations: z.array(vaccinationSchema).optional(),
+    dewormings: z.array(dewormingSchema).optional(),
     specialConditions: z.array(z.string().trim().min(1)).optional(),
     visibleOnPortal: z.boolean().optional(),
     listedForAdoption: z.boolean().optional(),

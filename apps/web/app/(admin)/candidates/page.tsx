@@ -1,10 +1,11 @@
+import Link from 'next/link';
+import { UserPlus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { and, eq, isNull } from 'drizzle-orm';
 
-import { countApplicationsByStatus, listApplicationAnimals } from '@acolhe-animal/domain';
-import { db, organizationMember, user } from '@acolhe-animal/db';
+import { countApplicationsByStatus, listApplicationAnimals, listOrgMemberOptions } from '@acolhe-animal/domain';
 
 import { requireCtx } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
 import { PageHeaderHero } from '@/components/page-header';
 import { EmptyState } from '@/components/empty-state';
 import { CandidatesFilters } from '@/components/candidates/candidates-filters';
@@ -18,19 +19,6 @@ import {
 import { loadCandidatesPage } from './load-candidates';
 
 export const dynamic = 'force-dynamic';
-
-/** Active members of the org — the options for the "Responsável" filter. */
-const listOrgMembers = async (organizationId: number): Promise<{ userId: string; name: string }[]> =>
-  db
-    .select({ userId: organizationMember.userId, name: user.name })
-    .from(organizationMember)
-    .innerJoin(user, eq(organizationMember.userId, user.id))
-    .where(
-      and(
-        eq(organizationMember.organizationId, organizationId),
-        isNull(organizationMember.removedAt),
-      ),
-    );
 
 export default async function CandidatosPage({
   searchParams,
@@ -64,7 +52,7 @@ export default async function CandidatosPage({
         filters.responsible && filters.responsible !== 'sem' ? filters.responsible : undefined,
     }),
     listApplicationAnimals(ctx),
-    listOrgMembers(ctx.organizationId),
+    listOrgMemberOptions(ctx),
   ]);
 
   const counts = {
@@ -97,6 +85,16 @@ export default async function CandidatosPage({
         description={t('page.description')}
         metric={{ value: waiting, label: t('page.metricLabel') }}
       />
+
+      {/* Mobile-only primary CTA — on desktop the topbar carries it. */}
+      <div className="mb-5 px-6 lg:hidden">
+        <Button asChild className="w-full">
+          <Link href="/candidatos/nova">
+            <UserPlus className="size-4" />
+            {t('manual.trigger')}
+          </Link>
+        </Button>
+      </div>
 
       <CandidatesFilters
         counts={counts}

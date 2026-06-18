@@ -15,6 +15,7 @@
     "@acolhe-animal/messaging": "workspace:*",
     "@acolhe-animal/shared": "workspace:*",
     "drizzle-orm": "catalog:",
+    "pdf-lib": "^1.17.1",
     "zod": "catalog:"
   },
   "devDependencies": {

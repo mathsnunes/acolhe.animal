@@ -18,6 +18,7 @@
     "@acolhe-animal/messaging": "workspace:*",
     "@acolhe-animal/shared": "workspace:*",
     "@hookform/resolvers": "catalog:",
+    "@resvg/resvg-js": "catalog:",
     "@radix-ui/react-avatar": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
     "@radix-ui/react-dropdown-menu": "catalog:",

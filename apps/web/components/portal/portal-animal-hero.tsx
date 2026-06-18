@@ -17,11 +17,13 @@ export const PortalAnimalHero = ({
   animal,
   photoUrl,
   preview = false,
+  listedForAdoption = true,
 }: {
   slug: string;
   animal: Pick<Animal, 'id' | 'name' | 'species' | 'sex' | 'size' | 'shortStory' | 'quirks'>;
   photoUrl?: string | null;
   preview?: boolean;
+  listedForAdoption?: boolean;
 }) => {
   const t = useTranslations('portal');
   const meta = animalMeta(t, animal);
@@ -54,14 +56,19 @@ export const PortalAnimalHero = ({
           <p className="mt-4 text-sm leading-relaxed text-ink-soft">{animal.quirks}</p>
         )}
 
-        {preview ? (
+        {preview || !listedForAdoption ? (
           <Button size="lg" className="mt-8 w-full sm:w-auto" disabled>
-            {t('detail.adoptCta', { animalName: animal.name })}
+            {listedForAdoption
+              ? t('detail.adoptCta', { animalName: animal.name })
+              : t('detail.adoptClosed')}
           </Button>
         ) : (
           <Button asChild size="lg" className="mt-8 w-full sm:w-auto">
             <Link href={`/${slug}/adotar/${animal.id}`}>{t('detail.adoptCta', { animalName: animal.name })}</Link>
           </Button>
+        )}
+        {!preview && !listedForAdoption && (
+          <p className="mt-3 text-sm text-ink-soft">{t('detail.adoptClosedHint')}</p>
         )}
       </div>
     </article>

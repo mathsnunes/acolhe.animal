@@ -73,6 +73,11 @@ export class MockStorageProvider implements StorageProvider {
     // (`R2_PUBLIC_URL` is the absolute public domain used by the live R2 adapter.)
     return `/local-storage/${key}`;
   }
+
+  keyFromUrl(url: string): string {
+    // Strip the origin-relative prefix and any cache-busting query.
+    return url.split('?')[0]!.replace(/^\/local-storage\//, '');
+  }
 }
 
 const guessContentType = (key: string): string => {
@@ -81,5 +86,7 @@ const guessContentType = (key: string): string => {
   if (key.endsWith('.webp')) return 'image/webp';
   if (key.endsWith('.mp4')) return 'video/mp4';
   if (key.endsWith('.mov')) return 'video/quicktime';
+  if (key.endsWith('.pdf')) return 'application/pdf';
+  if (key.endsWith('.html')) return 'text/html; charset=utf-8';
   return 'application/octet-stream';
 };

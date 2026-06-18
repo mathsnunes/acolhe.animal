@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -7,9 +8,12 @@ import { toast } from 'sonner';
 
 import { normalizePhoneBR } from '@acolhe-animal/shared';
 
+import { AuthHeading, titleEm } from '@/components/auth/auth-heading';
+import { AuthModeTabs } from '@/components/auth/auth-mode-tabs';
+import { AuthPane } from '@/components/auth/auth-pane';
+import { PasswordField } from '@/components/auth/password-field';
+import { PhoneField } from '@/components/auth/phone-field';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { signIn } from '@/lib/auth-client';
 
 export default function LoginPage() {
@@ -17,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -28,7 +33,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await signIn.phoneNumber({ phoneNumber: normalized, password });
+      const res = await signIn.phoneNumber({ phoneNumber: normalized, password, rememberMe: remember });
       if (res.error) {
         toast.error(t('invalidCredentials'));
       } else {
@@ -42,40 +47,38 @@ export default function LoginPage() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      <div>
-        <h1 className="display text-3xl text-ink">{t('title')}</h1>
-        <p className="mt-1 text-sm text-ink-soft">{t('subtitle')}</p>
-      </div>
+    <AuthPane slot={<AuthModeTabs current="login" />}>
+      <AuthHeading
+        eyebrow={t('eyebrow')}
+        title={t.rich('title', { em: titleEm })}
+        subtitle={t('subtitle')}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="phone">{t('phone')}</Label>
-        <Input
-          id="phone"
-          inputMode="tel"
-          placeholder="(48) 99999-0000"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          autoComplete="tel"
-        />
-      </div>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <PhoneField label={t('phone')} value={phone} onChange={setPhone} autoFocus />
+        <PasswordField label={t('password')} value={password} onChange={setPassword} />
 
-      <div className="space-y-2">
-        <Label htmlFor="password">{t('password')}</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
-      </div>
+        <div className="flex items-center justify-between pt-0.5">
+          <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink-soft">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="size-4 cursor-pointer accent-terra"
+            />
+            {t('remember')}
+          </label>
+          <Link href="/recuperar-senha" className="text-[13px] font-medium text-terra hover:underline hover:underline-offset-2">
+            {t('forgot')}
+          </Link>
+        </div>
 
-      <Button type="submit" className="w-full" pending={loading}>
-        {t('submit')}
-      </Button>
+        <Button type="submit" className="w-full" pending={loading}>
+          {t('submit')} <span aria-hidden>→</span>
+        </Button>
 
-      <p className="text-center text-xs text-ink-mute">{t('devHint')}</p>
-    </form>
+        <p className="text-center text-xs text-ink-mute">{t('devHint')}</p>
+      </form>
+    </AuthPane>
   );
 }

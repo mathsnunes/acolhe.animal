@@ -63,6 +63,7 @@ import { PortalAnimalHero } from '@/components/portal/portal-animal-hero';
 
 type Sociability = 'yes' | 'no' | 'with-care' | 'unknown';
 type Vaccine = { name: string; date: string };
+type Dewormer = { product: string; date: string };
 
 type FormValues = {
   name: string;
@@ -71,14 +72,19 @@ type FormValues = {
   size: '' | 'small' | 'medium' | 'large';
   predominantColor: string;
   weightKg: string;
+  microchipCode: string;
   ageMode: 'birthdate' | 'estimate';
   estimatedBirthDate: string;
+  // `ageMonthsAtIntake` holds the number the user typed; `ageUnit` says whether it
+  // means months or years. We convert to months when building the domain input.
   ageMonthsAtIntake: string;
+  ageUnit: 'months' | 'years';
   intakeDate: string;
   rescueDate: string;
   rescueLocation: string;
   neutered: '' | 'yes' | 'no' | 'scheduled';
   vaccinations: Vaccine[];
+  dewormings: Dewormer[];
   specialConditions: string[];
   hasClinicalCondition: boolean;
   clinicalType: '' | 'post-surgery-recovery' | 'chronic-treatment' | 'behavioral-rehabilitation' | 'other';
@@ -107,21 +113,29 @@ const CLINICAL_TYPES = ['post-surgery-recovery', 'chronic-treatment', 'behaviora
 const toDateInput = (value: Date | string | null | undefined): string =>
   value ? new Date(value).toISOString().slice(0, 10) : '';
 
-const defaultsFor = (animal?: Animal): FormValues => ({
+const defaultsFor = (animal?: Animal): FormValues => {
+  // Whole years read nicer than "24 meses": show the estimate in years when it
+  // divides evenly, otherwise keep months.
+  const months = animal?.ageMonthsAtIntake ?? null;
+  const inYears = months != null && months >= 12 && months % 12 === 0;
+  return {
   name: animal?.name ?? '',
   species: animal?.species ?? '',
   sex: animal?.sex ?? '',
   size: animal?.size ?? '',
   predominantColor: animal?.predominantColor ?? '',
   weightKg: animal?.weightKg != null ? String(animal.weightKg) : '',
+  microchipCode: animal?.microchipCode ?? '',
   ageMode: animal?.ageMonthsAtIntake != null && !animal?.estimatedBirthDate ? 'estimate' : 'birthdate',
   estimatedBirthDate: toDateInput(animal?.estimatedBirthDate),
-  ageMonthsAtIntake: animal?.ageMonthsAtIntake != null ? String(animal.ageMonthsAtIntake) : '',
+  ageMonthsAtIntake: months != null ? String(inYears ? months / 12 : months) : '',
+  ageUnit: inYears ? 'years' : 'months',
   intakeDate: toDateInput(animal?.intakeDate),
   rescueDate: toDateInput(animal?.rescueDate),
   rescueLocation: animal?.rescueLocation ?? '',
   neutered: animal?.neutered ?? '',
   vaccinations: (animal?.vaccinations ?? []).map((v) => ({ name: v.name, date: v.date })),
+  dewormings: (animal?.dewormings ?? []).map((d) => ({ product: d.product ?? '', date: d.date })),
   specialConditions: animal?.specialConditions ?? [],
   hasClinicalCondition: animal?.clinicalCondition != null,
   clinicalType: animal?.clinicalCondition?.type ?? '',
@@ -137,32 +151,42 @@ const defaultsFor = (animal?: Animal): FormValues => ({
   shortStory: animal?.shortStory ?? '',
   visibleOnPortal: animal?.visibleOnPortal ?? true,
   listedForAdoption: animal?.listedForAdoption ?? true,
-});
+  };
+};
 
-/** Shape the form into the domain input, dropping empties so partial saves stay clean. */
+/**
+ * Shape the form into the domain input. Identity essentials are only sent once
+ * present; the optional text fields and lists are ALWAYS sent (empty string /
+ * empty array when cleared) so a debounced autosave can actually clear them —
+ * otherwise an omitted field reads as "untouched" and the clear is lost.
+ */
 const buildInput = (v: FormValues): AnimalDraftInput => {
   const input: AnimalDraftInput = {};
   if (v.name.trim()) input.name = v.name.trim();
   if (v.species) input.species = v.species;
   if (v.sex) input.sex = v.sex;
   if (v.size) input.size = v.size;
-  if (v.predominantColor.trim()) input.predominantColor = v.predominantColor.trim();
+  input.predominantColor = v.predominantColor.trim();
   if (v.weightKg) input.weightKg = Number(v.weightKg);
+  input.microchipCode = v.microchipCode.trim();
 
   if (v.ageMode === 'birthdate' && v.estimatedBirthDate) {
     input.estimatedBirthDate = new Date(v.estimatedBirthDate);
   } else if (v.ageMode === 'estimate' && v.ageMonthsAtIntake) {
-    input.ageMonthsAtIntake = Number(v.ageMonthsAtIntake);
+    const n = Number(v.ageMonthsAtIntake);
+    input.ageMonthsAtIntake = v.ageUnit === 'years' ? Math.round(n * 12) : Math.round(n);
   }
 
   if (v.intakeDate) input.intakeDate = new Date(v.intakeDate);
   if (v.rescueDate) input.rescueDate = new Date(v.rescueDate);
-  if (v.rescueLocation.trim()) input.rescueLocation = v.rescueLocation.trim();
+  input.rescueLocation = v.rescueLocation.trim();
 
   if (v.neutered) input.neutered = v.neutered;
-  const vaccines = v.vaccinations.filter((x) => x.name.trim());
-  if (vaccines.length) input.vaccinations = vaccines;
-  if (v.specialConditions.length) input.specialConditions = v.specialConditions;
+  input.vaccinations = v.vaccinations.filter((x) => x.name.trim());
+  input.dewormings = v.dewormings
+    .filter((d) => d.date)
+    .map((d) => ({ date: d.date, product: d.product.trim() || undefined }));
+  input.specialConditions = v.specialConditions;
 
   if (v.hasClinicalCondition && v.clinicalType && v.clinicalDescription.trim()) {
     input.clinicalCondition = {
@@ -178,8 +202,8 @@ const buildInput = (v: FormValues): AnimalDraftInput => {
   input.goodWithDogs = v.goodWithDogs;
   input.goodWithCats = v.goodWithCats;
   input.goodWithStrangers = v.goodWithStrangers;
-  if (v.quirks.trim()) input.quirks = v.quirks.trim();
-  if (v.shortStory.trim()) input.shortStory = v.shortStory.trim();
+  input.quirks = v.quirks.trim();
+  input.shortStory = v.shortStory.trim();
 
   input.visibleOnPortal = v.visibleOnPortal;
   input.listedForAdoption = v.listedForAdoption;
@@ -196,7 +220,7 @@ const validateStep = (step: number, v: FormValues): Record<string, string> => {
     if (v.ageMode === 'birthdate' && !v.estimatedBirthDate) e.estimatedBirthDate = 'errAge';
     if (v.ageMode === 'estimate' && !v.ageMonthsAtIntake) e.ageMonthsAtIntake = 'errAge';
   }
-  if (step === 3 && !v.neutered) e.neutered = 'errNeutered';
+  if (step === 4 && !v.neutered) e.neutered = 'errNeutered';
   return e;
 };
 
@@ -206,7 +230,7 @@ const STEP_OF_FIELD: Record<string, number> = {
   sex: 1,
   estimatedBirthDate: 1,
   ageMonthsAtIntake: 1,
-  neutered: 3,
+  neutered: 4,
 };
 
 /** "~8 meses" (birth date) or "~2 anos no resgate" (estimate at intake). */
@@ -225,7 +249,8 @@ const ageText = (t: Translator, v: FormValues): string => {
     return months < 0 ? '—' : text(months, false);
   }
   if (v.ageMode === 'estimate' && v.ageMonthsAtIntake) {
-    const m = Number(v.ageMonthsAtIntake);
+    const n = Number(v.ageMonthsAtIntake);
+    const m = v.ageUnit === 'years' ? n * 12 : n;
     return Number.isNaN(m) ? '—' : text(m, true);
   }
   return '';
@@ -239,7 +264,7 @@ const incompleteFields = (v: FormValues): { step: number; labelKey: string }[] =
   if (!v.sex) items.push({ step: 1, labelKey: 'form.sexLabel' });
   const hasAge = v.ageMode === 'birthdate' ? Boolean(v.estimatedBirthDate) : Boolean(v.ageMonthsAtIntake);
   if (!hasAge) items.push({ step: 1, labelKey: 'detail.factAge' });
-  if (!v.neutered) items.push({ step: 3, labelKey: 'wizard.neuteredHeading' });
+  if (!v.neutered) items.push({ step: 4, labelKey: 'wizard.neuteredHeading' });
   return items;
 };
 
@@ -350,7 +375,7 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
   const onPublish = () => {
     const allErrors: Record<string, string> = {
       ...validateStep(1, values),
-      ...validateStep(3, values),
+      ...validateStep(4, values),
     };
     if (Object.keys(allErrors).length) {
       setErrors(allErrors);
@@ -410,13 +435,13 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
 
       <div className="mt-6 rounded-2xl border border-line-soft bg-paper p-6 shadow-card sm:p-8">
         {step === 1 && <StepIdentity t={t} v={values} set={set} errors={errors} />}
-        {step === 2 && <StepEntry t={t} v={values} set={set} />}
-        {step === 3 && <StepHealth t={t} v={values} set={set} errors={errors} />}
-        {step === 4 && <StepBehavior t={t} v={values} set={set} />}
-        {step === 5 && (
+        {step === 2 && (
           <StepStory t={t} v={values} set={set} animalId={idRef.current} resolveOwnerId={ensureOwnerId} />
         )}
-        {step === 6 && <StepReview t={t} v={values} onEdit={setStep} animalId={idRef.current} />}
+        {step === 3 && <StepEntry t={t} v={values} set={set} />}
+        {step === 4 && <StepHealth t={t} v={values} set={set} errors={errors} />}
+        {step === 5 && <StepBehavior t={t} v={values} set={set} />}
+        {step === 6 && <StepReview t={t} v={values} set={set} onEdit={setStep} animalId={idRef.current} />}
 
         <div className="mt-8 flex flex-col gap-4 border-t border-line-soft pt-5 sm:flex-row sm:items-center sm:justify-between">
           <span
@@ -466,7 +491,7 @@ export const AnimalWizard = ({ animal }: { animal?: Animal }) => {
 
 /* ── Stepper ──────────────────────────────────────────────────────────────── */
 
-const STEP_KEYS = ['identification', 'entry', 'health', 'behavior', 'story', 'review'] as const;
+const STEP_KEYS = ['identification', 'story', 'entry', 'health', 'behavior', 'review'] as const;
 
 const Stepper = ({
   t,
@@ -704,6 +729,14 @@ const StepIdentity = ({ t, v, set, errors = {} }: StepProps) => (
       />
     </Field>
 
+    <Field label={t('wizard.microchipLabel')} optional hint={t('wizard.microchipHint')}>
+      <Input
+        value={v.microchipCode}
+        onChange={(e) => set('microchipCode', e.target.value)}
+        placeholder={t('wizard.microchipPlaceholder')}
+      />
+    </Field>
+
     <div className="border-t border-line-soft pt-6">
       <SectionHeading title={t('wizard.ageHeading')} sub={t('wizard.ageSub')} />
       <div className="mt-4">
@@ -723,13 +756,27 @@ const StepIdentity = ({ t, v, set, errors = {} }: StepProps) => (
           </Field>
         ) : (
           <Field label={t('form.ageAtIntakeLabel')} required error={errors.ageMonthsAtIntake && t('wizard.errAge')}>
-            <Input
-              type="number"
-              min={0}
-              value={v.ageMonthsAtIntake}
-              onChange={(e) => set('ageMonthsAtIntake', e.target.value)}
-              placeholder={t('form.ageAtIntakePlaceholder')}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={0}
+                value={v.ageMonthsAtIntake}
+                onChange={(e) => set('ageMonthsAtIntake', e.target.value)}
+                placeholder={t('form.ageAtIntakePlaceholder')}
+                className="flex-1"
+              />
+              <div className="w-32 shrink-0">
+                <FormSelect
+                  value={v.ageUnit}
+                  onChange={(val) => set('ageUnit', val as FormValues['ageUnit'])}
+                  placeholder=""
+                  options={[
+                    { value: 'months', label: t('wizard.unitMonths') },
+                    { value: 'years', label: t('wizard.unitYears') },
+                  ]}
+                />
+              </div>
+            </div>
           </Field>
         )}
       </div>
@@ -768,6 +815,11 @@ const StepHealth = ({ t, v, set, errors = {} }: StepProps) => {
   const updateVaccine = (i: number, patch: Partial<Vaccine>) =>
     set('vaccinations', v.vaccinations.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const removeVaccine = (i: number) => set('vaccinations', v.vaccinations.filter((_, j) => j !== i));
+
+  const addDeworming = () => set('dewormings', [...v.dewormings, { product: '', date: '' }]);
+  const updateDeworming = (i: number, patch: Partial<Dewormer>) =>
+    set('dewormings', v.dewormings.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const removeDeworming = (i: number) => set('dewormings', v.dewormings.filter((_, j) => j !== i));
 
   const addCondition = (value: string) => {
     const val = value.trim();
@@ -844,6 +896,46 @@ const StepHealth = ({ t, v, set, errors = {} }: StepProps) => {
         ) : (
           <p className="mt-3 text-xs text-ink-mute">{t('wizard.vaccinesSpeciesHint')}</p>
         )}
+      </div>
+
+      <div className="border-t border-line-soft pt-6">
+        <SectionHeading title={t('wizard.dewormingsHeading')} sub={t('wizard.dewormingsSub')} optional />
+        {v.dewormings.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {v.dewormings.map((dw, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={dw.product}
+                  onChange={(e) => updateDeworming(i, { product: e.target.value })}
+                  placeholder={t('wizard.dewormingProductPlaceholder')}
+                  className="flex-1"
+                />
+                <Input
+                  type="date"
+                  value={dw.date}
+                  onChange={(e) => updateDeworming(i, { date: e.target.value })}
+                  className="w-44"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeDeworming(i)}
+                  aria-label={t('wizard.removeDeworming')}
+                  className="p-2 text-ink-mute hover:text-rose"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={addDeworming}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-terra hover:text-terra/80"
+        >
+          <Plus className="size-4" />
+          {t('wizard.addDeworming')}
+        </button>
       </div>
 
       <div className="border-t border-line-soft pt-6">
@@ -1019,24 +1111,6 @@ const StepStory = ({
     </div>
 
     <div className="border-t border-line-soft pt-6">
-      <SectionHeading title={t('wizard.visibilityHeading')} sub={t('wizard.visibilitySub')} />
-      <div className="mt-4 space-y-4">
-        <Toggle
-          label={t('wizard.visibleOnPortalLabel')}
-          hint={t('wizard.visibleOnPortalHint')}
-          checked={v.visibleOnPortal}
-          onChange={(val) => set('visibleOnPortal', val)}
-        />
-        <Toggle
-          label={t('wizard.listedForAdoptionLabel')}
-          hint={t('wizard.listedForAdoptionHint')}
-          checked={v.listedForAdoption}
-          onChange={(val) => set('listedForAdoption', val)}
-        />
-      </div>
-    </div>
-
-    <div className="border-t border-line-soft pt-6">
       <SectionHeading title={t('wizard.photosHeading')} sub={t('wizard.photosSub')} optional />
       <AnimalMediaUploader animalId={animalId} resolveOwnerId={resolveOwnerId} />
     </div>
@@ -1046,11 +1120,13 @@ const StepStory = ({
 const StepReview = ({
   t,
   v,
+  set,
   onEdit,
   animalId,
 }: {
   t: Translator;
   v: FormValues;
+  set: <K extends keyof FormValues>(key: K, value: FormValues[K]) => void;
   onEdit: (s: number) => void;
   animalId: string | null;
 }) => {
@@ -1072,6 +1148,7 @@ const StepReview = ({
   const age = ageText(t, v);
   const size = v.size ? sizeLabel(t, v.size) : '';
   const namedVaccines = v.vaccinations.filter((x) => x.name.trim());
+  const namedDewormings = v.dewormings.filter((x) => x.date);
 
   // Render the previews with the real portal components so they match exactly.
   // Coerce the form's possibly-empty values to the saved enum shape they expect.
@@ -1122,27 +1199,68 @@ const StepReview = ({
         </div>
       )}
 
-      {/* Preview: card in the listing */}
+      {/* Visibility lives with the review now — you decide how the animal shows on
+          the portal right where you can preview the result. */}
       <div>
-        <h3 className="font-display text-lg text-ink">{t('wizard.previewCardTitle')}</h3>
-        <p className="mt-1 hint">{t('wizard.previewCardHint')}</p>
-        <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
-          <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.portalPublic')}</p>
-          <div className="mx-auto max-w-[280px]">
-            <PortalAnimalCard preview slug="" animal={previewAnimal} photoUrl={cover?.mediumUrl} />
-          </div>
+        <SectionHeading title={t('wizard.visibilityHeading')} sub={t('wizard.visibilitySub')} />
+        <div className="mt-4 space-y-4">
+          <Toggle
+            label={t('wizard.visibleOnPortalLabel')}
+            hint={t('wizard.visibleOnPortalHint')}
+            checked={v.visibleOnPortal}
+            onChange={(val) => set('visibleOnPortal', val)}
+          />
+          <Toggle
+            label={t('wizard.listedForAdoptionLabel')}
+            hint={t('wizard.listedForAdoptionHint')}
+            checked={v.listedForAdoption}
+            onChange={(val) => set('listedForAdoption', val)}
+          />
         </div>
       </div>
 
-      {/* Preview: the animal's public page (top) */}
-      <div>
-        <h3 className="font-display text-lg text-ink">{t('wizard.previewDetailTitle')}</h3>
-        <p className="mt-1 hint">{t('wizard.previewDetailHint')}</p>
-        <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
-          <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.animalPage')}</p>
-          <PortalAnimalHero preview slug="" animal={previewAnimal} photoUrl={cover?.mediumUrl} />
+      {/* Portal previews only make sense when the animal is actually visible there. */}
+      {v.visibleOnPortal ? (
+        <>
+          {/* Preview: card in the listing */}
+          <div>
+            <h3 className="font-display text-lg text-ink">{t('wizard.previewCardTitle')}</h3>
+            <p className="mt-1 hint">{t('wizard.previewCardHint')}</p>
+            <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
+              <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.portalPublic')}</p>
+              <div className="mx-auto max-w-[280px]">
+                <PortalAnimalCard
+                  preview
+                  slug=""
+                  animal={previewAnimal}
+                  photoUrl={cover?.mediumUrl}
+                  listedForAdoption={v.listedForAdoption}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preview: the animal's public page (top) */}
+          <div>
+            <h3 className="font-display text-lg text-ink">{t('wizard.previewDetailTitle')}</h3>
+            <p className="mt-1 hint">{t('wizard.previewDetailHint')}</p>
+            <div className="mt-4 rounded-xl border border-dashed border-line bg-bg-2/30 p-6">
+              <p className="eyebrow eyebrow-mute mb-3">— {t('wizard.animalPage')}</p>
+              <PortalAnimalHero
+                preview
+                slug=""
+                animal={previewAnimal}
+                photoUrl={cover?.mediumUrl}
+                listedForAdoption={v.listedForAdoption}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="rounded-xl border border-dashed border-line bg-bg-2/30 px-5 py-4">
+          <p className="text-sm text-ink-soft">{t('wizard.previewHiddenNote')}</p>
         </div>
-      </div>
+      )}
 
       {/* Technical details (field-by-field, with edit shortcuts) */}
       <div className="border-t border-line-soft pt-6">
@@ -1157,29 +1275,29 @@ const StepReview = ({
             <ReviewRow label={t('wizard.colorLabel')} value={v.predominantColor || dash} />
             <ReviewRow label={t('wizard.weightLabel')} value={v.weightKg ? `${v.weightKg} kg` : dash} />
             <ReviewRow label={t('detail.factAge')} value={age || dash} />
+            <ReviewRow label={t('wizard.microchipLabel')} value={v.microchipCode || dash} />
           </ReviewBlock>
 
-          <ReviewBlock title={t('wizard.steps.entry')} onEdit={() => onEdit(2)} editLabel={t('detail.edit')}>
+          <ReviewBlock title={t('wizard.steps.story')} onEdit={() => onEdit(2)} editLabel={t('detail.edit')}>
+            <ReviewRow label={t('wizard.storyHeading')} value={v.shortStory || dash} />
+          </ReviewBlock>
+
+          <ReviewBlock title={t('wizard.steps.entry')} onEdit={() => onEdit(3)} editLabel={t('detail.edit')}>
             <ReviewRow label={t('wizard.intakeDateLabel')} value={v.intakeDate || t('wizard.today')} />
             <ReviewRow label={t('wizard.rescueDateLabel')} value={v.rescueDate || dash} />
             <ReviewRow label={t('form.rescueLocationLabel')} value={v.rescueLocation || dash} />
           </ReviewBlock>
 
-          <ReviewBlock title={t('wizard.steps.health')} onEdit={() => onEdit(3)} editLabel={t('detail.edit')}>
+          <ReviewBlock title={t('wizard.steps.health')} onEdit={() => onEdit(4)} editLabel={t('detail.edit')}>
             <ReviewRow label={t('detail.factNeutered')} value={v.neutered ? neuteredLabel(t, v.neutered) : dash} />
             <ReviewRow label={t('wizard.vaccinesHeading')} value={namedVaccines.map((x) => x.name).join(', ') || dash} />
+            <ReviewRow label={t('wizard.dewormingsHeading')} value={namedDewormings.map((x) => x.product || x.date).join(', ') || dash} />
             <ReviewRow label={t('wizard.specialConditionsHeading')} value={v.specialConditions.join(', ') || dash} />
           </ReviewBlock>
 
-          <ReviewBlock title={t('wizard.steps.behavior')} onEdit={() => onEdit(4)} editLabel={t('detail.edit')}>
+          <ReviewBlock title={t('wizard.steps.behavior')} onEdit={() => onEdit(5)} editLabel={t('detail.edit')}>
             <ReviewRow label={t('detail.factEnergy')} value={v.energyLevel ? energyLabel(t, v.energyLevel) : dash} />
             <ReviewRow label={t('wizard.sociabilityHeading')} value={sociabilityLine} />
-          </ReviewBlock>
-
-          <ReviewBlock title={t('wizard.steps.story')} onEdit={() => onEdit(5)} editLabel={t('detail.edit')}>
-            <ReviewRow label={t('wizard.storyHeading')} value={v.shortStory || dash} />
-            <ReviewRow label={t('wizard.visibleOnPortalLabel')} value={v.visibleOnPortal ? t('wizard.yes') : t('wizard.no')} />
-            <ReviewRow label={t('wizard.listedForAdoptionLabel')} value={v.listedForAdoption ? t('wizard.yes') : t('wizard.no')} />
           </ReviewBlock>
         </div>
       </div>

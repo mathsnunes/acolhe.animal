@@ -14,11 +14,18 @@
     "animalCreated": "{name} foi cadastrado",
     "animalCreatedFallback": "Um animal foi cadastrado",
     "animalArchived": "Um animal foi arquivado",
+    "animalUnarchived": "Um animal foi reativado",
     "applicationSubmitted": "Nova candidatura recebida",
+    "applicationAssigned": "Uma candidatura foi atribuída",
+    "applicationReviewStarted": "Uma candidatura entrou em análise",
     "applicationApproved": "Uma candidatura foi aprovada",
     "applicationRejected": "Uma candidatura foi recusada",
+    "applicationWithdrew": "Um candidato desistiu",
+    "applicationAdopted": "Uma candidatura foi concluída com adoção 🎉",
+    "applicationCancelled": "Uma candidatura foi cancelada",
     "adoptionCompleted": "{animalName} foi adotado por {adopterName} 🎉",
     "adoptionCompletedFallback": "Um animal foi adotado 🎉",
-    "adoptionCancelled": "Uma adoção foi cancelada"
+    "adoptionCancelled": "Uma adoção foi cancelada",
+    "fallback": "Atividade registrada"
   }
 }

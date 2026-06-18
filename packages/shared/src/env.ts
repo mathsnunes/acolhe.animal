@@ -14,6 +14,13 @@ const envSchema = z.object({
 
   BETTER_AUTH_SECRET: z.string().min(16, 'BETTER_AUTH_SECRET muito curto.'),
   BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
+  /**
+   * Extra origins better-auth should trust, comma-separated (each an absolute
+   * origin or a wildcard pattern like `https://*.example.com`). Use it for
+   * staging hosts or a fixed dev tunnel. Ephemeral Cloudflare/ngrok tunnels are
+   * already trusted automatically outside production — see `lib/auth.ts`.
+   */
+  BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
 
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
 

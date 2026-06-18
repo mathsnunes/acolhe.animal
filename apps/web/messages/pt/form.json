@@ -98,6 +98,7 @@
     "petHistoryPlaceholder": "Ex: Minha cachorra Bidu morreu em 2023, de causas naturais, com 14 anos…"
   },
   "routine": {
+    "theAnimalFallback": "o animal",
     "title": "Como a {animalName} vai",
     "em": "se encaixar na sua rotina?",
     "lede": "Cães e gatos precisam de companhia, atenção e cuidado contínuo. A gente quer entender como isso cabe no seu dia a dia.",

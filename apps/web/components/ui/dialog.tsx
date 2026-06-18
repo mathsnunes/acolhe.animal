@@ -3,6 +3,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 
@@ -31,7 +32,10 @@ const DialogContent = ({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) => <DialogPortal>
+}: React.ComponentProps<typeof DialogPrimitive.Content>) => {
+  const t = useTranslations('common');
+  return (
+    <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
@@ -51,10 +55,12 @@ const DialogContent = ({
           )}
         >
           <X className="size-4" />
-          <span className="sr-only">Fechar</span>
+          <span className="sr-only">{t('actions.close')}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
-    </DialogPortal>;
+    </DialogPortal>
+  );
+};
 
 const DialogHeader = ({ className, ...props }: React.ComponentProps<'div'>) => <div
       data-slot="dialog-header"

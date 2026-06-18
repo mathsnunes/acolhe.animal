@@ -48,4 +48,8 @@ export class R2StorageProvider implements StorageProvider {
   getPublicUrl(_key: string): string {
     throw new Error(NOT_IMPLEMENTED);
   }
+
+  keyFromUrl(_url: string): string {
+    throw new Error(NOT_IMPLEMENTED);
+  }
 }

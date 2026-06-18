@@ -47,12 +47,24 @@ const HomeView = ({
           : t('events.animalCreatedFallback');
       case 'animal.archived':
         return t('events.animalArchived');
+      case 'animal.unarchived':
+        return t('events.animalUnarchived');
       case 'application.submitted':
         return t('events.applicationSubmitted');
+      case 'application.assigned':
+        return t('events.applicationAssigned');
+      case 'application.review_started':
+        return t('events.applicationReviewStarted');
       case 'application.approved':
         return t('events.applicationApproved');
       case 'application.rejected':
         return t('events.applicationRejected');
+      case 'application.withdrew':
+        return t('events.applicationWithdrew');
+      case 'application.adopted':
+        return t('events.applicationAdopted');
+      case 'application.cancelled':
+        return t('events.applicationCancelled');
       case 'adoption.completed':
         return str(p.animalName) && str(p.adopterName)
           ? t('events.adoptionCompleted', {
@@ -63,7 +75,7 @@ const HomeView = ({
       case 'adoption.cancelled':
         return t('events.adoptionCancelled');
       default:
-        return e.eventType;
+        return t('events.fallback');
     }
   };
 
@@ -88,8 +100,8 @@ const HomeView = ({
       ) : (
         <ul className="space-y-3">
           {timeline.map((e) => (
-            <li key={e.id} className="flex items-baseline gap-3 text-sm">
-              <span className="size-1.5 shrink-0 translate-y-1.5 rounded-full bg-terra" />
+            <li key={e.id} className="flex items-start gap-3 text-sm">
+              <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full bg-terra" />
               <span className="text-ink">{eventText(e)}</span>
               <span className="ml-auto shrink-0 text-xs text-ink-mute">
                 {formatRelative(e.occurredAt)}

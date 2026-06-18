@@ -96,7 +96,7 @@ export default async function SentPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* ── Ações ────────────────────────────────────────────── */}
+        {/* ── Actions ──────────────────────────────────────────── */}
         <div className="mt-12 border-t border-line-soft pt-8 text-center">
           <p className="mb-6 font-display text-lg italic text-ink-soft">
             {t('submitted.thanks', { animalName })}

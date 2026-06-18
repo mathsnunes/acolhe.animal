@@ -14,16 +14,23 @@ import {
   animal,
   animalPhoto,
   animalVideo,
+  organization,
   upload,
   type AnimalPhoto,
   type AnimalVideo,
   type Upload,
 } from '@acolhe-animal/db';
-import { extractVideoPoster, getStorage, processImage, transcodeVideo } from '@acolhe-animal/integrations';
+import {
+  extractVideoPoster,
+  getStorage,
+  processImage,
+  processLogo,
+  transcodeVideo,
+} from '@acolhe-animal/integrations';
 
 import type { Ctx } from '../context';
 import { withTransaction } from '../context';
-import { assertCanManageAnimals } from '../auth/permissions';
+import { assertAdmin, assertCanManageAnimals } from '../auth/permissions';
 import { getAnimal } from '../animals/service';
 import { requestUploadsSchema } from './schemas';
 
@@ -46,6 +53,8 @@ const photoKey = (animalPublicId: string, photoId: string, name: string): string
   `animals/${animalPublicId}/photos/${photoId}/${name}`;
 const videoKey = (animalPublicId: string, videoId: string, name: string): string =>
   `animals/${animalPublicId}/videos/${videoId}/${name}`;
+/** Stable key for an org's logo — re-uploads overwrite it (the term reads it here). */
+export const orgLogoKey = (organizationId: number): string => `logos/${organizationId}/logo.png`;
 
 export interface UploadTicketResult {
   uploadId: string;
@@ -59,16 +68,20 @@ export interface UploadTicketResult {
  * prefix, and mint a presigned URL per file. The bytes never touch our server.
  */
 export const requestUploads = async (ctx: Ctx, input: unknown): Promise<UploadTicketResult[]> => {
-  assertCanManageAnimals(ctx);
   const { policy: policyKey, owner, files } = requestUploadsSchema.parse(input);
   const policy = getUploadPolicy(policyKey);
   uploadBatchSchema(policy).parse(files); // count / type / per-file & total size
 
-  const ownerAnimal = await getAnimal(ctx, owner.id); // tenant + existence check
-
-  const used = await countOwnerMedia(ctx, policy, owner.id, ownerAnimal.pk);
-  if (used + files.length > policy.maxFiles) {
-    throw new ValidationError(`Limite de ${policy.maxFiles} arquivo(s) por animal atingido.`);
+  if (owner.type === 'organization') {
+    // The org logo: admin-only, one file, no per-animal quota.
+    assertAdmin(ctx);
+  } else {
+    assertCanManageAnimals(ctx);
+    const ownerAnimal = await getAnimal(ctx, owner.id); // tenant + existence check
+    const used = await countOwnerMedia(ctx, policy, owner.id, ownerAnimal.pk);
+    if (used + files.length > policy.maxFiles) {
+      throw new ValidationError(`Limite de ${policy.maxFiles} arquivo(s) por animal atingido.`);
+    }
   }
 
   const storage = getStorage();
@@ -102,6 +115,60 @@ export const requestUploads = async (ctx: Ctx, input: unknown): Promise<UploadTi
     tickets.push({ uploadId, url: ticket.uploadUrl, method: ticket.method, headers: ticket.headers });
   }
   return tickets;
+};
+
+/**
+ * Finalize an org-logo upload: verify the bytes, normalize to a resized PNG (keeps
+ * transparency, embeds in the term PDF), store it at the stable logo key, and set
+ * `organization.logoUrl` (cache-busted so a re-upload shows immediately). Admin-only.
+ */
+export const commitOrgLogo = async (ctx: Ctx, uploadId: string): Promise<{ logoUrl: string }> => {
+  assertAdmin(ctx);
+  const row = await loadPendingUpload(ctx, uploadId);
+  if (row.policy !== 'org-logo' || row.ownerType !== 'organization') {
+    await markFailed(ctx, row.pk);
+    throw new ValidationError('Upload de logo inválido.');
+  }
+  const storage = getStorage();
+  const info = await storage.exists(row.storageKey);
+  if (!info) {
+    await markFailed(ctx, row.pk);
+    throw new ValidationError('O arquivo não foi enviado. Tente novamente.');
+  }
+
+  let png;
+  try {
+    png = await processLogo(await storage.get(row.storageKey));
+  } catch {
+    await failAndDelete(ctx, row, storage);
+    throw new ValidationError('Não foi possível processar a imagem. Envie um arquivo válido.');
+  }
+
+  const finalKey = orgLogoKey(ctx.organizationId);
+  await storage.put({ key: finalKey, body: png.body, contentType: 'image/png' });
+  try {
+    await storage.delete(row.storageKey); // drop the temp original
+  } catch {
+    /* best-effort */
+  }
+  const logoUrl = `${storage.getPublicUrl(finalKey)}?v=${uploadId}`;
+
+  return withTransaction(ctx, async (txc) => {
+    await txc.db.update(organization).set({ logoUrl }).where(eq(organization.pk, ctx.organizationId));
+    await markCommitted(txc, row.pk, finalKey);
+    return { logoUrl };
+  });
+};
+
+/** Remove the org logo: clear the URL and delete the stored file (best-effort). */
+export const removeOrgLogo = async (ctx: Ctx): Promise<void> => {
+  assertAdmin(ctx);
+  await ctx.db.update(organization).set({ logoUrl: null }).where(eq(organization.pk, ctx.organizationId));
+  try {
+    await getStorage().delete(orgLogoKey(ctx.organizationId));
+  } catch {
+    /* best-effort */
+  }
 };
 
 /**

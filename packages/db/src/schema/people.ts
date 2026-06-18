@@ -32,6 +32,7 @@ export const person = pgTable(
     streetAddress: text(),
     addressNumber: text(),
     addressComplement: text(),
+    addressNeighborhood: text(),
     postalCode: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })
@@ -134,6 +135,12 @@ export const adoption = pgTable(
     adopterDocument: text().notNull(),
     adopterPhone: text().notNull(),
     adopterAddress: jsonb().$type<AdopterAddress>().notNull(),
+
+    // Who conducted the adoption (the member who ran the selection). Snapshotted
+    // name + phone so the term survives member changes; null on older/offline rows
+    // (the term then falls back to the org).
+    responsibleName: text(),
+    responsiblePhone: text(),
 
     extraClauses: text(),
     termPdfUrl: text().notNull(),

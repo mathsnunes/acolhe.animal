@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { maskCep, maskCpf, maskPhoneBR, maskUf } from '@/lib/masks';
 import { registerOfflineAction } from '@/app/(admin)/adoptions/actions';
 
 export interface AdoptableAnimal {
@@ -143,7 +144,7 @@ export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] })
                 inputMode="tel"
                 placeholder={t('offlineForm.phonePlaceholder')}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(maskPhoneBR(e.target.value))}
                 required
               />
             </div>
@@ -157,7 +158,7 @@ export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] })
                 inputMode="numeric"
                 placeholder={t('offlineForm.cpfPlaceholder')}
                 value={document}
-                onChange={(e) => setDocument(e.target.value)}
+                onChange={(e) => setDocument(maskCpf(e.target.value))}
                 required
               />
             </div>
@@ -213,7 +214,7 @@ export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] })
                 id="off-state"
                 maxLength={2}
                 value={state}
-                onChange={(e) => setState(e.target.value.toUpperCase())}
+                onChange={(e) => setState(maskUf(e.target.value))}
                 required
               />
             </div>
@@ -224,7 +225,7 @@ export const OfflineAdoptionForm = ({ animals }: { animals: AdoptableAnimal[] })
                 inputMode="numeric"
                 placeholder={t('offlineForm.postalCodePlaceholder')}
                 value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
+                onChange={(e) => setPostalCode(maskCep(e.target.value))}
                 required
               />
             </div>

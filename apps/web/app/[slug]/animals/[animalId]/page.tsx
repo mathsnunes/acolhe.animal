@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { BrandMark } from '@/components/brand';
-import { PortalAnimalHero } from '@/components/portal/portal-animal-hero';
-import { getPortalAnimal, getPublicOrganization } from '../../data';
+import { PortalAnimalDetail } from '@/components/portal/portal-animal-detail';
+import { PortalHeader } from '@/components/portal/portal-header';
+import { PortalFooter } from '@/components/portal/portal-footer';
+import { getPortalAnimal, getPublicOrganization, portalChrome } from '../../data';
 
 type PageProps = { params: Promise<{ slug: string; animalId: string }> };
 
@@ -34,55 +34,42 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
 
 export default async function AnimalDetailPage({ params }: PageProps) {
   const { slug, animalId } = await params;
-  const t = await getTranslations('portal');
   const org = await getPublicOrganization(slug);
   if (!org) notFound();
 
   const found = await getPortalAnimal(org.pk, animalId);
-  if (!found || !found.animal.visibleOnPortal || !found.animal.listedForAdoption) {
+  // Visibility controls whether the animal shows publicly at all; whether it
+  // accepts candidacies only gates the adopt button (handled in the detail).
+  if (!found || !found.animal.visibleOnPortal) {
     notFound();
   }
 
-  const { animal, photoUrl } = found;
+  const { animal, photos, videos } = found;
+
+  const { accentStyle, documentLabel, hasAbout } = portalChrome(org);
 
   return (
-    <div className="min-h-dvh bg-bg">
-      <nav className="border-b border-line-soft bg-paper">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-3">
-          <Link
-            href={`/${slug}`}
-            className="inline-flex items-center gap-2 text-sm text-ink-mute transition hover:text-ink"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="size-3.5"
-              aria-hidden="true"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            {t('adopt.back')}
-          </Link>
-          <span className="h-4 w-px bg-line" />
-          <span className="font-mono text-[11px] tracking-wide text-ink-mute">{org.name}</span>
-        </div>
-      </nav>
+    <div className="flex min-h-dvh flex-col bg-bg" style={accentStyle}>
+      {/* ── Same top header as the portal home, for a consistent shell ───────── */}
+      <PortalHeader slug={slug} orgName={org.name} logoUrl={org.logoUrl} showAbout={hasAbout} />
 
-      <main className="mx-auto max-w-4xl px-6 py-10 sm:py-14">
-        <PortalAnimalHero slug={slug} animal={animal} photoUrl={photoUrl} />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8 sm:py-10">
+        <PortalAnimalDetail
+          slug={slug}
+          animal={animal}
+          photos={photos}
+          videos={videos}
+          listedForAdoption={animal.listedForAdoption}
+        />
       </main>
 
-      <footer className="border-t border-line-soft bg-paper">
-        <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-6 py-10 text-center">
-          <p className="display text-lg text-ink">{org.name}</p>
-          <span className="inline-flex items-center gap-2 font-mono text-[11px] tracking-wider text-ink-mute">
-            <span>{t('footer.madeWith')}</span>
-            <BrandMark className="text-[13px]" />
-          </span>
-        </div>
-      </footer>
+      <PortalFooter
+        orgName={org.name}
+        documentLabel={documentLabel}
+        instagram={org.portalConfig?.instagram}
+        homeHref={`/${slug}`}
+        showAbout={hasAbout}
+      />
     </div>
   );
 }

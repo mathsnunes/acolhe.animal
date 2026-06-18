@@ -10,8 +10,9 @@
     "applicationTitle": "Candidatura",
     "submittedTitle": "Candidatura enviada"
   },
-  "hero": {
-    "eyebrow": "— Portal de adoção"
+  "nav": {
+    "animals": "Animais",
+    "about": "Sobre"
   },
   "available": {
     "eyebrow": "— Quem está esperando",
@@ -23,10 +24,46 @@
     "loadingMore": "Carregando mais animais…"
   },
   "footer": {
-    "madeWith": "feito com"
+    "madeWith": "feito com",
+    "about": "Sobre"
   },
   "card": {
-    "cta": "Quero adotar"
+    "cta": "Quero adotar",
+    "ctaStoryOnly": "Conheça a história",
+    "goodWithChildren": "Crianças",
+    "goodWithDogs": "Cães",
+    "goodWithCats": "Gatos"
+  },
+  "sections": {
+    "dogs": "Cães",
+    "cats": "Gatos"
+  },
+  "filters": {
+    "size": "Porte",
+    "age": "Idade",
+    "sex": "Sexo",
+    "goodWith": "Convive",
+    "clear": "Limpar filtros",
+    "noResults": "Nenhum animal com esses filtros. Tente ajustar a busca.",
+    "sizes": { "small": "Pequeno", "medium": "Médio", "large": "Grande" },
+    "ages": { "baby": "Filhote", "adult": "Adulto", "senior": "Idoso" },
+    "convivencia": { "children": "Crianças", "dogs": "Cães", "cats": "Gatos" }
+  },
+  "lives": {
+    "eyebrow": "— Nosso impacto",
+    "subtitle": "vidas que já encontraram um lar"
+  },
+  "terms": {
+    "trigger": "Termos de adoção",
+    "title": "Compromisso de adoção responsável",
+    "description": "Ao adotar, você se compromete a garantir o bem-estar do animal pela vida toda.",
+    "bullets": {
+      "b1": "Oferecer abrigo, alimentação adequada e cuidados veterinários sempre que necessário.",
+      "b2": "Castrar o animal e manter a vacinação e a vermifugação em dia.",
+      "b3": "Nunca abandonar, vender ou repassar o animal sem comunicar a organização.",
+      "b4": "Garantir um ambiente seguro, evitando fugas, maus-tratos e acidentes.",
+      "b5": "Caso não seja mais possível cuidar, devolver o animal à organização — abandonar não é opção."
+    }
   },
   "labels": {
     "speciesDog": "Cão",
@@ -35,11 +72,40 @@
     "sexFemale": "Fêmea",
     "sizeSmall": "Pequeno porte",
     "sizeMedium": "Médio porte",
-    "sizeLarge": "Grande porte"
+    "sizeLarge": "Grande porte",
+    "ageMonths": "{months, plural, one {# mês} other {# meses}}",
+    "ageYears": "{years, plural, one {# ano} other {# anos}}"
   },
   "detail": {
     "available": "Disponível para adoção",
-    "adoptCta": "Quero adotar a {animalName}"
+    "adoptCta": "Quero adotar a {animalName}",
+    "adoptClosed": "Adoções não abertas no momento",
+    "adoptClosedHint": "Este animal está aqui só para contar a história — as candidaturas não estão abertas no momento.",
+    "yes": "Sim",
+    "traitsTitle": "Características",
+    "livingTitle": "Convive bem com",
+    "healthTitle": "Saúde",
+    "quirksTitle": "Manias e jeitinho",
+    "factAge": "Idade",
+    "factSize": "Porte",
+    "factColor": "Cor",
+    "factWeight": "Peso",
+    "factEnergy": "Energia",
+    "factMicrochip": "Microchip",
+    "factNeutered": "Castração",
+    "vaccinesTitle": "Vacinas",
+    "dewormingTitle": "Vermifugação",
+    "dewormingDone": "Em dia",
+    "specialTitle": "Condições especiais",
+    "with": {
+      "goodWithChildren": "Crianças",
+      "goodWithDogs": "Outros cães",
+      "goodWithCats": "Gatos",
+      "goodWithStrangers": "Pessoas novas"
+    },
+    "neutered": { "yes": "Castrado", "no": "Não castrado", "scheduled": "Castração agendada" },
+    "energy": { "calm": "Calmo", "balanced": "Equilibrado", "energetic": "Elétrico" },
+    "sociability": { "yes": "Sim", "no": "Não", "with-care": "Com cuidado", "unknown": "Não sei" }
   },
   "adopt": {
     "back": "Voltar",

@@ -1,0 +1,33 @@
+{
+  "trigger": "Gerar arte",
+  "title": "Gerar arte para Instagram",
+  "subtitle": "Para {name}. Você gera, copia e posta direto na sua conta — o produto não publica nada para você.",
+  "tabs": {
+    "feed": "Feed",
+    "story": "Story"
+  },
+  "dimensions": {
+    "feed-square": "1080 × 1080",
+    "story-vertical": "1080 × 1920"
+  },
+  "choosePhoto": "Escolha a foto",
+  "noPhotos": "Adicione fotos ao animal para gerar a arte.",
+  "captionLabel": "Legenda sugerida",
+  "chars": "{count} caracteres",
+  "generatedAt": "Gerada em {date}",
+  "generate": "Gerar arte",
+  "regenerate": "Gerar de novo",
+  "generating": "Montando a peça…",
+  "generatingHint": "Escolhendo a melhor foto e aplicando a marca. Leva uns segundinhos.",
+  "copyImage": "Copiar imagem",
+  "copyCaption": "Copiar legenda",
+  "download": "Baixar PNG",
+  "ready": "PNG · pronta para postar",
+  "emptyTitle": "Sem arte ainda",
+  "emptyHint": "Escolha uma foto e gere a arte.",
+  "footer": "A arte é gerada respeitando o brand da sua organização. Cada animal pode ter uma arte de feed e uma de story ativa ao mesmo tempo — gerar de novo substitui a anterior.",
+  "imageCopied": "Imagem copiada.",
+  "captionCopied": "Legenda copiada.",
+  "copyImageUnsupported": "Seu navegador não copia imagens — baixe o PNG.",
+  "generateError": "Não foi possível gerar a arte. Tente de novo."
+}

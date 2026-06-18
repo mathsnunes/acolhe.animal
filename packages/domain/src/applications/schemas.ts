@@ -19,4 +19,12 @@ export const saveDraftSchema = z.object({
   applicationData: applicationDataSchema,
 });
 
+/** Staff-created candidacy: who + which animal + optional questionnaire answers. */
+export const manualApplicationSchema = z.object({
+  animalId: z.string().min(1),
+  person: personIdentitySchema,
+  applicationData: applicationDataSchema.optional(),
+});
+
 export type StartApplicationInput = z.input<typeof startApplicationSchema>;
+export type ManualApplicationInput = z.input<typeof manualApplicationSchema>;

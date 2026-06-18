@@ -1,31 +1,37 @@
 import { createHash } from 'node:crypto';
 
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { createId, NotFoundError, ConflictError } from '@acolhe-animal/shared';
 import { cpfSchema, optionalEmailSchema, phoneSchema, postalCodeSchema } from '@acolhe-animal/shared';
+import { formatCnpj, formatCpf, formatPhoneBR } from '@acolhe-animal/shared';
 import {
   adoption,
   animal,
   application,
   organization,
+  organizationMember,
   person,
+  user,
   type Adoption,
+  type Animal,
 } from '@acolhe-animal/db';
 import { getStorage } from '@acolhe-animal/integrations';
 
 import type { Ctx } from '../context';
 import { withTransaction } from '../context';
 import { assertCanManageAnimals } from '../auth/permissions';
+import { orgLogoKey } from '../uploads/service';
 import { emitTimelineEvent } from '../timeline/timeline';
 import { getPersonByPk, upsertPersonByPhone } from '../people/service';
-import { composeAdoptionTerm, renderTermHtml } from './term';
+import { renderTermPdf, type AdoptionTermData } from './term';
 
 const addressSnapshotSchema = z.object({
   street: z.string().default(''),
   number: z.string().default(''),
   complement: z.string().optional(),
+  neighborhood: z.string().optional(),
   city: z.string().default(''),
   state: z.string().default(''),
   postalCode: z.string().default(''),
@@ -36,7 +42,19 @@ export const finalizeDigitalSchema = z.object({
   adopterDocument: cpfSchema,
   adopterAddress: addressSnapshotSchema,
   extraClauses: z.string().trim().optional(),
+  /** The member who conducted the adoption; defaults to the acting user. */
+  responsibleUserId: z.string().optional(),
   signature: z.object({ ip: z.string(), userAgent: z.string() }),
+});
+
+/** Editable fields when correcting an existing adoption + its term. */
+export const updateAdoptionSchema = z.object({
+  adopterName: z.string().trim().min(1),
+  adopterDocument: cpfSchema,
+  adopterPhone: phoneSchema,
+  adopterAddress: addressSnapshotSchema,
+  extraClauses: z.string().trim().optional(),
+  responsibleUserId: z.string().optional(),
 });
 
 export const registerOfflineSchema = z.object({
@@ -54,17 +72,123 @@ export const registerOfflineSchema = z.object({
   adoptedAt: z.coerce.date(),
 });
 
-/** Store the rendered term and return its public URL + sha256 hash. */
-const storeTerm = async (adoptionId: string, termText: string): Promise<{ url: string; hash: string }> => {
-  const html = renderTermHtml(termText);
-  const bytes = Buffer.from(html, 'utf-8');
-  const hash = createHash('sha256').update(bytes).digest('hex');
+/** Store the rendered term PDF and return its public URL + sha256 hash. */
+const storeTerm = async (
+  adoptionId: string,
+  bytes: Uint8Array,
+): Promise<{ url: string; hash: string }> => {
+  const buf = Buffer.from(bytes);
+  const hash = createHash('sha256').update(buf).digest('hex');
   const { url } = await getStorage().put({
-    key: `adoptions/${adoptionId}/term.html`,
-    body: bytes,
-    contentType: 'text/html; charset=utf-8',
+    key: `adoptions/${adoptionId}/term.pdf`,
+    body: buf,
+    contentType: 'application/pdf',
   });
-  return { url, hash };
+  // Cache-bust on the content hash so a regenerated (corrected) term loads fresh
+  // even though it overwrites the same storage key.
+  return { url: `${url}?v=${hash.slice(0, 12)}`, hash };
+};
+
+/** A short "idade aproximada" line for the term, from the animal's age fields. */
+const animalAgeText = (a: Pick<Animal, 'estimatedBirthDate' | 'ageMonthsAtIntake' | 'ageReferenceDate'>): string => {
+  let months: number | null = null;
+  if (a.estimatedBirthDate) {
+    const now = new Date();
+    months =
+      (now.getFullYear() - a.estimatedBirthDate.getFullYear()) * 12 +
+      (now.getMonth() - a.estimatedBirthDate.getMonth());
+  } else if (a.ageMonthsAtIntake != null) {
+    const since = a.ageReferenceDate ?? null;
+    const extra = since
+      ? Math.max(0, Math.floor((Date.now() - since.getTime()) / (1000 * 60 * 60 * 24 * 30.44)))
+      : 0;
+    months = a.ageMonthsAtIntake + extra;
+  }
+  if (months == null || months < 0) return '';
+  if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
+  const years = Math.floor(months / 12);
+  return `${years} ${years === 1 ? 'ano' : 'anos'}`;
+};
+
+/** The org columns the adoption term needs (header + document label). */
+const selectTermOrg = (ctx: Ctx) =>
+  ctx.db
+    .select({
+      name: organization.name,
+      document: organization.document,
+      documentType: organization.documentType,
+      phone: organization.phone,
+      logoUrl: organization.logoUrl,
+    })
+    .from(organization)
+    .where(eq(organization.pk, ctx.organizationId))
+    .limit(1);
+
+type TermOrgRow = Awaited<ReturnType<typeof selectTermOrg>>[number];
+
+/** Build the term's org header from an org row, embedding the logo PNG when set. */
+const buildTermOrg = async (ctx: Ctx, org: TermOrgRow | undefined): Promise<AdoptionTermData['org']> => {
+  // A missing/unreadable logo shouldn't block the term.
+  let logo: { bytes: Uint8Array; type: 'png' } | null = null;
+  if (org?.logoUrl) {
+    try {
+      logo = { bytes: await getStorage().get(orgLogoKey(ctx.organizationId)), type: 'png' };
+    } catch {
+      logo = null;
+    }
+  }
+  const documentLabel = org
+    ? `${org.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} ${
+        org.documentType === 'cnpj' ? formatCnpj(org.document) : formatCpf(org.document)
+      }`
+    : null;
+  return { name: org?.name ?? 'a organização', documentLabel, phone: org ? formatPhoneBR(org.phone) : null, logo };
+};
+
+/** Build the term's animal block from an animal row. */
+const toTermAnimal = (a: Animal): AdoptionTermData['animal'] => ({
+  name: a.name,
+  species: a.species,
+  sex: a.sex,
+  color: a.predominantColor,
+  ageText: animalAgeText(a),
+  microchip: a.microchipCode,
+});
+
+/**
+ * Resolve a member's name + phone (snapshotted onto the adoption + term) by user
+ * id, ensuring they're an active member of the caller's org. Null if not.
+ */
+const resolveResponsible = async (
+  ctx: Ctx,
+  userId: string,
+): Promise<{ name: string; phone: string } | null> => {
+  const [row] = await ctx.db
+    .select({ name: user.name, phone: user.phoneNumber })
+    .from(organizationMember)
+    .innerJoin(user, eq(organizationMember.userId, user.id))
+    .where(
+      and(
+        eq(organizationMember.userId, userId),
+        eq(organizationMember.organizationId, ctx.organizationId),
+        isNull(organizationMember.removedAt),
+      ),
+    )
+    .limit(1);
+  return row ? { name: row.name, phone: formatPhoneBR(row.phone) } : null;
+};
+
+/** Active members for the "responsável" picker (any animal manager can read). */
+export const listResponsibleMembers = async (
+  ctx: Ctx,
+): Promise<Array<{ userId: string; name: string; phone: string }>> => {
+  assertCanManageAnimals(ctx);
+  const rows = await ctx.db
+    .select({ userId: organizationMember.userId, name: user.name, phone: user.phoneNumber })
+    .from(organizationMember)
+    .innerJoin(user, eq(organizationMember.userId, user.id))
+    .where(and(eq(organizationMember.organizationId, ctx.organizationId), isNull(organizationMember.removedAt)));
+  return rows.map((r) => ({ userId: r.userId, name: r.name, phone: formatPhoneBR(r.phone) }));
 };
 
 /**
@@ -89,29 +213,64 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
   const [personRow, [animalRow], [org]] = await Promise.all([
     getPersonByPk(ctx, app.personId),
     ctx.db.select().from(animal).where(eq(animal.pk, app.animalId)).limit(1),
-    ctx.db
-      .select({ name: organization.name })
-      .from(organization)
-      .where(eq(organization.pk, ctx.organizationId))
-      .limit(1),
+    selectTermOrg(ctx),
   ]);
   if (!animalRow) throw new NotFoundError('Animal não encontrado.');
 
+  // Responsible member: explicit pick, else the acting user. Snapshotted so the
+  // term keeps the right person even if they later change name or leave.
+  const fallbackUserId = ctx.actor.type === 'user' ? ctx.actor.userId : null;
+  const responsibleId = data.responsibleUserId ?? fallbackUserId;
+  const responsible = responsibleId ? await resolveResponsible(ctx, responsibleId) : null;
+
   const adoptionId = createId('adoption');
-  const termText = composeAdoptionTerm({
-    organizationName: org?.name ?? 'a organização',
-    adopterName: personRow.name,
-    adopterDocument: data.adopterDocument,
-    animalName: animalRow.name,
-    animalSpecies: animalRow.species,
+  const termData: AdoptionTermData = {
+    org: await buildTermOrg(ctx, org),
+    responsible,
+    adopter: {
+      name: personRow.name,
+      cpf: formatCpf(data.adopterDocument),
+      phone: formatPhoneBR(personRow.phone),
+      email: personRow.email,
+      address: {
+        street: data.adopterAddress.street,
+        number: data.adopterAddress.number,
+        complement: data.adopterAddress.complement,
+        neighborhood: data.adopterAddress.neighborhood,
+        city: data.adopterAddress.city,
+        state: data.adopterAddress.state,
+        postalCode: data.adopterAddress.postalCode,
+      },
+    },
+    animal: toTermAnimal(animalRow),
     date: new Date(),
     extraClauses: data.extraClauses,
-  });
-  const { url, hash } = await storeTerm(adoptionId, termText);
+  };
+  const pdfBytes = await renderTermPdf(termData);
+  const { url, hash } = await storeTerm(adoptionId, pdfBytes);
 
   return withTransaction(ctx, async (tx) => {
-    // Persist the adopter's CPF on the Person (collected at signature time).
-    await tx.db.update(person).set({ cpf: data.adopterDocument }).where(eq(person.id, personRow.id));
+    // Backfill the adopter's CPF on the Person (collected at signature time) — but
+    // only when it's free in this org. CPF is unique per organization, and the same
+    // human may already hold it under another person record (e.g. a prior candidacy,
+    // or an adoption that was later returned). The adoption itself always records
+    // `adopterDocument`, so skipping the backfill here loses nothing and avoids a
+    // `person_org_cpf_unique` violation.
+    if (personRow.cpf !== data.adopterDocument) {
+      const [cpfOwner] = await tx.db
+        .select({ pk: person.pk })
+        .from(person)
+        .where(
+          and(eq(person.organizationId, ctx.organizationId), eq(person.cpf, data.adopterDocument)),
+        )
+        .limit(1);
+      if (!cpfOwner) {
+        await tx.db
+          .update(person)
+          .set({ cpf: data.adopterDocument })
+          .where(eq(person.id, personRow.id));
+      }
+    }
 
     const [row] = await tx.db
       .insert(adoption)
@@ -126,6 +285,8 @@ export const finalizeDigitalAdoption = async (ctx: Ctx, input: unknown): Promise
         adopterDocument: data.adopterDocument,
         adopterPhone: personRow.phone,
         adopterAddress: data.adopterAddress,
+        responsibleName: responsible?.name ?? null,
+        responsiblePhone: responsible?.phone ?? null,
         extraClauses: data.extraClauses ?? null,
         termPdfUrl: url,
         termPdfHash: hash,
@@ -217,6 +378,129 @@ export const registerOfflineAdoption = async (ctx: Ctx, input: unknown): Promise
     return row!;
   });
 };
+
+/**
+ * The active (non-cancelled) adoption of an animal, if any — the full record
+ * plus the public id of the originating candidacy (null for offline adoptions).
+ * The animal detail page renders the whole adoption (adopter, term, origin)
+ * inline now that there's no dedicated adoption page.
+ */
+export const getAdoptionByAnimal = async (
+  ctx: Ctx,
+  animalId: string,
+): Promise<{ adoption: Adoption; originApplicationId: string | null } | null> => {
+  const [row] = await ctx.db
+    .select({ adoption, originApplicationId: application.id })
+    .from(adoption)
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
+    .leftJoin(application, eq(adoption.applicationId, application.pk))
+    .where(
+      and(
+        eq(animal.id, animalId),
+        eq(adoption.organizationId, ctx.organizationId),
+        isNull(adoption.cancelledAt),
+      ),
+    )
+    .limit(1);
+  return row ? { adoption: row.adoption, originApplicationId: row.originApplicationId } : null;
+};
+
+/**
+ * Correct an existing (non-cancelled) adoption: update the snapshot values and
+ * the responsible member, regenerate the term PDF, and replace it in storage.
+ * For fixing a wrong value on an already-issued term.
+ */
+export const updateAdoption = async (ctx: Ctx, adoptionId: string, input: unknown): Promise<Adoption> => {
+  assertCanManageAnimals(ctx);
+  const data = updateAdoptionSchema.parse(input);
+
+  const [row] = await ctx.db
+    .select()
+    .from(adoption)
+    .where(and(eq(adoption.id, adoptionId), eq(adoption.organizationId, ctx.organizationId)))
+    .limit(1);
+  if (!row) throw new NotFoundError('Adoção não encontrada.');
+  if (row.cancelledAt) throw new ConflictError('Uma adoção cancelada não pode ser editada.');
+
+  const [personRow, [animalRow], [org]] = await Promise.all([
+    getPersonByPk(ctx, row.personId),
+    ctx.db.select().from(animal).where(eq(animal.pk, row.animalId)).limit(1),
+    selectTermOrg(ctx),
+  ]);
+  if (!animalRow) throw new NotFoundError('Animal não encontrado.');
+
+  // Re-resolve the responsible when a member is supplied, else keep the snapshot.
+  const responsible = data.responsibleUserId
+    ? await resolveResponsible(ctx, data.responsibleUserId)
+    : row.responsibleName
+      ? { name: row.responsibleName, phone: row.responsiblePhone }
+      : null;
+
+  const termData: AdoptionTermData = {
+    org: await buildTermOrg(ctx, org),
+    responsible,
+    adopter: {
+      name: data.adopterName,
+      cpf: formatCpf(data.adopterDocument),
+      phone: formatPhoneBR(data.adopterPhone),
+      email: personRow.email,
+      address: { ...data.adopterAddress },
+    },
+    animal: toTermAnimal(animalRow),
+    date: row.adoptedAt,
+    extraClauses: data.extraClauses,
+  };
+
+  const pdfBytes = await renderTermPdf(termData);
+  const { url, hash } = await storeTerm(adoptionId, pdfBytes);
+
+  const [updated] = await ctx.db
+    .update(adoption)
+    .set({
+      adopterName: data.adopterName,
+      adopterDocument: data.adopterDocument,
+      adopterPhone: data.adopterPhone,
+      adopterAddress: data.adopterAddress,
+      responsibleName: responsible?.name ?? null,
+      responsiblePhone: responsible?.phone ?? null,
+      extraClauses: data.extraClauses ?? null,
+      termPdfUrl: url,
+      termPdfHash: hash,
+    })
+    .where(eq(adoption.pk, row.pk))
+    .returning();
+
+  return updated!;
+};
+
+export interface AdoptionListRow {
+  id: string;
+  source: 'digital' | 'offline';
+  adopterName: string;
+  termPdfUrl: string;
+  adoptedAt: Date;
+  cancelledAt: Date | null;
+  animalId: string;
+  animalName: string;
+}
+
+/** All adoptions of the org (active + cancelled), most recent first, for the list page. */
+export const listAdoptions = async (ctx: Ctx): Promise<AdoptionListRow[]> =>
+  ctx.db
+    .select({
+      id: adoption.id,
+      source: adoption.source,
+      adopterName: adoption.adopterName,
+      termPdfUrl: adoption.termPdfUrl,
+      adoptedAt: adoption.adoptedAt,
+      cancelledAt: adoption.cancelledAt,
+      animalId: animal.id,
+      animalName: animal.name,
+    })
+    .from(adoption)
+    .innerJoin(animal, eq(adoption.animalId, animal.pk))
+    .where(eq(adoption.organizationId, ctx.organizationId))
+    .orderBy(desc(adoption.adoptedAt));
 
 /** Cancel an adoption (return/giveback). Frees the animal again. */
 export const cancelAdoption = async (ctx: Ctx, adoptionId: string, reason: string): Promise<void> => {

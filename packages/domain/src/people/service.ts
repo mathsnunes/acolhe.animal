@@ -21,6 +21,7 @@ export const personIdentitySchema = z.object({
   streetAddress: z.string().trim().optional(),
   addressNumber: z.string().trim().optional(),
   addressComplement: z.string().trim().optional(),
+  addressNeighborhood: z.string().trim().optional(),
   postalCode: postalCodeSchema.optional(),
 });
 
@@ -73,6 +74,7 @@ export const upsertPersonByPhone = async (ctx: Ctx, input: unknown): Promise<Per
     streetAddress: data.streetAddress ?? null,
     addressNumber: data.addressNumber ?? null,
     addressComplement: data.addressComplement ?? null,
+    addressNeighborhood: data.addressNeighborhood ?? null,
     postalCode: data.postalCode ?? null,
   };
 

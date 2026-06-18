@@ -115,5 +115,6 @@ const guessContentType = (path: string): string => {
   if (path.endsWith('.mp4')) return 'video/mp4';
   if (path.endsWith('.mov')) return 'video/quicktime';
   if (path.endsWith('.html')) return 'text/html; charset=utf-8';
+  if (path.endsWith('.pdf')) return 'application/pdf';
   return 'application/octet-stream';
 };

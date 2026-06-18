@@ -24,6 +24,13 @@ export const phoneSchema = z
     return normalized;
   });
 
+/**
+ * Account password. Minimum 8 characters is the only hard rule — we favor strong
+ * passwords through a non-blocking strength meter (see `passwordStrength`), not
+ * by rejecting average ones. Reused by signup, recovery and invite acceptance.
+ */
+export const passwordSchema = z.string().min(8, 'A senha precisa ter ao menos 8 caracteres.');
+
 /** Optional email — empty string becomes undefined. */
 export const optionalEmailSchema = z
   .string()
@@ -73,6 +80,22 @@ export const hexColorSchema = z
   .string()
   .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Cor inválida (use formato hex, ex: #B85C3C).');
 
+/**
+ * Instagram handle, normalized to the bare username (drops `@`, a full URL, and
+ * trailing slashes). Empty is allowed so the field can be cleared.
+ */
+export const instagramHandleSchema = z
+  .string()
+  .trim()
+  .transform((v) =>
+    v
+      .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+      .replace(/^@/, '')
+      .replace(/\/+$/, '')
+      .trim(),
+  )
+  .refine((v) => v === '' || /^[A-Za-z0-9._]{1,30}$/.test(v), 'Use só letras, números, ponto e underline.');
+
 /** A monetary amount in reais — positive, up to 2 decimals. */
 export const moneySchema = z
   .number({ invalid_type_error: 'Informe um valor.' })
@@ -101,6 +124,11 @@ export const RESERVED_SLUGS = new Set([
   'contact',
   'support',
   'invite',
+  'convite',
+  'signup',
+  'criar-conta',
+  'recover',
+  'recuperar-senha',
   // Route segments — keep these unreachable as org slugs. Both the pt-BR public
   // URLs and the underlying English route folders resolve, so reserve both.
   'inicio',
@@ -121,10 +149,12 @@ export const RESERVED_SLUGS = new Set([
   'campaigns',
   'historias',
   'stories',
-  'itens-em-falta',
-  'needed-items',
+  'necessidades-recorrentes',
+  'recurring-needs',
   'apoiadores',
   'supporters',
+  'membros',
+  'members',
   'config',
   'settings',
   'entrar',

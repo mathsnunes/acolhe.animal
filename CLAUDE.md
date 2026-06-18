@@ -61,7 +61,7 @@ shared  ← messaging ← domain
 
 ## Conventions in brief
 
-- **Language**: code, schema, comments, commits and technical docs are in **English**. End-user UI copy is **Portuguese (pt-BR)**, externalized via **next-intl** (`apps/web/messages/pt/*`, namespaced by feature) — see "Internationalization" below.
+- **Language**: everything generated is in **English** — code, schema, comments, commit messages, **pull/merge request titles and descriptions**, and technical docs (including `docs/` and the design specs under `docs/superpowers/specs/`). The **only** Portuguese is end-user-facing content: UI copy (**next-intl**, `apps/web/messages/pt/*`, namespaced by feature — see "Internationalization" below), domain `DomainError` messages, and WhatsApp/email templates. When a comment needs to quote a pt-BR UI label or status (e.g. `"em avaliação"`), keep the quote but write the surrounding comment in English. The `01-docs-referencia/` product reference is pt-BR and stays as-is.
 - **URLs are pt-BR**, mapped to English route folders via `beforeFiles` rewrites in `apps/web/next.config.ts` (`/animais` → `app/(admin)/animals`, `/candidatos` → `candidates`, `/inicio` → `home`, public `/[slug]/adotar/[animalId]`). **Query params are pt-BR too** (keys + values, e.g. `?especie=cachorro&tamanho=pequeno&layout=lista`), translated centrally in `apps/web/lib/animals-search-params.ts`. Route folders + code stay English. Reserved route names (pt + en) are blocked as org slugs in `packages/shared/src/schemas/common.ts`.
 - **Arrow functions**: write functions as arrow expressions, not `function` declarations (components, pages and helpers included). Enforced by ESLint (`func-style` + `eslint-plugin-prefer-arrow-functions`); `eslint --fix` converts. See `docs/conventions.md`.
 - **IDs (hybrid)**: every entity has an internal `pk` (`bigint generated always as identity`) — the real primary key and the target of every foreign key, **never exposed to clients** — plus a public `id`, a prefixed string from `createId(kind)` (`@acolhe-animal/shared`), generated in the app. URLs/API and `entityId` references speak the public `id`; FKs/joins use `pk`. `ctx.organizationId` carries the org's `pk`. Helpers in `packages/db/src/schema/_id.ts`; the surrogate stays hidden so the public surface is opaque and non-enumerable.
@@ -89,7 +89,7 @@ Note: domain-layer error messages and WhatsApp/email templates are still authore
 
 ## Authentication
 
-better-auth (phone + password + OTP), config in `apps/web/lib/auth.ts`. **Dev shortcut**: when there's no session in `development`, `lib/auth-context.ts` auto-logs-in the seeded admin (Angeli Felice) so the panel is demoable without completing login. This **never** applies in production. Real login at `/login`.
+better-auth (phone + password + OTP, plus email-OTP for recovery), config in `apps/web/lib/auth.ts`. A real login is **always** required — including in dev (there is no auto-login shortcut). `lib/auth-context.ts` is the only place that reads the session and builds the `Ctx`; the active org is selected by the `acolhe_active_org` cookie (validated against the user's memberships). Auth surface: `/entrar` (login), `/criar-conta` (signup + new org), `/recuperar-senha` (recovery), `/convite/[token]` (invite). Member management at `/membros` (admin only).
 
 ## Run locally
 
@@ -101,7 +101,7 @@ pnpm db:seed        # cities + Angeli Felice org + sample animals
 pnpm dev            # http://localhost:3000
 ```
 
-Dev login: phone **+55 48 99999-0000**, password **acolhe123** (or just open `/home` in dev).
+Dev login: phone **+55 48 99999-0000**, password **acolhe123** (required — log in at `/entrar`).
 
 ## Where things live
 

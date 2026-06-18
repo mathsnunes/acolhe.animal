@@ -21,10 +21,10 @@
     "title": "Em breve",
     "description": "Conte as histórias de adoções bem-sucedidas para inspirar novos adotantes e apoiadores."
   },
-  "neededItems": {
-    "eyebrow": "Itens em falta",
-    "title": "Em breve",
-    "description": "Liste o que falta na sede (ração, areia, cobertores) para que apoiadores possam ajudar."
+  "recurringNeeds": {
+    "eyebrow": "Necessidades recorrentes",
+    "title": "Necessidades recorrentes chegam com o portal de doações",
+    "description": "Cadastre o que a organização precisa todo mês (ração, areia, remédios) para que apoiadores possam ajudar de forma recorrente."
   },
   "supporters": {
     "eyebrow": "Apoiadores",

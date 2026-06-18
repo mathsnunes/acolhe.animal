@@ -19,6 +19,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CityCombobox } from '@/components/auth/city-combobox';
+import { ResponsibleField, type ResponsibleMember } from '@/components/adoptions/responsible-field';
+import { maskCep, maskCpf } from '@/lib/masks';
 import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
 
 /**
@@ -26,27 +29,56 @@ import { finalizeAdoptionAction } from '@/app/(admin)/candidates/actions';
  * clauses, then formalize a digital adoption. On success we land on the new
  * adoption record.
  */
+export interface FinalizeInitial {
+  document?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  cityText?: string;
+}
+
 export const FinalizeAdoptionDialog = ({
   applicationId,
+  animalId,
   adopterName,
   animalName,
+  triggerClassName = 'w-full',
+  initial,
+  responsibleMembers = [],
+  currentUserId,
 }: {
   applicationId: string;
+  animalId: string;
   adopterName: string;
   animalName: string;
+  triggerClassName?: string;
+  /** Pre-fill from the candidacy's Person, so the data isn't re-typed. */
+  initial?: FinalizeInitial;
+  /** Members eligible to be the adoption's "responsável". */
+  responsibleMembers?: ResponsibleMember[];
+  /** Defaults the responsible to the acting user. */
+  currentUserId?: string | null;
 }) => {
   const router = useRouter();
   const t = useTranslations('candidates');
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const [document, setDocument] = useState('');
-  const [street, setStreet] = useState('');
-  const [number, setNumber] = useState('');
-  const [complement, setComplement] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [postalCode, setPostalCode] = useState('');
+  const [responsibleUserId, setResponsibleUserId] = useState(
+    currentUserId ?? responsibleMembers[0]?.userId ?? '',
+  );
+  const [document, setDocument] = useState(initial?.document ?? '');
+  const [street, setStreet] = useState(initial?.street ?? '');
+  const [number, setNumber] = useState(initial?.number ?? '');
+  const [complement, setComplement] = useState(initial?.complement ?? '');
+  const [neighborhood, setNeighborhood] = useState(initial?.neighborhood ?? '');
+  const [city, setCity] = useState(initial?.city ?? '');
+  const [state, setState] = useState(initial?.state ?? '');
+  const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
   const [extraClauses, setExtraClauses] = useState('');
 
   const onSubmit = (e: FormEvent) => {
@@ -59,11 +91,13 @@ export const FinalizeAdoptionDialog = ({
           street,
           number,
           complement: complement || undefined,
+          neighborhood: neighborhood || undefined,
           city,
           state,
           postalCode,
         },
         extraClauses: extraClauses.trim() || undefined,
+        responsibleUserId: responsibleUserId || undefined,
         signature: {
           ip: '',
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
@@ -72,7 +106,7 @@ export const FinalizeAdoptionDialog = ({
       if (res.ok) {
         toast.success(t('toasts.adoptionFinalized', { animalName }));
         setOpen(false);
-        router.push(`/adocoes/${res.data.id}`);
+        router.push(`/animais/${animalId}`);
       } else {
         toast.error(res.error.message);
       }
@@ -82,7 +116,7 @@ export const FinalizeAdoptionDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" size="lg" className="w-full">
+        <Button variant="secondary" size="lg" className={triggerClassName}>
           <HeartHandshake className="size-4" /> {t('finalize.trigger')}
         </Button>
       </DialogTrigger>
@@ -95,6 +129,12 @@ export const FinalizeAdoptionDialog = ({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="space-y-4">
+          <ResponsibleField
+            members={responsibleMembers}
+            value={responsibleUserId}
+            onChange={setResponsibleUserId}
+          />
+
           <div className="space-y-2">
             <Label htmlFor="cpf">{t('finalize.cpfLabel')}</Label>
             <Input
@@ -102,7 +142,7 @@ export const FinalizeAdoptionDialog = ({
               inputMode="numeric"
               placeholder={t('finalize.cpfPlaceholder')}
               value={document}
-              onChange={(e) => setDocument(e.target.value)}
+              onChange={(e) => setDocument(maskCpf(e.target.value))}
               required
             />
           </div>
@@ -128,30 +168,42 @@ export const FinalizeAdoptionDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="complement">{t('finalize.complementLabel')}</Label>
-            <Input
-              id="complement"
-              value={complement}
-              onChange={(e) => setComplement(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_6rem_8rem]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="city">{t('finalize.cityLabel')}</Label>
-              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">{t('finalize.stateLabel')}</Label>
+              <Label htmlFor="complement">{t('finalize.complementLabel')}</Label>
               <Input
-                id="state"
-                maxLength={2}
-                value={state}
-                onChange={(e) => setState(e.target.value.toUpperCase())}
-                required
+                id="complement"
+                value={complement}
+                onChange={(e) => setComplement(e.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="neighborhood">{t('finalize.neighborhoodLabel')}</Label>
+              <Input
+                id="neighborhood"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_8rem]">
+            <CityCombobox
+              label={t('finalize.cityLabel')}
+              placeholder={t('finalize.cityPlaceholder')}
+              emptyLabel={t('finalize.cityEmpty')}
+              initialText={initial?.cityText ?? ''}
+              onChange={(c) => {
+                // The autocomplete carries the UF, so there's no separate state field.
+                if (c) {
+                  setCity(c.name);
+                  setState(c.stateCode);
+                } else {
+                  setCity('');
+                  setState('');
+                }
+              }}
+            />
             <div className="space-y-2">
               <Label htmlFor="postalCode">{t('finalize.postalCodeLabel')}</Label>
               <Input
@@ -159,7 +211,7 @@ export const FinalizeAdoptionDialog = ({
                 inputMode="numeric"
                 placeholder={t('finalize.postalCodePlaceholder')}
                 value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
+                onChange={(e) => setPostalCode(maskCep(e.target.value))}
                 required
               />
             </div>

@@ -10,9 +10,9 @@ import { UPLOAD_POLICIES, uploadFileMetaSchema, type UploadPolicyKey } from '@ac
 
 const policyKeys = Object.keys(UPLOAD_POLICIES) as [UploadPolicyKey, ...UploadPolicyKey[]];
 
-/** What an upload is attached to. Today only animals; widen as new consumers land. */
+/** What an upload is attached to. Animals (photos/videos) and the org (logo). */
 export const uploadOwnerSchema = z.object({
-  type: z.literal('animal'),
+  type: z.enum(['animal', 'organization']),
   id: z.string().min(1),
 });
 export type UploadOwnerRef = z.infer<typeof uploadOwnerSchema>;

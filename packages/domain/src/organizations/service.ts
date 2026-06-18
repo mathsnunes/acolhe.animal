@@ -1,6 +1,6 @@
 import { and, eq, isNull } from 'drizzle-orm';
 
-import type { Database, Organization } from '@acolhe-animal/db';
+import type { Database, DbExecutor, Organization } from '@acolhe-animal/db';
 import { organization, organizationMember } from '@acolhe-animal/db';
 
 /**
@@ -21,8 +21,8 @@ export const getOrganizationById = async (db: Database, id: string): Promise<Org
   return row ?? null;
 };
 
-/** Resolve an organization by its internal surrogate key (`ctx.organizationId`). */
-export const getOrganizationByPk = async (db: Database, pk: number): Promise<Organization | null> => {
+/** Resolve an organization by its internal surrogate key (`ctx.organizationId`). Accepts a tx too. */
+export const getOrganizationByPk = async (db: DbExecutor, pk: number): Promise<Organization | null> => {
   const [row] = await db.select().from(organization).where(eq(organization.pk, pk)).limit(1);
   return row ?? null;
 };
