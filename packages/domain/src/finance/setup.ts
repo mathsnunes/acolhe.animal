@@ -341,3 +341,30 @@ export const advanceKycStatus = async (
 
   await db.update(organization).set(updates).where(eq(organization.pk, org.pk));
 };
+
+/**
+ * Unlinks the Asaas subaccount from this org. Clears all Asaas fields and
+ * resets onboarding to not_started. The subaccount continues to exist in Asaas.
+ * Admin-only. Use with confirmation dialog.
+ */
+export const disconnectAsaasAccount = async (ctx: Ctx): Promise<void> => {
+  assertAdmin(ctx);
+  const [org] = await ctx.db
+    .select({ pk: organization.pk })
+    .from(organization)
+    .where(eq(organization.pk, ctx.organizationId))
+    .limit(1);
+  if (!org) throw new NotFoundError('Organização não encontrada.');
+
+  await ctx.db
+    .update(organization)
+    .set({
+      asaasAccountId: null,
+      asaasApiKeyEncrypted: null,
+      asaasWalletId: null,
+      asaasKycStatus: 'pending',
+      asaasOnboardingStatus: 'not_started',
+      asaasPixKeyCached: null,
+    })
+    .where(eq(organization.pk, org.pk));
+};

@@ -7,10 +7,12 @@ import {
   confirmAndCreateSubaccount,
   fetchRequiredDocuments,
   uploadDocument,
+  disconnectAsaasAccount,
   type ConfirmAndCreateInput,
 } from '@acolhe-animal/domain';
 
 import { action } from '@/lib/action';
+import { type ActionResult } from '@acolhe-animal/shared';
 import { requireCtx } from '@/lib/auth-context';
 
 const revalidateFinance = () => {
@@ -52,4 +54,11 @@ export const refreshDocumentsAction = async () =>
   action(async () => {
     const ctx = await requireCtx();
     return fetchRequiredDocuments(ctx);
+  });
+
+export const disconnectAsaasAction = async (): Promise<ActionResult<void>> =>
+  action(async () => {
+    const ctx = await requireCtx();
+    await disconnectAsaasAccount(ctx);
+    revalidatePath('/config/financeiro');
   });

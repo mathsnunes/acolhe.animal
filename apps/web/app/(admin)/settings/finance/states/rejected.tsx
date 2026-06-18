@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { FinanceStepper } from '../_components/finance-stepper';
 import { AsaasFooter } from '../_components/asaas-footer';
+import { DisconnectButton } from '../_components/disconnect-button';
 
 interface Props {
   reason: string | null;
@@ -33,6 +34,7 @@ export const RejectedState = ({ reason }: Props) => (
         <Button variant="ghost">Falar com o suporte</Button>
       </div>
       <AsaasFooter />
+      <DisconnectButton />
     </div>
   </div>
 );

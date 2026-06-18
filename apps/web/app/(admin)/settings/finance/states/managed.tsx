@@ -2,6 +2,7 @@ import { CheckCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 import { AsaasFooter } from '../_components/asaas-footer';
+import { DisconnectButton } from '../_components/disconnect-button';
 
 interface Props {
   pixKey: string;
@@ -57,5 +58,6 @@ export const ManagedState = ({ pixKey }: Props) => (
       </Link>
     </p>
     <AsaasFooter />
+      <DisconnectButton />
   </div>
 );

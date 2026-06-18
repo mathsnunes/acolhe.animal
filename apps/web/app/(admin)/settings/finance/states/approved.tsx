@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { FinanceStepper } from '../_components/finance-stepper';
 import { AsaasFooter } from '../_components/asaas-footer';
+import { DisconnectButton } from '../_components/disconnect-button';
 
 export const ApprovedState = () => (
   <div>
@@ -27,6 +28,7 @@ export const ApprovedState = () => (
         </Button>
       </div>
       <AsaasFooter />
+      <DisconnectButton />
     </div>
   </div>
 );
