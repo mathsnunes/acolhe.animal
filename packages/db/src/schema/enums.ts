@@ -180,3 +180,11 @@ export const webhookStatus = pgEnum('webhook_status', [
   'failed',
   'ignored',
 ]);
+
+/** Asaas companyType values for subaccount creation. */
+export const orgCompanyType = pgEnum('org_company_type', [
+  'MEI',
+  'LIMITED',
+  'INDIVIDUAL',
+  'ASSOCIATION',
+]);

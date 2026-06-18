@@ -8,6 +8,7 @@ import {
   asaasOnboardingStatus,
   inviteStatus,
   memberRole,
+  orgCompanyType,
   orgDocumentType,
   organizationStatus,
 } from './enums';
@@ -63,6 +64,10 @@ export const organization = pgTable(
     asaasOnboardingStatus: asaasOnboardingStatus().notNull().default('not_started'),
     /** Cached Pix key for portal display; source of truth is Asaas. */
     asaasPixKeyCached: text(),
+    /** Responsible person's birth date (required by Asaas for subaccount creation). */
+    responsibleBirthDate: text(),
+    /** Asaas company type for the subaccount (MEI / LIMITED / INDIVIDUAL / ASSOCIATION). */
+    companyType: orgCompanyType(),
 
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true })
