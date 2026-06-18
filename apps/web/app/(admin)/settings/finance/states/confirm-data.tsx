@@ -26,7 +26,8 @@ export const ConfirmDataState = ({ fields }: Props) => {
   const t = useTranslations('finance');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [companyType, setCompanyType] = useState(fields.companyType ?? '');
+  const isCpf = fields.documentType === 'cpf';
+  const [companyType, setCompanyType] = useState(fields.companyType ?? (isCpf ? 'INDIVIDUAL' : ''));
   const [birthDate, setBirthDate] = useState(fields.responsibleBirthDate ?? '');
   const [error, setError] = useState<string | null>(null);
 
@@ -105,23 +106,24 @@ export const ConfirmDataState = ({ fields }: Props) => {
               {t('confirmData.stillNeed')}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1.5 block text-[12px] font-medium text-ink-soft">
-                {t('confirmData.companyTypeLabel')} <span className="text-terra">•</span>
-              </label>
-              <Select value={companyType} onValueChange={setCompanyType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MEI">{t('confirmData.companyTypeMEI')}</SelectItem>
-                  <SelectItem value="ASSOCIATION">{t('confirmData.companyTypeASSOCIATION')}</SelectItem>
-                  <SelectItem value="LIMITED">{t('confirmData.companyTypeLIMITED')}</SelectItem>
-                  <SelectItem value="INDIVIDUAL">{t('confirmData.companyTypeINDIVIDUAL')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className={isCpf ? "grid grid-cols-1 gap-3" : "grid grid-cols-2 gap-3"}>
+            {!isCpf && (
+              <div>
+                <label className="mb-1.5 block text-[12px] font-medium text-ink-soft">
+                  {t('confirmData.companyTypeLabel')} <span className="text-terra">•</span>
+                </label>
+                <Select value={companyType} onValueChange={setCompanyType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MEI">{t('confirmData.companyTypeMEI')}</SelectItem>
+                    <SelectItem value="ASSOCIATION">{t('confirmData.companyTypeASSOCIATION')}</SelectItem>
+                    <SelectItem value="LIMITED">{t('confirmData.companyTypeLIMITED')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <label className="mb-1.5 block text-[12px] font-medium text-ink-soft">
                 {t('confirmData.birthDateLabel')} <span className="text-terra">•</span>
@@ -146,7 +148,7 @@ export const ConfirmDataState = ({ fields }: Props) => {
           <Button
             className="rounded-full px-7"
             onClick={handleSubmit}
-            disabled={isPending || !companyType || !birthDate}
+            disabled={isPending || (!isCpf && !companyType) || !birthDate}
           >
             {isPending ? 'Criando conta…' : t('confirmData.cta')}
           </Button>
