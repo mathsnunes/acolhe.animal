@@ -60,6 +60,11 @@ export class MockPaymentsProvider implements PaymentsProvider {
     };
   }
 
+  // TODO: remove — sandbox simulation only
+  async simulatePaymentReceived(_accountApiKey: string, _paymentId: string, _amount: number): Promise<void> {
+    // no-op in mock
+  }
+
   async createTransfer(_input: CreateTransferInput): Promise<CreateTransferResult> {
     return { transferId: `tra_mock_${createToken(16)}`, status: 'processing', fee: 0 };
   }

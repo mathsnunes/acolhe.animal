@@ -6,7 +6,7 @@ import { FinanceStepper } from '../_components/finance-stepper';
 import { AsaasFooter } from '../_components/asaas-footer';
 import { DisconnectButton } from '../_components/disconnect-button';
 
-export const ApprovedState = () => (
+export const ApprovedState = ({ pixKey }: { pixKey?: string | null }) => (
   <div>
     <FinanceStepper activeStep="done" />
     <div className="card text-center">
@@ -27,6 +27,13 @@ export const ApprovedState = () => (
           <Link href="/config/financeiro?tab=saque">Configurar saque</Link>
         </Button>
       </div>
+      {/* TODO: remove — temporary visual feedback only */}
+      {pixKey && (
+        <div className="mx-auto mt-6 max-w-sm rounded-xl border border-line bg-paper p-4 text-left">
+          <p className="mb-1 text-[11px] font-medium uppercase tracking-[.1em] text-ink-mute">Chave Pix (EVP)</p>
+          <p className="break-all font-mono text-[13px] text-ink">{pixKey}</p>
+        </div>
+      )}
       <AsaasFooter />
       <DisconnectButton />
     </div>

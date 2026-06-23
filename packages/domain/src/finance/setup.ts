@@ -1,8 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { organization } from '@acolhe-animal/db';
+import { donation, donor, organization } from '@acolhe-animal/db';
 import type { Organization } from '@acolhe-animal/db';
+import { createId } from '@acolhe-animal/shared';
 import { NotFoundError, ValidationError } from '@acolhe-animal/shared';
 import { getPayments } from '@acolhe-animal/integrations';
 
@@ -43,7 +44,7 @@ export type FinanceSetupScreen =
   | { screen: 'awaiting_revenue' }
   | { screen: 'documents_pending'; documents: DocumentItem[] }
   | { screen: 'under_review' }
-  | { screen: 'approved' }
+  | { screen: 'approved'; pixKey: string | null }
   | { screen: 'managed'; pixKey: string }
   | { screen: 'rejected'; reason: string | null };
 
@@ -97,7 +98,7 @@ export const getFinanceSetupState = async (ctx: Ctx): Promise<FinanceSetupScreen
   if (status === 'approved') {
     return org.asaasPixKeyCached
       ? { screen: 'managed', pixKey: org.asaasPixKeyCached }
-      : { screen: 'approved' };
+      : { screen: 'approved', pixKey: null };
   }
 
   return { screen: 'not_started', pixKey: org.asaasPixKeyCached };
@@ -340,6 +341,133 @@ export const advanceKycStatus = async (
   }
 
   await db.update(organization).set(updates).where(eq(organization.pk, org.pk));
+};
+
+// TODO: remove — sandbox simulation only
+export interface TestChargeResult {
+  qrCodePayload: string;
+  qrCodeImageBase64: string;
+  paymentId: string;
+}
+
+// TODO: remove — sandbox simulation only
+/**
+ * Creates a real Pix charge on the org's Asaas subaccount for sandbox testing.
+ * Inserts a pending donation record so it shows up in the donations list.
+ * Admin-only.
+ */
+export interface DonationListItem {
+  id: string;
+  amount: string;
+  status: string;
+  paymentMethod: string;
+  donorName: string;
+  asaasPaymentId: string | null;
+  createdAt: Date;
+  confirmedAt: Date | null;
+}
+
+export const listDonations = async (ctx: Ctx): Promise<DonationListItem[]> => {
+  assertAdmin(ctx);
+  const rows = await ctx.db
+    .select({
+      id: donation.id,
+      amount: donation.amount,
+      status: donation.status,
+      paymentMethod: donation.paymentMethod,
+      donorName: donor.name,
+      asaasPaymentId: donation.asaasPaymentId,
+      createdAt: donation.createdAt,
+      confirmedAt: donation.confirmedAt,
+    })
+    .from(donation)
+    .innerJoin(donor, eq(donation.donorId, donor.pk))
+    .where(eq(donation.organizationId, ctx.organizationId))
+    .orderBy(desc(donation.createdAt))
+    .limit(50);
+  return rows;
+};
+
+export const createTestDonationCharge = async (ctx: Ctx, amount: number): Promise<TestChargeResult> => {
+  assertAdmin(ctx);
+  const [org] = await ctx.db
+    .select({
+      pk: organization.pk,
+      asaasApiKeyEncrypted: organization.asaasApiKeyEncrypted,
+      asaasWalletId: organization.asaasWalletId,
+      asaasPixKeyCached: organization.asaasPixKeyCached,
+    })
+    .from(organization)
+    .where(eq(organization.pk, ctx.organizationId))
+    .limit(1);
+
+  if (!org?.asaasApiKeyEncrypted) throw new NotFoundError('Conta Asaas não configurada.');
+
+  const apiKey = decrypt(org.asaasApiKeyEncrypted);
+  const donationId = createId('donation');
+
+  const charge = await getPayments().createPixCharge({
+    accountApiKey: apiKey,
+    amount,
+    description: `Doação teste — ${donationId}`,
+    externalReference: donationId,
+    donor: { name: 'Doador Teste', cpf: '24971563792' }, // valid CPF for sandbox
+  });
+
+  // Upsert a system donor for test entries
+  let [testDonor] = await ctx.db
+    .select({ pk: donor.pk })
+    .from(donor)
+    .where(eq(donor.organizationId, ctx.organizationId))
+    .limit(1);
+
+  if (!testDonor) {
+    [testDonor] = await ctx.db
+      .insert(donor)
+      .values({ id: createId('donor'), organizationId: ctx.organizationId, name: 'Doador Teste', isAnonymous: true })
+      .returning({ pk: donor.pk });
+  }
+
+  await ctx.db.insert(donation).values({
+    id: donationId,
+    organizationId: ctx.organizationId,
+    donorId: testDonor!.pk,
+    amount: String(amount),
+    paymentMethod: 'pix',
+    source: 'portal_pix',
+    status: 'pending',
+    asaasPaymentId: charge.paymentId,
+  });
+
+  return {
+    qrCodePayload: charge.qrCodePayload,
+    qrCodeImageBase64: charge.qrCodeImageBase64,
+    paymentId: charge.paymentId,
+  };
+};
+
+// TODO: remove — sandbox simulation only
+/** Sandbox-only: confirm a PIX payment via Asaas receiveInCash endpoint. */
+export const simulateTestPayment = async (ctx: Ctx, asaasPaymentId: string): Promise<void> => {
+  assertAdmin(ctx);
+  const [[org], [row]] = await Promise.all([
+    ctx.db
+      .select({ asaasApiKeyEncrypted: organization.asaasApiKeyEncrypted })
+      .from(organization)
+      .where(eq(organization.pk, ctx.organizationId))
+      .limit(1),
+    ctx.db
+      .select({ amount: donation.amount })
+      .from(donation)
+      .where(eq(donation.asaasPaymentId, asaasPaymentId))
+      .limit(1),
+  ]);
+
+  if (!org?.asaasApiKeyEncrypted) throw new NotFoundError('Conta Asaas não configurada.');
+
+  const apiKey = decrypt(org.asaasApiKeyEncrypted);
+  const amount = row ? Number(row.amount) : 1;
+  await getPayments().simulatePaymentReceived(apiKey, asaasPaymentId, amount);
 };
 
 /**

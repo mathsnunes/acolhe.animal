@@ -19,6 +19,7 @@ export const PortalFooter = ({
   instagram,
   homeHref = '',
   showAbout = true,
+  donationHref,
 }: {
   orgName: string;
   documentLabel: string | null;
@@ -27,6 +28,8 @@ export const PortalFooter = ({
   homeHref?: string;
   /** Whether the org has an about section to link to. */
   showAbout?: boolean;
+  /** When set, shows an "Apoiar" link pointing to this URL. */
+  donationHref?: string;
 }) => {
   const t = useTranslations('portal');
 
@@ -47,6 +50,11 @@ export const PortalFooter = ({
               className="inline-flex items-center gap-1.5 transition-colors hover:text-terra"
             >
               <Instagram className="size-4" aria-hidden /> Instagram
+            </a>
+          )}
+          {donationHref && (
+            <a href={donationHref} className="font-medium text-terra transition-colors hover:text-terra/80">
+              Apoiar
             </a>
           )}
           {showAbout && (

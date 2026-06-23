@@ -46,6 +46,21 @@ export const ConfirmDataState = ({ fields }: Props) => {
     });
   };
 
+  const fmtCnpj = (v: string) => v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  const fmtCpf  = (v: string) => v.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  const fmtPhone = (v: string) => {
+    const digits = v.replace(/\D/g, '');
+    if (digits.startsWith('55') && digits.length >= 12) {
+      const local = digits.slice(2);
+      return local.length === 11
+        ? `+55 (${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}`
+        : `+55 (${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+    }
+    return v;
+  };
+  const fmtDocument = (type: string, doc: string) =>
+    type === 'cnpj' ? fmtCnpj(doc.replace(/\D/g, '')) : fmtCpf(doc.replace(/\D/g, ''));
+
   const ReadField = ({ label, value }: { label: string; value: string }) => (
     <div className="bg-paper p-3">
       <div className="mb-1 text-[11px] uppercase tracking-[.04em] text-ink-mute">{label}</div>
@@ -74,9 +89,9 @@ export const ConfirmDataState = ({ fields }: Props) => {
           </div>
           <div className="grid grid-cols-2 divide-x divide-y divide-line overflow-hidden rounded-[10px] border border-line">
             <ReadField label="Nome" value={fields.name} />
-            <ReadField label={fields.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} value={fields.document} />
+            <ReadField label={fields.documentType === 'cnpj' ? 'CNPJ' : 'CPF'} value={fmtDocument(fields.documentType, fields.document)} />
             <ReadField label="E-mail" value={fields.email ?? '—'} />
-            <ReadField label="Telefone" value={fields.phone} />
+            <ReadField label="Telefone" value={fmtPhone(fields.phone)} />
           </div>
         </div>
 

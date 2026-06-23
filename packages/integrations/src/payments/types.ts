@@ -17,6 +17,8 @@ export interface CreateSubaccountInput {
   mobilePhone?: string;
   birthDate?: string;
   companyType?: string;
+  /** Monthly income/revenue in BRL (required by Asaas). */
+  incomeValue?: number;
   address?: {
     street: string;
     number: string;
@@ -48,6 +50,8 @@ export interface CreatePixChargeInput {
   description?: string;
   /** Split percentage routed to the platform master wallet (Phase 2). */
   splitPercent?: number;
+  /** Donor info — used to upsert an Asaas customer on the subaccount. */
+  donor?: { name: string; cpf?: string; email?: string };
 }
 
 export interface CreatePixChargeResult {
@@ -101,6 +105,8 @@ export interface PaymentsProvider {
   getRequiredDocuments(accountApiKey: string): Promise<RequiredDocument[]>;
   uploadDocument(input: UploadDocumentInput): Promise<void>;
   getPixKey(accountApiKey: string): Promise<string>;
+  // TODO: remove — sandbox simulation only, not part of the production contract
+  simulatePaymentReceived(accountApiKey: string, paymentId: string, amount: number): Promise<void>;
   createPixCharge(input: CreatePixChargeInput): Promise<CreatePixChargeResult>;
   createTransfer(input: CreateTransferInput): Promise<CreateTransferResult>;
 }

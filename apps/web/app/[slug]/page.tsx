@@ -87,6 +87,7 @@ export default async function PortalPage({ params }: PageProps) {
         documentLabel={documentLabel}
         instagram={org.portalConfig?.instagram}
         showAbout={hasAbout}
+        donationHref={org.asaasPixKeyCached ? `/${slug}/apoiar` : undefined}
       />
     </div>
   );

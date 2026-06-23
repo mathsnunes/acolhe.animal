@@ -42,7 +42,7 @@ const FinancePage = async ({ searchParams }: Props) => {
     case 'under_review':
       return <UnderReviewState />;
     case 'approved':
-      return <ApprovedState />;
+      return <ApprovedState pixKey={state.pixKey} />;
     case 'managed':
       return <ManagedState pixKey={state.pixKey} />;
     case 'rejected':

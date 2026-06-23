@@ -11,6 +11,9 @@ import type {
   UploadDocumentInput,
 } from './types';
 
+/** Strip country code and non-digits — Asaas expects DDD + number only (e.g. "48999990000"). */
+const toAsaasPhone = (e164: string): string => e164.replace(/^\+55/, '').replace(/\D/g, '');
+
 const getBase = () => {
   const url = process.env.ASAAS_BASE_URL;
   if (!url) throw new Error('ASAAS_BASE_URL is not set');
@@ -62,8 +65,13 @@ export class AsaasPaymentsProvider implements PaymentsProvider {
       email: input.email,
       cpfCnpj: input.cpfCnpj,
       companyType: input.companyType,
-      phone: input.phone,
-      mobilePhone: input.mobilePhone ?? input.phone,
+      incomeValue: input.incomeValue ?? 1000,
+      phone: toAsaasPhone(input.phone),
+      // mobilePhone is optional — only send when we have an 11-digit BR mobile (DDD + 9 + 8 digits)
+      mobilePhone: (() => {
+        const digits = toAsaasPhone(input.mobilePhone ?? input.phone);
+        return digits.length === 11 ? digits : undefined;
+      })(),
       birthDate: input.birthDate,
       address: input.address?.street,
       addressNumber: input.address?.number,
@@ -113,7 +121,7 @@ export class AsaasPaymentsProvider implements PaymentsProvider {
   }
 
   async getPixKey(accountApiKey: string): Promise<string> {
-    const res = await asaasReq(accountApiKey, 'GET', '/myAccount/pixTransactionKeys');
+    const res = await asaasReq(accountApiKey, 'GET', '/pix/addressKeys');
     const data = await toJson<{ data: Array<{ key: string; status: string }> }>(res);
     const active = data.data?.find((k) => k.status === 'ACTIVE');
     if (!active) throw new Error('No active Pix key found on subaccount');
@@ -121,7 +129,17 @@ export class AsaasPaymentsProvider implements PaymentsProvider {
   }
 
   async createPixCharge(input: CreatePixChargeInput): Promise<CreatePixChargeResult> {
+    // Asaas requires a customer on every payment — upsert one from donor info.
+    const customerRes = await asaasReq(input.accountApiKey, 'POST', '/customers', {
+      name: input.donor?.name ?? 'Doador Anônimo',
+      ...(input.donor?.cpf ? { cpfCnpj: input.donor.cpf.replace(/\D/g, '') } : {}),
+      ...(input.donor?.email ? { email: input.donor.email } : {}),
+      notificationDisabled: true,
+    });
+    const customerData = await toJson<{ id: string }>(customerRes);
+
     const res = await asaasReq(input.accountApiKey, 'POST', '/payments', {
+      customer: customerData.id,
       billingType: 'PIX',
       value: input.amount,
       dueDate: new Date(Date.now() + 30 * 60 * 1000).toISOString().slice(0, 10),
@@ -137,6 +155,15 @@ export class AsaasPaymentsProvider implements PaymentsProvider {
       qrCodePayload: data.pixTransaction?.payload ?? '',
       qrCodeImageBase64: data.pixTransaction?.encodedImage ?? '',
     };
+  }
+
+  // TODO: remove — sandbox simulation only
+  async simulatePaymentReceived(accountApiKey: string, paymentId: string, amount: number): Promise<void> {
+    const res = await asaasReq(accountApiKey, 'POST', `/payments/${paymentId}/receiveInCash`, {
+      paymentDate: new Date().toISOString().slice(0, 10),
+      value: amount,
+    });
+    await toJson<unknown>(res);
   }
 
   async createTransfer(input: CreateTransferInput): Promise<CreateTransferResult> {
